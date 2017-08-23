@@ -1,9 +1,3 @@
-/*
- * fuzzon_generator.cpp
- *
- *  Created on: Aug 22, 2017
- *      Author: dablju
- */
 
 
 #include "fuzzon_generator.h"
@@ -38,22 +32,22 @@ TestCase Generator::generateNext()
 
     std::cout << buffer.GetString() << std::endl;
 
-    static const char* kTypeNames[] =
-        { "Null", "False", "True", "Object", "Array", "String", "Number" };
-
-    const int output_count = 1;
-    for(size_t i=0; i< output_count; ++i)
-    {
-    	auto file_name = std::string("output_" + std::to_string(i) + ".input");
-    	auto file_path = boost::filesystem::path(output_directory_)/file_name;
-
-    	for (auto& m : input_format.GetObject())
-    	{
-    		std::string name = m.name.GetString();
-    		Logger::Get()->info(std::string(name + " is " + std::string(kTypeNames[m.value.GetType()])));
-    	}
-
-    }
+//    static const char* kTypeNames[] =
+//        { "Null", "False", "True", "Object", "Array", "String", "Number" };
+//
+//    const int output_count = 1;
+//    for(size_t i=0; i< output_count; ++i)
+//    {
+//    	auto file_name = std::string("output_" + std::to_string(i) + ".input");
+//    	auto file_path = boost::filesystem::path(output_directory_)/file_name;
+//
+//    	for (auto& m : input_format.GetObject())
+//    	{
+//    		std::string name = m.name.GetString();
+//    		Logger::Get()->info(std::string(name + " is " + std::string(kTypeNames[m.value.GetType()])));
+//    	}
+//
+//    }
 
     return TestCase();
 }

@@ -1,9 +1,3 @@
-/*
- * fuzzon_test_case.cpp
- *
- *  Created on: Aug 22, 2017
- *      Author: dablju
- */
 
 #include "fuzzon_mutator.h"
 
@@ -37,7 +31,7 @@ int Mutator::FlipBit(uint8_t* data, size_t data_size)
 
     const auto bit_to_flip = bit_selector(generator_);
     auto& selected_byte = data[bit_to_flip / 8];
-    selected_byte = selected_byte ^ (bit_to_flip % 8);
+    selected_byte = (selected_byte ^ (1 << (bit_to_flip % 8)));
     return 0;
 }
 

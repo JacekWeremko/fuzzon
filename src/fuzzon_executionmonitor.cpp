@@ -1,9 +1,3 @@
-/*
- * fuzzon_executionmonitor.cpp
- *
- *  Created on: Aug 23, 2017
- *      Author: dablju
- */
 
 #include "fuzzon_executionmonitor.h"
 

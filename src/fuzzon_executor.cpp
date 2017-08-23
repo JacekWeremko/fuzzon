@@ -1,9 +1,3 @@
-/*
- * fuzzon_executor.cpp
- *
- *  Created on: Aug 22, 2017
- *      Author: dablju
- */
 
 #include "fuzzon_executor.h"
 

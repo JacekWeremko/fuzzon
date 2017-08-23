@@ -1,9 +1,3 @@
-/*
- * fuzzon_executor.h
- *
- *  Created on: Aug 22, 2017
- *      Author: dablju
- */
 
 #ifndef FUZZON_EXECUTOR_H_
 #define FUZZON_EXECUTOR_H_

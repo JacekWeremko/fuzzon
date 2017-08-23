@@ -1,9 +1,3 @@
-/*
- * fuzzon_mutator.h
- *
- *  Created on: Aug 21, 2017
- *      Author: dablju
- */
 
 #ifndef FUZZON_MUTATOR_H_
 #define FUZZON_MUTATOR_H_
@@ -23,11 +17,12 @@ public:
 
 	TestCase Mutate(TestCase mutate_me);
 
-private:
+
 	int FlipBit(uint8_t* data, size_t data_size);
 	int FlipByte(uint8_t* data, size_t data_size);
 	int ChangeByte(uint8_t* data, size_t data_size);
 
+private:
 	bool preserve_special_chars_;
 	boost::random::mt19937 generator_;
 };

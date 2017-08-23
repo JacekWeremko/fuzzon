@@ -1,9 +1,3 @@
-/*
- * zuffer_feedback.cpp
- *
- *  Created on: Apr 30, 2017
- *      Author: dablju
- */
 
 
 #include "utils/logger.h"

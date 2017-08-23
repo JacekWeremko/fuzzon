@@ -1,9 +1,3 @@
-/*
- * fuzzon_output.h
- *
- *  Created on: Aug 22, 2017
- *      Author: dablju
- */
 
 #ifndef FUZZON_EXECUTIONDATA_H_
 #define FUZZON_EXECUTIONDATA_H_

@@ -1,9 +1,3 @@
-/*
- * fuzzon_executionmonitor.h
- *
- *  Created on: Aug 23, 2017
- *      Author: dablju
- */
 
 #ifndef FUZZON_EXECUTIONMONITOR_H_
 #define FUZZON_EXECUTIONMONITOR_H_

@@ -1,40 +1,37 @@
-/*
- * fuzzon_test_case.cpp
- *
- *  Created on: Aug 22, 2017
- *      Author: dablju
- */
-
 #include "fuzzon_testcase.h"
+
 
 namespace fuzzon {
 
-TestCase::TestCase()
+TestCase::TestCase() : length_(10), data_(new uint8_t[length_])
 {
-	length_ = 10;
-	data_ = new uint8_t[length_];
+//	length_ = 10;
+//	data_ = std::make_shared<uint8_t>(uint8_t[length_]);
 }
 
-TestCase::TestCase(uint8_t* data, size_t length) : data_(data), length_(length)
+TestCase::TestCase(uint8_t* data, size_t length) : length_(length), data_(std::shared_ptr<uint8_t>(data))
 {
-
+	int cahce = length_;
+	length_ = cahce;
 }
 
 TestCase::TestCase(std::string serialized)
 {
 	length_ = serialized.length();
-	data_ = new uint8_t[length_];
-	std::copy(serialized.begin(), serialized.end(), data_);
+	data_ = std::shared_ptr<uint8_t>(new uint8_t[length_]);
+	std::copy(serialized.begin(), serialized.end(), data_.get());
 }
 
 TestCase::~TestCase()
 {
-	delete [] data_;
+//	delete [] data_;
+//	data_ = NULL;
+	length_ = 0;
 }
 
 std::string TestCase::string()
 {
-	return std::string(reinterpret_cast<char const*>(data_), length_);
+	return std::string(reinterpret_cast<char const*>(data_.get()), length_ -1);
 }
 
 char** TestCase::argv()

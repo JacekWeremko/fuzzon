@@ -1,14 +1,9 @@
-/*
- * fuzzon_test_case.h
- *
- *  Created on: Aug 22, 2017
- *      Author: dablju
- */
 
 #ifndef FUZZON_TESTCASE_H_
 #define FUZZON_TESTCASE_H_
 
 #include <string>
+#include <memory>
 
 namespace fuzzon {
 
@@ -21,7 +16,7 @@ public:
 	virtual ~TestCase();
 
 
-	uint8_t* const data() { return data_; }
+	uint8_t* const data() { return data_.get(); }
 	const size_t length() { return length_; }
 
 	char** argv();
@@ -30,8 +25,8 @@ public:
 	std::string string();
 
 private:
-	uint8_t* data_;
 	size_t length_;
+	std::shared_ptr<uint8_t> data_;
 //	std::string serialized_;
 };
 

@@ -53,7 +53,7 @@ int FuzzonSUTEntryPoint(int argc, char **argv)
 	}
 
 	char data[8] = { 0 };
-	std::memcpy(&data[0], argv[1], sizeof(argv[1]));
+	std::memcpy(&data[0], &argv[1], sizeof(&argv[1]));
 
 	if (func_a(data[0]))
 	{

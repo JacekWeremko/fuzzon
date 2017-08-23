@@ -1,9 +1,4 @@
-/*
- * logger.h
- *
- *  Created on: Apr 29, 2017
- *      Author: dablju
- */
+
 
 #ifndef DEBUG_UTILS_LOGGER_H_
 #define DEBUG_UTILS_LOGGER_H_

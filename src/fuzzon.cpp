@@ -1,10 +1,3 @@
-//============================================================================
-// Name        : fuzzon.cpp
-// Author      : Jacek Weremko
-// Version     :
-// Copyright   : Your copyright notice
-// Description : Hello World in C++, Ansi-style
-//============================================================================
 
 #include "fuzzon.h"
 #include "fuzzon_generator.h"

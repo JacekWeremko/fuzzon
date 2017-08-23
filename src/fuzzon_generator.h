@@ -1,9 +1,3 @@
-/*
- * fuzzon_generator.h
- *
- *  Created on: Aug 20, 2017
- *      Author: dablju
- */
 
 #ifndef FUZZON_GENERATOR_H_
 #define FUZZON_GENERATOR_H_

@@ -1,9 +1,3 @@
-/*
- * logger.h
- *
- *  Created on: Apr 29, 2017
- *      Author: dablju
- */
 
 #include "logger.h"
 
