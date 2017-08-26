@@ -10,7 +10,7 @@ namespace fuzzon
 class Mutator
 {
 public:
-	Mutator(bool preserve_special_chars);
+	Mutator(std::string input_alphabet, std::string output_alphabet);
 	virtual ~Mutator();
 
 	TestCase Mutate(TestCase mutate_me);
@@ -21,7 +21,9 @@ public:
 	int ChangeByte(uint8_t* data, size_t data_size);
 
 private:
-	bool preserve_special_chars_;
+	const size_t mutation_guard = 1000;
+	std::string input_alphabet_;
+	std::string output_alphabet_;
 };
 
 }

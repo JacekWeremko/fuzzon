@@ -38,7 +38,16 @@ int Fuzzon::Run(std::string sut_path, std::string input_format)
 
 	auto iterations = 2;
 	Generator test_cases_generator(input_format);
-	Mutator test_cases_mutator(false);
+
+	std::string input_alphabet(
+			"abcdefghijklmnopqrstuvwxyz"
+			"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+			"1234567890");
+	std::string output_alphabet(
+			"abcdefghijklmnopqrstuvwxyz"
+			"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+			"1234567890");
+	Mutator test_cases_mutator(input_alphabet, output_alphabet);
 	while(iterations--)
 	{
 		// generation phase
@@ -69,7 +78,6 @@ int Fuzzon::Run(std::string sut_path, std::string input_format)
 			}
 		}
 	}
-
 
 	return 0;
 }
