@@ -4,8 +4,6 @@
 
 #include "fuzzon_testcase.h"
 
-#include <boost/random.hpp>
-
 namespace fuzzon
 {
 
@@ -24,7 +22,6 @@ public:
 
 private:
 	bool preserve_special_chars_;
-	boost::random::mt19937 generator_;
 };
 
 }

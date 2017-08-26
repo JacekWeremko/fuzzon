@@ -1,0 +1,42 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "id": "http://example.com/example.json",
+    "type": "object",
+    "properties": {
+        "type": "object",
+        "test_cases": {
+            "id": "/properties/test_cases",
+            "type": "integer"
+        },
+        "test_case": {
+            "id": "/properties/test_case",
+            "type": "array",
+            "length": { "$ref": "/properties/test_cases" },
+            "items": {
+                "id": "/properties/test_case/items",
+                "type": "object",
+                "properties": {
+                    "id": "/properties/test_case/items/properties",
+                    "type": "object",
+                    "k": {
+                        "id": "/properties/test_case/items/properties/k",
+                        "type": "integer"
+                    },
+                    "m": {
+                        "id": "/properties/test_case/items/properties/m",
+                        "type": "integer"
+                    },
+                    "values": {
+                        "id": "/properties/test_case/items/properties/values",
+                        "type": "array",
+                        "length": { "$ref": "/properties/test_case/items/properties/k" },
+                        "items": {
+                            "id": "/properties/test_case/items/properties/values/items",
+                            "type": "integer"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

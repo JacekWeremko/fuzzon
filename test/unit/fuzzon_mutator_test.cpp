@@ -1,11 +1,4 @@
 
-#define BOOST_TEST_MODULE fuzzon_mutator_test
-//#define BOOST_LIB_NAME asd
-#define BOOST_TEST_NO_MAIN
-#define BOOST_TEST_ALTERNATIVE_INIT_API
-//#define BOOST_TEST_DYN_LINK
-#define WRAP_XML_CDATA
-
 #include <iostream>
 #include <boost/test/unit_test.hpp>
 #include <boost/test/test_case_template.hpp>
@@ -14,18 +7,6 @@
 
 #include "../../src/fuzzon_mutator.h"
 
-
-
-int FuzzonSUTEntryPoint(int argc, char**argv)
-{
-	return 0;
-}
-
-int main(int argc, char* argv[], char* envp[])
-{
-	auto val = boost::unit_test::unit_test_main(init_unit_test, argc, argv);
-	return val;
-}
 
 BOOST_AUTO_TEST_SUITE(fuzzon_mutator_suite)
 
@@ -86,8 +67,4 @@ BOOST_AUTO_TEST_CASE(flib_byte)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-
-
-
-//BOOST_AUTO_TEST_SUITE_END()
 

@@ -37,7 +37,7 @@ int Fuzzon::Run(std::string sut_path, std::string input_format)
 	Corpus corpus;
 
 	auto iterations = 2;
-	Generator test_cases_generator(input_format, tmp_dir.string());
+	Generator test_cases_generator(input_format);
 	Mutator test_cases_mutator(false);
 	while(iterations--)
 	{

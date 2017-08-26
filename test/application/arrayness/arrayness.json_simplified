@@ -1,0 +1,12 @@
+{
+	"test_cases" : 
+	[
+		{ "length" : "int", "max_value" : "15" },	
+		{ "type" : 
+			[
+				{ "length" : "int", "max_value" : "100" },
+				{ "type" : "int" }
+			]
+		}
+	]
+}
