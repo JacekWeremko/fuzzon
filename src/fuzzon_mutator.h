@@ -22,6 +22,8 @@ public:
 
 private:
 	const size_t mutation_guard = 1000;
+
+	bool type_preservation_;
 	std::string input_alphabet_;
 };
 

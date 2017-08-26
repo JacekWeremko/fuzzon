@@ -10,6 +10,7 @@
 
 #include <random>
 #include <boost/random.hpp>
+#include <map>
 
 namespace fuzzon {
 
@@ -26,19 +27,30 @@ public:
 
 	virtual ~Random();
 
-//	boost::random::mt19937& GetGenerator()
-//	{
-//		return generator_;
-//	}
-
 	void SetAlphabet(std::string alphabet)
 	{
 		alphabet_ = alphabet;
 	}
 
 
+	enum AlphabetType
+	{
+			SmallLetters = 0,
+			CapitalLetters,
+			Nums,
+			NumsSpecials,
+			OtherSpecials,
+			Unknown,
+	};
+
+
 	int GenerateInt(int min = -1, int max = -1);
 	std::string GenerateString(int length = -1);
+	char GenerateChar();
+	char GenerateChar(char same_type_as_me);
+
+
+	AlphabetType FindCharType(char what_is_my_type);
 
 //	template<typename generate_type>
 //	generate_type Generate(int min = -1, int max = -1);
@@ -50,14 +62,11 @@ public:
 private:
 	Random();
 
-//	std::random_device rand_;
 	boost::random::mt19937 generator_;
 	std::string alphabet_;
-	const std::string alphabet_small_letters_;
-	const std::string alphabet_capital_letters_;
-	const std::string alphabet_nums_;
-	const std::string alphabet_nums_special_;
-	const std::string alphabet_other_special_;
+//	std::vector<std::string> alphabets_;
+
+	std::map<AlphabetType, std::string> alphabets_;
 };
 
 } /* namespace fuzzon */
