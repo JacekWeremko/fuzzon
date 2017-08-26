@@ -28,8 +28,6 @@ void generate_and_validate(boost::filesystem::path intput_format)
 
 BOOST_AUTO_TEST_CASE(generate_sinle_string_json_arrayness_propsal)
 {
-//	auto intput_format = boost::filesystem::current_path()/".."/"test"/"application"/"branchness"/"branchness.json";
-	//auto intput_format = boost::filesystem::current_path()/".."/"test"/"application"/"arrayness"/"arrayness.json";
 	auto intput_format = boost::filesystem::current_path()/".."/"test"/"application"/"arrayness"/"arrayness_propsal2.json";
 	generate_and_validate(intput_format);
 }

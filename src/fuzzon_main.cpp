@@ -16,8 +16,12 @@ int main(int argc, char **argv)
 	auto output_dir   = boost::filesystem::path("Output").append(time_now_str);
 	//	boost::filesystem::path output_path(boost::filesystem::current_path().append("output"));
 
-	auto sut_path     = boost::filesystem::current_path()/"test"/"application"/"branchness"/"branchness";
-	auto intput_format= boost::filesystem::current_path()/"test"/"application"/"branchness"/"branchness.json";
+//	auto sut_path     = boost::filesystem::current_path()/".."/"test"/"application"/"branchness"/"branchness";
+//	auto intput_format= boost::filesystem::current_path()/".."/"test"/"application"/"branchness"/"branchness.json";
+
+	auto sut_path     = boost::filesystem::current_path()/"branchness";
+	auto intput_format= boost::filesystem::current_path()/"branchness.json";
+
 
 	fuzzon::Fuzzon crazy_fuzzer = fuzzon::Fuzzon(output_dir.string());
 	return crazy_fuzzer.Run(sut_path.string(), intput_format.string());

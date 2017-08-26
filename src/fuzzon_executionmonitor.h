@@ -56,7 +56,7 @@ public:
 		auto traces = PrintPCTraces();
 		auto counters = PrintPCConuters();
 
-//		Logger::Get()->info("\npc_counters	: {0:s}\npc_trace	: {1:s}", counters, traces);
+		Logger::Get()->info("counters	: " + std::string(counters));
 		Logger::Get()->info("pc_traces	: " + std::string(traces));
 	}
 

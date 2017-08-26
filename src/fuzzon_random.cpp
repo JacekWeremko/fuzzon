@@ -34,10 +34,13 @@ Random::Random()
 	};
 
 	generator_ = boost::random::mt19937(static_cast<std::uint32_t>(std::time(0)));
+//	alphabet_ = std::string(
+//			alphabets_[AlphabetType::SmallLetters] +
+//			alphabets_[AlphabetType::CapitalLetters] +
+//			alphabets_[AlphabetType::Nums]);
 	alphabet_ = std::string(
-			alphabets_[AlphabetType::SmallLetters] +
-			alphabets_[AlphabetType::CapitalLetters] +
-			alphabets_[AlphabetType::Nums]);
+			alphabets_[AlphabetType::SmallLetters]);
+
 }
 
 int Random::GenerateInt(int min, int max)

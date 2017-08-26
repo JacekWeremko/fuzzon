@@ -15,7 +15,7 @@ public:
 	Executor(std::string sut_path);
 	virtual ~Executor();
 
-	ExecutionData ExecuteBlocking(TestCase input);
+	ExecutionData ExecuteBlocking(TestCase& input);
 
 private:
 	std::string sut_path_;

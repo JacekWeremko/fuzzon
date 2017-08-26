@@ -33,16 +33,20 @@ int Fuzzon::Run(std::string sut_path, std::string input_format)
 	boost::filesystem::create_directories(paths_dir);
 	boost::filesystem::create_directories(tmp_dir);
 
+	Logger::Get()->info("input_format : " + input_format);
+
 	Executor execution_monitor(sut_path);
 	Corpus corpus;
 
 	auto iterations = 2;
 	Generator test_cases_generator(input_format);
 
-	std::string input_alphabet(
-			"abcdefghijklmnopqrstuvwxyz"
-			"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-			"1234567890");
+//	std::string input_alphabet(
+//			"abcdefghijklmnopqrstuvwxyz"
+//			"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+//			"1234567890");
+	std::string input_alphabet("abcdefghijklmnopqrstuvwxyz");
+
 	Mutator test_cases_mutator(input_alphabet);
 	while(iterations--)
 	{

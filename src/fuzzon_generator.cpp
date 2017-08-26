@@ -74,53 +74,7 @@ TestCase Generator::generateNext()
 	int result = StripJson(generated_input, output);
 	Logger::Get()->info("Stripped input data :" + output.str());
 
-
-//	rapidjson::Value::MemberIterator it = input_format.FindMember("properties");
-//	if (it->value.IsObject())
-//	{
-//		ParseJson(it->value, ss);
-//	}
-
-//	for (auto cuttent_it = input_format.MemberBegin(); cuttent_it != input_format.MemberEnd(); ++cuttent_it)
-//	{
-//		std::string name = cuttent_it->name.GetString();
-//		std::string type = std::string(kTypeNames[cuttent_it->value.GetType()]);
-//		Logger::Get()->info(std::string(name + " is " + type));
-//		if (cuttent_it->value.IsObject())
-//		{
-//			ParseJson(cuttent_it->value, ss);
-//		}
-//	}
-
-//    if (input_format.IsObject())
-//    {
-//		for (auto& m : input_format.GetObject())
-//		{
-//			std::string name = m.name.GetString();
-//			std::string type = std::string(kTypeNames[m.value.GetType()]);
-//			Logger::Get()->info(std::string(name + " is " + type));
-//			if (m.value.IsObject())
-//			{
-////				ParseJson(m.value, ss);
-//			}
-//		}
-//    }
-
-//    rapidjson::Value* document = &input_format;
-//	for (auto& m : document)
-//	{
-//		std::string name = m.name.GetString();
-//		std::string type = std::string(kTypeNames[m.value.GetType()]);
-//		Logger::Get()->info(std::string(name + " is " + type));
-//		if (m.value.IsObject())
-//		{
-////				ParseJson(m.value, ss);
-//		}
-//	}
-
-
-
-    return TestCase();
+    return TestCase(output.str());
 }
 
 //int Generator::ParseJson(rapidjson::Value& current, rapidjson::Document& new_document)

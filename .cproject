@@ -158,6 +158,11 @@
 								<option id="llvm.c_cpp.compiler.option.misc.other.752328581" name="Other flags" superClass="llvm.c_cpp.compiler.option.misc.other" useByScannerDiscovery="false" value="-c -fmessage-length=0" valueType="string"/>
 								<option id="llvm.c_cpp.compiler.option.preprocessor.def.1210765448" name="Defined symbols (-D)" superClass="llvm.c_cpp.compiler.option.preprocessor.def" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="UNIT_TEST"/>
+									<listOptionValue builtIn="false" value="BOOST_TEST_LOG_LEVEL=ALL"/>
+								</option>
+								<option id="llvm.c_cpp.compiler.option.include.paths.901091661" name="Include paths (-I)" superClass="llvm.c_cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
+									<listOptionValue builtIn="false" value="/usr/include/c++/6"/>
+									<listOptionValue builtIn="false" value="/usr/local/include"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.llvm.cpp.compiler.input.840470498" superClass="cdt.managedbuild.tool.llvm.cpp.compiler.input"/>
 							</tool>
@@ -198,6 +203,7 @@
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
 	<storageModule moduleId="refreshScope" versionNumber="2">
+		<configuration configurationName="Unit_Test"/>
 		<configuration configurationName="Unit Test">
 			<resource resourceType="PROJECT" workspacePath="/fuzzon"/>
 		</configuration>

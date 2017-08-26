@@ -41,12 +41,13 @@ char** TestCase::argv()
 
 const size_t TestCase::argc()
 {
-	size_t argc = 0;
+	size_t argc = 1;
 	auto as_string = this->string();
 	std::string::size_type space_position = 0;
 	while((space_position = as_string.find(' ', space_position)) != std::string::npos)
 	{
 	    space_position++;
+	    argc++;
 	}
 	return argc;
 }

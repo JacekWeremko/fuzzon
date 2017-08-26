@@ -6,11 +6,14 @@
 //#include "fuzzon_test_main.h"
 #include <boost/test/unit_test.hpp>
 
+#ifdef UNIT_TEST
 
 int FuzzonSUTEntryPoint(int argc, char**argv)
 {
 	return 0;
 }
+
+#endif
 
 int main(int argc, char* argv[], char* envp[])
 {

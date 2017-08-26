@@ -11,7 +11,7 @@
 
 BOOST_AUTO_TEST_SUITE(fuzzon_mutator_suite)
 
-BOOST_AUTO_TEST_CASE(flib_bite)
+BOOST_AUTO_TEST_CASE(flip_bite)
 {
 	std::string input_alphabet(
 			"abcdefghijklmnopqrstuvwxyz"
@@ -21,8 +21,8 @@ BOOST_AUTO_TEST_CASE(flib_bite)
 
 	for(size_t iters=0; iters<10; iters++)
 	{
-		uint8_t test_data[10] = { 1,2,3,4,5,6,7,8,9,0 };
-		uint8_t mutate_me[10] = { 1,2,3,4,5,6,7,8,9,0 };
+		uint8_t test_data[10] = { 'A','B','c','d','5','6','7','8','9','0' };
+		uint8_t mutate_me[10] = { 'A','B','c','d','5','6','7','8','9','0' };
 		mutator_.FlipBit(&mutate_me[0], sizeof(mutate_me));
 
 		int mutated_bytes = 0, mutated_bites = 0;
@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_CASE(flib_bite)
 }
 
 
-BOOST_AUTO_TEST_CASE(flib_byte)
+BOOST_AUTO_TEST_CASE(flip_byte)
 {
 	std::string input_alphabet(
 			"abcdefghijklmnopqrstuvwxyz"
@@ -58,8 +58,8 @@ BOOST_AUTO_TEST_CASE(flib_byte)
 
 	for(size_t iters=0; iters<10; iters++)
 	{
-		uint8_t test_data[10] = { 1,2,3,4,5,6,7,8,9,0 };
-		uint8_t mutate_me[10] = { 1,2,3,4,5,6,7,8,9,0 };
+		uint8_t test_data[10] = { 'A','B','c','d','5','6','7','8','9','0' };
+		uint8_t mutate_me[10] = { 'A','B','c','d','5','6','7','8','9','0' };
 		mutator_.FlipByte(&mutate_me[0], sizeof(mutate_me));
 
 		int mutated_bytes = 0;
@@ -86,13 +86,8 @@ void test_type_preservation()
 
 	for(size_t iters=0; iters<10; iters++)
 	{
-//		uint8_t test_data[10] = { 'A','B','c','d','5','6','!','^',':',';' };
-//		uint8_t mutate_me[10] = { 'A','B','c','d','5','6','!','^',':',';' };
-//		uint8_t test_data[10] = { 'A','B','A','B','A','B','A','B','A','B' };
-//		uint8_t mutate_me[10] = { 'A','B','A','B','A','B','A','B','A','B' };
-		uint8_t test_data[10] = { ';',';',';',';',';',';',';',';',';',';' };
-		uint8_t mutate_me[10] = { ';',';',';',';',';',';',';',';',';',';' };
-
+		uint8_t test_data[10] = { 'A','B','c','d','5','6','!','^',':',';' };
+		uint8_t mutate_me[10] = { 'A','B','c','d','5','6','!','^',':',';' };
 
 		mutator_.ChangeByte(&mutate_me[0], sizeof(mutate_me));
 
