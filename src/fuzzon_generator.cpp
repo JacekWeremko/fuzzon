@@ -126,8 +126,6 @@ TestCase Generator::generateNext()
 //int Generator::ParseJson(rapidjson::Value& current, rapidjson::Document& new_document)
 int Generator::ParseJson(rapidjson::Value& current, rapidjson::Document& new_document, rapidjson::Value& new_document_current)
 {
-	static boost::random::uniform_int_distribution<> numbers(1, 5);
-
     if (!current.IsObject())
     {
     	Logger::Get()->critical(std::string(current.GetString()) + " is not an object!");
@@ -159,22 +157,11 @@ int Generator::ParseJson(rapidjson::Value& current, rapidjson::Document& new_doc
 		auto element_type = std::string(cuttent_it->value.FindMember("type")->value.GetString());
 		if (std::string("integer").compare(element_type) == 0)
 		{
-			if (new_document_current.IsArray())
-			{
-				new_document_current.PushBack(rapidjson::Value(numbers(Random::Get()->GetGenerator())), new_document.GetAllocator());
-				PrintJson("AddMember integer", new_document);
-			}
-			else if (new_document_current.IsObject())
-			{
-				new_document_current.AddMember(rapidjson::Value(cuttent_it->name, new_document.GetAllocator()),
-						                       rapidjson::Value(numbers(Random::Get()->GetGenerator())),
-											   new_document.GetAllocator());
-				PrintJson("AddMember integer " + std::string(cuttent_it->name.GetString()), new_document);
-			}
-			else
-			{
-				Logger::Get()->critical(element_type + " handling is not implemented yet!");
-			}
+			JsonInsertInteger(new_document, new_document_current, std::string(cuttent_it->name.GetString()));
+		}
+		if (std::string("string").compare(element_type) == 0)
+		{
+			JsonInsertString(new_document, new_document_current, std::string(cuttent_it->name.GetString()));
 		}
 		else if (std::string("object").compare(element_type) == 0)
 		{
@@ -234,15 +221,29 @@ int Generator::ParseJson(rapidjson::Value& current, rapidjson::Document& new_doc
 											        rapidjson::Value(rapidjson::kArrayType),
 											        new_document.GetAllocator());
 				PrintJson("AddMember object4 " + std::string(items->name.GetString()), new_document);
-//				auto new_array_item = new_document_array->value.FindMember(items->name);
 				auto new_array_item = new_document_array->value.MemberEnd() - 1;
+
 
 				for(size_t idx=0; idx<array_length; idx++)
 				{
-					new_array_item->value.PushBack(rapidjson::Value(numbers(Random::Get()->GetGenerator())),
-												   new_document.GetAllocator());
+					JsonInsertInteger(new_document, new_array_item->value, std::string(cuttent_it->name.GetString()));
 				}
 			}
+			else if (std::string("string").compare(std::string(type_of_array_elements->value.GetString())) == 0)
+			{
+				new_document_array->value.AddMember(rapidjson::Value(items->name, new_document.GetAllocator()),
+											        rapidjson::Value(rapidjson::kArrayType),
+											        new_document.GetAllocator());
+				PrintJson("AddMember object4 " + std::string(items->name.GetString()), new_document);
+				auto new_array_item = new_document_array->value.MemberEnd() - 1;
+
+
+				for(size_t idx=0; idx<array_length; idx++)
+				{
+					JsonInsertString(new_document, new_array_item->value, std::string(cuttent_it->name.GetString()));
+				}
+			}
+
 			else
 			{
 				Logger::Get()->critical(std::string(type_of_array_elements->value.GetString()) +
@@ -271,6 +272,10 @@ int Generator::StripJson(rapidjson::Value& current, std::stringstream& output)
 	{
 		output << current.GetInt() << " ";
 	}
+	else if (current.IsString())
+	{
+		output << current.GetString() << " ";
+	}
 	else if (current.IsArray())
 	{
 		for(auto idx=0; idx < current.Size(); idx++)
@@ -288,9 +293,8 @@ int Generator::StripJson(rapidjson::Value& current, std::stringstream& output)
 	}
 	else
 	{
-		Logger::Get()->critical("wtf");
+		Logger::Get()->critical("Stripping not supported for given type.");
 	}
-
 
 	return 0;
 }
@@ -392,7 +396,66 @@ void Generator::PrintJson(std::string title, rapidjson::Value::ConstMemberIterat
 //}
 
 
+int Generator::JsonInsertInteger(rapidjson::Document& document, rapidjson::Value& current, std::string new_value_name)
+{
+	rapidjson::Value new_element_value = rapidjson::Value(Random::Get()->GenerateInt());
+	return JsonInsert(document, current, new_value_name, new_element_value);
+}
+
+int Generator::JsonInsertString(rapidjson::Document& document, rapidjson::Value& current, std::string new_value_name)
+{
+	rapidjson::Value new_element_value = rapidjson::Value(Random::Get()->GenerateString().c_str(), document.GetAllocator());
+	return JsonInsert(document, current, new_value_name, new_element_value);
+}
+
+int Generator::JsonInsert(rapidjson::Document& document, rapidjson::Value& current,
+						  std::string new_element_name, rapidjson::Value& new_element_value)
+{
+	if (current.IsArray())
+	{
+		current.PushBack(new_element_value, document.GetAllocator());
+		PrintJson("AddMember", document);
+	}
+	else if (current.IsObject())
+	{
+		current.AddMember(
+				rapidjson::Value(new_element_name.c_str(), document.GetAllocator()),
+				new_element_value, document.GetAllocator());
+		PrintJson("AddMember" + new_element_name, document);
+	}
+	else
+	{
+		Logger::Get()->critical(std::string(current.GetString()) + " insertion failed.");
+	}
+	return 0;
+}
+
+//template<typename generate_type>
+//generate_type Generator::JsonInsert(rapidjson::Document& document, rapidjson::Value& current, std::string new_value_name)
+//{
+//	auto random = rapidjson::Value(Random::Get()->Generate<generate_type>(), document.GetAllocator());
+//
+//	if (current.IsArray())
+//	{
+//		current.PushBack(random, document.GetAllocator());
+//		PrintJson("AddMember integer", document);
+//	}
+//	else if (current.IsObject())
+//	{
+//		current.AddMember(rapidjson::Value(new_value_name.c_str(), document.GetAllocator()),
+//									   random,
+//									   document.GetAllocator());
+//		PrintJson("AddMember integer " + new_value_name, document);
+//	}
+//	else
+//	{
+//		Logger::Get()->critical(std::string(current.GetString()) + " generation failed");
+//	}
+//	return 0;
+//}
 
 }
+
+
 
 

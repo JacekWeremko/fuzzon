@@ -39,6 +39,15 @@ private:
 	void PrintJson(std::string title, rapidjson::Value::ConstMemberIterator& print_me);
 
 
+	int JsonInsertInteger(rapidjson::Document& document, rapidjson::Value& current, std::string new_value_name);
+	int JsonInsertString(rapidjson::Document& document, rapidjson::Value& current, std::string new_value_name);
+
+
+	int JsonInsert(rapidjson::Document& document, rapidjson::Value& current,
+							  std::string new_element_name, rapidjson::Value& new_element_value);
+
+
+
 	std::string format_filepath_;
 };
 

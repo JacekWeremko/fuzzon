@@ -10,6 +10,10 @@ namespace fuzzon {
 class TestCase {
 public:
 	TestCase();
+//	TestCase(TestCase const&);
+//	void operator=(TestCase const&);
+
+
 	TestCase(uint8_t* data, size_t length);
 	TestCase(std::string serialized);
 

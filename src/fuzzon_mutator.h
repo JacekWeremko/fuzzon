@@ -10,7 +10,7 @@ namespace fuzzon
 class Mutator
 {
 public:
-	Mutator(std::string input_alphabet, std::string output_alphabet);
+	Mutator(std::string input_alphabet);
 	virtual ~Mutator();
 
 	TestCase Mutate(TestCase mutate_me);
@@ -23,7 +23,6 @@ public:
 private:
 	const size_t mutation_guard = 1000;
 	std::string input_alphabet_;
-	std::string output_alphabet_;
 };
 
 }

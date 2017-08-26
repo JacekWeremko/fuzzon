@@ -16,11 +16,7 @@ BOOST_AUTO_TEST_CASE(flib_bite)
 			"abcdefghijklmnopqrstuvwxyz"
 			"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 			"1234567890");
-	std::string output_alphabet(
-			"abcdefghijklmnopqrstuvwxyz"
-			"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-			"1234567890");
-	fuzzon::Mutator mutator_(input_alphabet, output_alphabet);
+	fuzzon::Mutator mutator_(input_alphabet);
 
 	for(size_t iters=0; iters<10; iters++)
 	{
@@ -57,11 +53,7 @@ BOOST_AUTO_TEST_CASE(flib_byte)
 			"abcdefghijklmnopqrstuvwxyz"
 			"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 			"1234567890");
-	std::string output_alphabet(
-			"abcdefghijklmnopqrstuvwxyz"
-			"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-			"1234567890");
-	fuzzon::Mutator mutator_(input_alphabet, output_alphabet);
+	fuzzon::Mutator mutator_(input_alphabet);
 
 	for(size_t iters=0; iters<10; iters++)
 	{

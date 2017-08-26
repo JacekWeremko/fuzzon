@@ -43,11 +43,7 @@ int Fuzzon::Run(std::string sut_path, std::string input_format)
 			"abcdefghijklmnopqrstuvwxyz"
 			"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 			"1234567890");
-	std::string output_alphabet(
-			"abcdefghijklmnopqrstuvwxyz"
-			"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-			"1234567890");
-	Mutator test_cases_mutator(input_alphabet, output_alphabet);
+	Mutator test_cases_mutator(input_alphabet);
 	while(iterations--)
 	{
 		// generation phase

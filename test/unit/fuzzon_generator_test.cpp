@@ -20,20 +20,23 @@ void generate_and_validate(boost::filesystem::path intput_format)
 	std::string output_directory = "";
 	fuzzon::Generator test_cases_generator(intput_format.string());
 
-	for(size_t i=0; i<1; i++)
-	{
-		fuzzon::TestCase new_test_case = test_cases_generator.generateNext();
-		BOOST_TEST_MESSAGE(new_test_case.string());
-		BOOST_TEST((int)test_cases_generator.IsValid(new_test_case) == 1);
-	}
+	fuzzon::TestCase new_test_case = test_cases_generator.generateNext();
+	BOOST_TEST_MESSAGE(new_test_case.string());
+	BOOST_TEST((int)test_cases_generator.IsValid(new_test_case) == 1);
 	return;
 }
 
-BOOST_AUTO_TEST_CASE(generate_sinle_string_json)
+BOOST_AUTO_TEST_CASE(generate_sinle_string_json_arrayness_propsal)
 {
 //	auto intput_format = boost::filesystem::current_path()/".."/"test"/"application"/"branchness"/"branchness.json";
 	//auto intput_format = boost::filesystem::current_path()/".."/"test"/"application"/"arrayness"/"arrayness.json";
 	auto intput_format = boost::filesystem::current_path()/".."/"test"/"application"/"arrayness"/"arrayness_propsal2.json";
+	generate_and_validate(intput_format);
+}
+
+BOOST_AUTO_TEST_CASE(generate_sinle_string_json_branchness)
+{
+	auto intput_format = boost::filesystem::current_path()/".."/"test"/"application"/"branchness"/"branchness.json";
 	generate_and_validate(intput_format);
 }
 

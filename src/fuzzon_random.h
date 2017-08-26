@@ -26,15 +26,38 @@ public:
 
 	virtual ~Random();
 
-	boost::random::mt19937& GetGenerator()
+//	boost::random::mt19937& GetGenerator()
+//	{
+//		return generator_;
+//	}
+
+	void SetAlphabet(std::string alphabet)
 	{
-		return generator_;
+		alphabet_ = alphabet;
 	}
+
+
+	int GenerateInt(int min = -1, int max = -1);
+	std::string GenerateString(int length = -1);
+
+//	template<typename generate_type>
+//	generate_type Generate(int min = -1, int max = -1);
+//
+//	template<typename generate_type>
+//	generate_type Generate(int length = -1);
+
+
 private:
 	Random();
 
 //	std::random_device rand_;
 	boost::random::mt19937 generator_;
+	std::string alphabet_;
+	const std::string alphabet_small_letters_;
+	const std::string alphabet_capital_letters_;
+	const std::string alphabet_nums_;
+	const std::string alphabet_nums_special_;
+	const std::string alphabet_other_special_;
 };
 
 } /* namespace fuzzon */
