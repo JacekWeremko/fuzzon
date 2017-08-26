@@ -1,9 +1,9 @@
 {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "definitions": {},
     "id": "http://example.com/example.json",
     "type": "object",
     "properties": {
+        "type": "object",
         "name": {
             "id": "/properties/name",
             "type": "string"
