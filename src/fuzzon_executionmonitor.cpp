@@ -3,9 +3,8 @@
 
 namespace fuzzon {
 
-ExecutionMonitor::ExecutionMonitor() {
-	// TODO Auto-generated constructor stub
-
+ExecutionMonitor::ExecutionMonitor() : cov_(Coverage::Flow)
+{
 }
 
 ExecutionMonitor::~ExecutionMonitor() {

@@ -28,64 +28,24 @@ public:
 
 	void Reset()
 	{
-		pc_trace_.clear();
-		pc_counter_.clear();
+		cov_ = Coverage(Coverage::Flow);
 	}
 
-	Coverage GetCoverage()
+	const Coverage* GetCoverage()
 	{
-		//TODO: implement
-		Coverage cov;
-		return cov;
+		return &cov_;
 	}
 
 
-	void AddTrace(uintptr_t PC) {
-		pc_trace_.push_back(PC);
-
-		auto it = pc_counter_.find(PC);
-		if (it == pc_counter_.end()) {
-			pc_counter_[PC] = 1;
-		} else {
-			pc_counter_[PC] = it->second + 1;
-		}
-	}
-
-
-	void PrintTrace() {
-		auto traces = PrintPCTraces();
-		auto counters = PrintPCConuters();
-
-		Logger::Get()->info("counters	: " + std::string(counters));
-		Logger::Get()->info("pc_traces	: " + std::string(traces));
-	}
-
-	std::string PrintPCConuters() {
-		std::string pc_counters = "";
-		for (const auto& elem : pc_counter_) {
-			std::stringstream stream;
-			stream << std::hex << elem.first << ":" << elem.second;
-			pc_counters += stream.str() + " ";
-		}
-		return pc_counters;
-
-	}
-
-	std::string PrintPCTraces() {
-		std::string pc_traces = "";
-		for (const auto& elem : pc_trace_) {
-			std::stringstream stream;
-			stream << std::hex << elem;
-			pc_traces += stream.str() + " ";
-		}
-		return pc_traces;
+	void TracePC(uintptr_t PC)
+	{
+		cov_.TracePC(PC);
 	}
 
 private:
 	ExecutionMonitor();
 
-	std::map<uintptr_t, unsigned int> pc_counter_;
-	std::vector<uintptr_t> pc_trace_;
+	Coverage cov_;
 };
 
 } /* namespace fuzzon */

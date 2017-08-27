@@ -31,7 +31,7 @@ TestCase::~TestCase()
 
 std::string TestCase::string()
 {
-	return std::string(reinterpret_cast<char const*>(data_.get()), length_ -1);
+	return std::string(reinterpret_cast<char const*>(data_.get()), length_);
 }
 
 char** TestCase::argv()

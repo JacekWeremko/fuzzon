@@ -75,9 +75,9 @@ int Mutator::ChangeByte(uint8_t* data, size_t data_size)
 
 	for(size_t mutation_idx = 0; mutation_idx<mutation_guard; mutation_idx++)
 	{
-		const auto new_char = type_preservation_ == true ?
-				Random::Get()->GenerateChar(selected_byte) : Random::Get()->GenerateChar();
-
+//		const auto new_char = type_preservation_ == true ?
+//				Random::Get()->GenerateChar(selected_byte) : Random::Get()->GenerateChar();
+		const auto new_char = Random::Get()->GenerateChar();
 		if (new_char == data[byte_to_flip])
 		{
 			continue;

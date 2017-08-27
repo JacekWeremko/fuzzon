@@ -5,6 +5,7 @@
 #include "fuzzon_executiondata.h"
 #include "fuzzon_testcase.h"
 
+
 #include <vector>
 
 namespace fuzzon {
@@ -14,13 +15,16 @@ public:
 	Corpus();
 	virtual ~Corpus();
 
-	bool IsInteresting(ExecutionData am_i);
+	bool IsInteresting(const ExecutionData& am_i);
 
-	void AddExecutionData(ExecutionData add_me_to_corpus);
+	void AddExecutionData(ExecutionData& add_me_to_corpus);
 
 	TestCase SelectFavorite();
 
 private:
+//	Coverage totoal_coverage_;
+
+//	std::vector<std::pair<size_t, ExecutionData>> execution_hisotry_;
 	std::vector<ExecutionData> execution_hisotry_;
 };
 

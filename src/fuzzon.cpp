@@ -4,6 +4,7 @@
 #include "fuzzon_mutator.h"
 #include "fuzzon_executor.h"
 #include "fuzzon_corpus.h"
+#include "fuzzon_random.h"
 
 namespace fuzzon
 {
@@ -45,8 +46,11 @@ int Fuzzon::Run(std::string sut_path, std::string input_format)
 //			"abcdefghijklmnopqrstuvwxyz"
 //			"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 //			"1234567890");
-	std::string input_alphabet("abcdefghijklmnopqrstuvwxyz");
+	//std::string input_alphabet("abcdefghijklmnopqrstuvwxyz");
 
+	std::string input_alphabet("abcd");
+
+	Random::Get()->SetAlphabet(input_alphabet);
 	Mutator test_cases_mutator(input_alphabet);
 	while(iterations--)
 	{
@@ -65,7 +69,7 @@ int Fuzzon::Run(std::string sut_path, std::string input_format)
 		}
 		// mutation phase
 		{
-			auto test_cases_to_mutate = 2;
+			auto test_cases_to_mutate = 20;
 			while(test_cases_to_mutate--)
 			{
 				TestCase favorite = corpus.SelectFavorite();

@@ -40,7 +40,6 @@ Random::Random()
 //			alphabets_[AlphabetType::Nums]);
 	alphabet_ = std::string(
 			alphabets_[AlphabetType::SmallLetters]);
-
 }
 
 int Random::GenerateInt(int min, int max)

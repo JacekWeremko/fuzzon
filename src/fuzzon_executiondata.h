@@ -20,6 +20,10 @@ public:
 	TestCase input_;
 	std::error_code ec_;
 	Coverage coverage_;
+
+	size_t similar_execution_coutner_;
+	size_t mutation_usage_count_;
+	double execution_time_;
 };
 
 } /* namespace fuzzon */
