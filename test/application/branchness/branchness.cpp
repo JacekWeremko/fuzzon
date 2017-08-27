@@ -7,6 +7,7 @@
 //============================================================================
 
 #include <cstring>
+#include <string>
 
 #include <stdint.h>
 #include <stddef.h>
@@ -52,8 +53,9 @@ int FuzzonSUTEntryPoint(int argc, char **argv)
 		return guard;
 	}
 
+	std::string argv1 = std::string(argv[1]);
 	char data[8] = { 0 };
-	std::memcpy(&data[0], &argv[1], sizeof(&argv[1]));
+	std::memcpy(&data[0], argv1.c_str(), argv1.size());
 
 	if (func_a(data[0]))
 	{
