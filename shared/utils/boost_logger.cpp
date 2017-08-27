@@ -73,7 +73,7 @@ Logger::Logger(std::string output_direcotry)
     boost::log::add_common_attributes();
 
     boost::log::core::get()->set_filter(
-        boost::log::trivial::severity>= boost::log::trivial::trace
+        boost::log::trivial::severity >= boost::log::trivial::trace
     );
 }
 

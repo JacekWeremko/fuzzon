@@ -168,6 +168,8 @@
 								<option id="llvm.c_cpp.compiler.option.include.paths.901091661" name="Include paths (-I)" superClass="llvm.c_cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="/usr/include/c++/6"/>
 									<listOptionValue builtIn="false" value="/usr/local/include"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/fuzzon/shared}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/fuzzon/src}&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.llvm.cpp.compiler.input.840470498" superClass="cdt.managedbuild.tool.llvm.cpp.compiler.input"/>
 							</tool>
@@ -183,7 +185,7 @@
 									<listOptionValue builtIn="false" value="/usr/lib/gcc/x86_64-linux-gnu/6/"/>
 								</option>
 								<option id="llvm.c.link.option.stats.760117985" name="Print statistics" superClass="llvm.c.link.option.stats" useByScannerDiscovery="false" value="false" valueType="boolean"/>
-								<option id="llvm.c.link.base.option.ldflags.155398885" name="Linker flags" superClass="llvm.c.link.base.option.ldflags" useByScannerDiscovery="false" value="-lpthread -lboost_unit_test_framework  -lboost_program_options -lboost_thread -lboost_date_time -lboost_log_setup -lboost_filesystem -lboost_exception -lboost_system -lboost_regex -lboost_log -lboost_serialization -lboost_random -lboost_iostreams" valueType="string"/>
+								<option id="llvm.c.link.base.option.ldflags.155398885" name="Linker flags" superClass="llvm.c.link.base.option.ldflags" useByScannerDiscovery="false" value="-lpthread -lboost_unit_test_framework  -lboost_program_options -lboost_thread -lboost_date_time -lboost_log_setup -lboost_filesystem -lboost_exception -lboost_system -lboost_regex -lboost_log -lboost_serialization -lboost_random -lboost_iostreams -lrt" valueType="string"/>
 								<inputType id="cdt.managedbuild.tool.llvm.c.linker.input.1421982675" superClass="cdt.managedbuild.tool.llvm.c.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
 									<additionalInput kind="additionalinput" paths="$(LIBS)"/>

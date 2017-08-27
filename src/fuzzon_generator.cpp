@@ -1,9 +1,6 @@
-
-
 #include "fuzzon_generator.h"
-#include "utils/logger.h"
 #include "fuzzon_random.h"
-
+#include "utils/logger.h"
 
 #include <rapidjson/document.h>
 #include <rapidjson/writer.h>
@@ -25,59 +22,40 @@ namespace fuzzon
 {
 
 Generator::Generator(std::string format_filepath) :
-	format_filepath_(format_filepath)
+	input_format_filepath_(format_filepath)
 {
+	std::ifstream t(input_format_filepath_);
+	std::string format_filepath_content((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());
 
+
+    input_format_.Parse(format_filepath_content.c_str());
+//    assert(input_format_.IsObject());
 }
 
 TestCase Generator::generateNext()
 {
-	std::ifstream t(format_filepath_);
-	std::string format_filepath_content((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());
+	rapidjson::Document intput_data;
+    intput_data.SetObject();
 
-    rapidjson::Document input_format;
-    input_format.Parse(format_filepath_content.c_str());
-//    assert(input_format.IsObject());
-
-    static const char* kTypeNames[] =
-        { "Null", "False", "True", "Object", "Array", "String", "Number" };
-
-    rapidjson::Document generated_input;
-    generated_input.SetObject();
-
-//	rapidjson::Value properties(rapidjson::kObjectType);
-////	generated_input.PushBack(properties, generated_input.GetAllocator());
-//	generated_input.AddMember("properties", properties, generated_input.GetAllocator());
-//
-//	auto properties_ref = generated_input.FindMember("properties");
-//
-//	rapidjson::Value new_value(8);
-//	properties_ref->value.AddMember("test01", new_value, generated_input.GetAllocator());
-
-	for (auto& m : input_format.GetObject())
+	for (auto& current : input_format_.GetObject())
 	{
-//		std::string name = m.name.GetString();
-//		std::string type = std::string(kTypeNames[m.value.GetType()]);
-//		Logger::Get()->info(std::string(name + " is " + type));
-
-		if (m.value.IsObject())
+		if (current.value.IsObject())
 		{
-			generated_input.AddMember("properties", rapidjson::Value(rapidjson::kObjectType), generated_input.GetAllocator());
-			ParseJson(m.value, generated_input, generated_input.FindMember("properties")->value);
+			intput_data.AddMember("properties", rapidjson::Value(rapidjson::kObjectType), intput_data.GetAllocator());
+			ParseJson(current.value, intput_data, intput_data.FindMember("properties")->value);
 		}
 	}
 
-	PrintJson("Input format", input_format);
-	PrintJson("Generated input data", generated_input);
+//	PrintJson("Input format", input_format_);
+//	PrintJson("Generated input data", generated_input);
+	std::stringstream input_stripped;
+	int result = StripJson(intput_data, input_stripped);
+	BOOST_ASSERT(result == true);
 
-	std::stringstream output;
-	int result = StripJson(generated_input, output);
-	Logger::Get()->info("Stripped input data :" + output.str());
-
-    return TestCase(output.str());
+//	Logger::Get()->debug("Stripped input data :" + output.str());
+    return TestCase(input_stripped.str());
 }
 
-//int Generator::ParseJson(rapidjson::Value& current, rapidjson::Document& new_document)
 int Generator::ParseJson(rapidjson::Value& current, rapidjson::Document& new_document, rapidjson::Value& new_document_current)
 {
     if (!current.IsObject())
@@ -92,7 +70,7 @@ int Generator::ParseJson(rapidjson::Value& current, rapidjson::Document& new_doc
 		    static const char* kTypeNames[] = { "Null", "False", "True", "Object", "Array", "String", "Number" };
 			std::string name = cuttent_it->name.GetString();
 			std::string type = std::string(kTypeNames[cuttent_it->value.GetType()]);
-			Logger::Get()->trace("Parse: " + std::string(name) + " is " + std::string((type)));
+//			Logger::Get()->trace("Parse: " + std::string(name) + " is " + std::string((type)));
 
 			static const std::vector<std::string> reserved = { "id", "type", "uniqueItems", "length" };
 			if (std::find(reserved.begin(), reserved.end(), name) != reserved.end())
@@ -147,7 +125,7 @@ int Generator::ParseJson(rapidjson::Value& current, rapidjson::Document& new_doc
 			new_document_current.AddMember(rapidjson::Value(cuttent_it->name, new_document.GetAllocator()),
 										   rapidjson::Value(rapidjson::kObjectType),
 										   new_document.GetAllocator());
-			PrintJson("AddMember object2 " + std::string(cuttent_it->name.GetString()), new_document);
+			PrintJson("AddMember array " + std::string(cuttent_it->name.GetString()), new_document);
 			auto new_document_array = new_document_current.FindMember(cuttent_it->name);
 
 
@@ -162,7 +140,7 @@ int Generator::ParseJson(rapidjson::Value& current, rapidjson::Document& new_doc
 					new_document_array->value.AddMember(rapidjson::Value(items->name, new_document.GetAllocator()),
 												   rapidjson::Value(rapidjson::kObjectType),
 												   new_document.GetAllocator());
-					PrintJson("AddMember object3 " + std::string(items->name.GetString()), new_document);
+					PrintJson("AddMember array/object " + std::string(items->name.GetString()), new_document);
 					//auto new_array_item = new_document_array->value.FindMember(items->name);
 					auto new_array_item = new_document_array->value.MemberEnd() - 1;
 
@@ -174,7 +152,7 @@ int Generator::ParseJson(rapidjson::Value& current, rapidjson::Document& new_doc
 				new_document_array->value.AddMember(rapidjson::Value(items->name, new_document.GetAllocator()),
 											        rapidjson::Value(rapidjson::kArrayType),
 											        new_document.GetAllocator());
-				PrintJson("AddMember object4 " + std::string(items->name.GetString()), new_document);
+				PrintJson("AddMember integer " + std::string(items->name.GetString()), new_document);
 				auto new_array_item = new_document_array->value.MemberEnd() - 1;
 
 
@@ -188,7 +166,7 @@ int Generator::ParseJson(rapidjson::Value& current, rapidjson::Document& new_doc
 				new_document_array->value.AddMember(rapidjson::Value(items->name, new_document.GetAllocator()),
 											        rapidjson::Value(rapidjson::kArrayType),
 											        new_document.GetAllocator());
-				PrintJson("AddMember object4 " + std::string(items->name.GetString()), new_document);
+				PrintJson("AddMember string " + std::string(items->name.GetString()), new_document);
 				auto new_array_item = new_document_array->value.MemberEnd() - 1;
 
 
@@ -197,7 +175,6 @@ int Generator::ParseJson(rapidjson::Value& current, rapidjson::Document& new_doc
 					JsonInsertString(new_document, new_array_item->value, std::string(cuttent_it->name.GetString()));
 				}
 			}
-
 			else
 			{
 				Logger::Get()->critical(std::string(type_of_array_elements->value.GetString()) +
@@ -216,12 +193,6 @@ int Generator::ParseJson(rapidjson::Value& current, rapidjson::Document& new_doc
 
 int Generator::StripJson(rapidjson::Value& current, std::stringstream& output)
 {
-//	if (!current.IsObject())
-//	{
-//		Logger::Get()->critical(std::string(current.GetString()) + " is not an object! Cannot traverse.");
-//		return -1;
-//	}
-
 	if (current.IsInt())
 	{
 		output << current.GetInt() << " ";
@@ -249,51 +220,48 @@ int Generator::StripJson(rapidjson::Value& current, std::stringstream& output)
 	{
 		Logger::Get()->critical("Stripping not supported for given type.");
 	}
-
 	return 0;
 }
-
-
-//rapidjson::Value Generator::JsonFindValue(rapidjson::Document& document, std::string path)
-//{
-//	std::vector<std::string> path_parts;
-//	boost::split(path_parts, path, boost::is_any_of("\\"));
-//
-//	Logger::Get()->trace("JsonFindValue: " + path);
-//	rapidjson::Value current_top = document.GetObject();
-//    if (!current_top.IsObject())
-//    {
-//    	Logger::Get()->critical(std::string(current_top.GetString()) + " is not an object! Cannot traverse.");
-//    	return current_top;
-//    }
-//
-//    for(const auto& current_element_name : path_parts)
-//    {
-//    	Logger::Get()->trace("current_top : " + std::string(current_top.GetString()));
-//    	Logger::Get()->trace("current_element_name: " + current_element_name);
-//    	if (current_top.IsArray())
-//    	{
-//    		auto last_array_element = current_top.End() - 1;
-//    		auto last_element = last_array_element->FindMember(current_element_name.c_str());
-//    		current_top = last_element->value;
-//    	}
-//    	else if (current_top.IsObject())
-//    	{
-//    		auto last_element = current_top.FindMember(current_element_name.c_str());
-//    		current_top = last_element->value;
-//    	}
-//    	else
-//    	{
-//    		Logger::Get()->critical("wtf");
-//    	}
-//
-//    }
-//	return current_top;
-//}
 
 bool Generator::IsValid(TestCase validate_me)
 {
 	// TODO:implememnt
+	return true;
+}
+
+bool Generator::JsonInsertInteger(rapidjson::Document& document, rapidjson::Value& current, std::string new_value_name)
+{
+	rapidjson::Value new_element_value = rapidjson::Value(Random::Get()->GenerateInt());
+	return JsonInsert(document, current, new_value_name, new_element_value);
+}
+
+bool Generator::JsonInsertString(rapidjson::Document& document, rapidjson::Value& current, std::string new_value_name)
+{
+	rapidjson::Value new_element_value = rapidjson::Value(Random::Get()->GenerateString().c_str(), document.GetAllocator());
+	return JsonInsert(document, current, new_value_name, new_element_value);
+}
+
+bool Generator::JsonInsert(rapidjson::Document& document,
+		rapidjson::Value& current, std::string new_element_name,
+		rapidjson::Value& new_element_value)
+{
+	if (current.IsArray())
+	{
+		current.PushBack(new_element_value, document.GetAllocator());
+		PrintJson("AddMember", document);
+	}
+	else if (current.IsObject())
+	{
+		current.AddMember(
+				rapidjson::Value(new_element_name.c_str(), document.GetAllocator()),
+				new_element_value, document.GetAllocator());
+		PrintJson("AddMember ", document);
+	}
+	else
+	{
+		Logger::Get()->critical(std::string(current.GetString()) + " insertion failed.");
+		return false;
+	}
 	return true;
 }
 
@@ -336,77 +304,6 @@ void Generator::PrintJson(std::string title, rapidjson::Value::ConstMemberIterat
 	Logger::Get()->debug(title + std::string(print_me->name.GetString()) + " : \r\n" + std::string(buffer.GetString()));
 	return;
 }
-
-//void Generator::PrintValue(rapidjson::Value& print_me)
-//{
-//    static const char* kTypeNames[] =
-//        { "Null", "False", "True", "Object", "Array", "String", "Number" };
-//
-//    rapidjson::GenericMember
-//	std::string name = print_me.name.GetString();
-//	std::string type = std::string(kTypeNames[print_me.value.GetType()]);
-//	Logger::Get()->info(std::string(name + " ..is.. " + type));
-//	return;
-//}
-
-
-int Generator::JsonInsertInteger(rapidjson::Document& document, rapidjson::Value& current, std::string new_value_name)
-{
-	rapidjson::Value new_element_value = rapidjson::Value(Random::Get()->GenerateInt());
-	return JsonInsert(document, current, new_value_name, new_element_value);
-}
-
-int Generator::JsonInsertString(rapidjson::Document& document, rapidjson::Value& current, std::string new_value_name)
-{
-	rapidjson::Value new_element_value = rapidjson::Value(Random::Get()->GenerateString().c_str(), document.GetAllocator());
-	return JsonInsert(document, current, new_value_name, new_element_value);
-}
-
-int Generator::JsonInsert(rapidjson::Document& document, rapidjson::Value& current,
-						  std::string new_element_name, rapidjson::Value& new_element_value)
-{
-	if (current.IsArray())
-	{
-		current.PushBack(new_element_value, document.GetAllocator());
-		PrintJson("AddMember", document);
-	}
-	else if (current.IsObject())
-	{
-		current.AddMember(
-				rapidjson::Value(new_element_name.c_str(), document.GetAllocator()),
-				new_element_value, document.GetAllocator());
-		PrintJson("AddMember" + new_element_name, document);
-	}
-	else
-	{
-		Logger::Get()->critical(std::string(current.GetString()) + " insertion failed.");
-	}
-	return 0;
-}
-
-//template<typename generate_type>
-//generate_type Generator::JsonInsert(rapidjson::Document& document, rapidjson::Value& current, std::string new_value_name)
-//{
-//	auto random = rapidjson::Value(Random::Get()->Generate<generate_type>(), document.GetAllocator());
-//
-//	if (current.IsArray())
-//	{
-//		current.PushBack(random, document.GetAllocator());
-//		PrintJson("AddMember integer", document);
-//	}
-//	else if (current.IsObject())
-//	{
-//		current.AddMember(rapidjson::Value(new_value_name.c_str(), document.GetAllocator()),
-//									   random,
-//									   document.GetAllocator());
-//		PrintJson("AddMember integer " + new_value_name, document);
-//	}
-//	else
-//	{
-//		Logger::Get()->critical(std::string(current.GetString()) + " generation failed");
-//	}
-//	return 0;
-//}
 
 }
 

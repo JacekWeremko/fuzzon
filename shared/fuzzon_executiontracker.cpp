@@ -1,4 +1,3 @@
-
 #include "fuzzon_executiontracker.h"
 #include "utils/logger.h"
 

@@ -9,9 +9,7 @@
 #include "../../src/fuzzon_random.h"
 
 
-BOOST_AUTO_TEST_SUITE(fuzzon_mutator_suite)
-
-BOOST_AUTO_TEST_CASE(flip_bite)
+void TestIfMutatorBitFlipChangesOnlySingleBitImpl()
 {
 	std::string input_alphabet(
 			"abcdefghijklmnopqrstuvwxyz"
@@ -47,8 +45,7 @@ BOOST_AUTO_TEST_CASE(flip_bite)
 	}
 }
 
-
-BOOST_AUTO_TEST_CASE(flip_byte)
+void TestIfMutatorByteFlipChangesOnlySingleByteImpl()
 {
 	std::string input_alphabet(
 			"abcdefghijklmnopqrstuvwxyz"
@@ -74,7 +71,37 @@ BOOST_AUTO_TEST_CASE(flip_byte)
 	}
 }
 
-void test_type_preservation()
+void TestIfMutatorMinMaxValueChangesOnlySingleByteImpl()
+{
+	std::string input_alphabet(
+			"abcdefghijklmnopqrstuvwxyz"
+			"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+			"1234567890"
+			"!@#$%^&*()"
+			"`~-_=+[{]}\\|;:'\",<.>/? ");
+	fuzzon::Mutator mutator_(input_alphabet);
+
+	for(size_t iters=0; iters<10; iters++)
+	{
+		uint8_t test_data[10] = { 'A','B','c','d','5','6','!','^',':',';' };
+		uint8_t mutate_me[10] = { 'A','B','c','d','5','6','!','^',':',';' };
+
+		mutator_.MinMaxValue(&mutate_me[0], sizeof(mutate_me));
+
+		int mutated_bytes = 0;
+		for(size_t i=0; i<10; ++i)
+		{
+			if(test_data[i] != mutate_me[i])
+			{
+				mutated_bytes++;
+				BOOST_TEST((mutate_me[i] == 0 || mutate_me[i] == 255));
+			}
+		}
+		BOOST_TEST(mutated_bytes == 1);
+	}
+}
+
+void TestIfMutatorByteChangePreserveCharacterTypeImpl()
 {
 	std::string input_alphabet(
 			"abcdefghijklmnopqrstuvwxyz"
@@ -107,11 +134,11 @@ void test_type_preservation()
 	}
 }
 
-BOOST_AUTO_TEST_CASE(type_preservation)
-{
-	test_type_preservation();
-}
-
+BOOST_AUTO_TEST_SUITE(fuzzon_mutator_suite)
+BOOST_AUTO_TEST_CASE(TestIfMutatorByteChangePreserveCharacterType)	{ TestIfMutatorByteChangePreserveCharacterTypeImpl(); }
+BOOST_AUTO_TEST_CASE(TestIfMutatorBitFlipChangesOnlySingleBit)	    { TestIfMutatorBitFlipChangesOnlySingleBitImpl(); }
+BOOST_AUTO_TEST_CASE(TestIfMutatorMinMaxValueChangesOnlySingleByte) { TestIfMutatorMinMaxValueChangesOnlySingleByteImpl(); }
+BOOST_AUTO_TEST_CASE(TestIfMutatorByteFlipChangesOnlySingleByte)    { TestIfMutatorByteFlipChangesOnlySingleByteImpl(); }
 BOOST_AUTO_TEST_SUITE_END()
 
 

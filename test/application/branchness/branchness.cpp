@@ -48,10 +48,9 @@ void crash_me()
 int main(int argc, char **argv)
 {
 	int guard = 0;
-
 	if (argc < 2)
 	{
-		return 2;
+		return 0;
 	}
 //	std::string test_stdin1, test_stdin2, test_stdin3;
 
@@ -104,6 +103,6 @@ int main(int argc, char **argv)
 			}
 		}
 	}
-	return 1;
+	return 0;
 }
 

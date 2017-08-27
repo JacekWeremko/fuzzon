@@ -1,12 +1,7 @@
-
 #ifndef FUZZON_COVERAGE_H_
 #define FUZZON_COVERAGE_H_
 
 #include <stdint.h>
-#include <stddef.h>
-#include <string>
-//#include <map>
-//#include <vector>
 
 namespace fuzzon {
 
@@ -18,13 +13,12 @@ public:
 		Flow
 	};
 
-	Coverage(TrackMode mode);
-
-
 	enum CompreseMode
 	{
 		Log2
 	};
+
+	Coverage(TrackMode mode);
 
 	void Compress(CompreseMode comprese_mode = CompreseMode::Log2);
 
@@ -35,18 +29,11 @@ public:
 	void PrintTrace() const;
 
 private:
-//	std::map<uintptr_t, unsigned int> pc_counter_;
-//	std::vector<uintptr_t> pc_trace_;
 	uintptr_t lact_pc_;
 	TrackMode mode_;
 
-	static const size_t pc_flow_size = 64 * 1024;
+	static const int pc_flow_size = 64 * 1024;
 	uint32_t pc_flow_[pc_flow_size / (sizeof(uint32_t))];
-
-
-//	std::string PrintPCTraces() const;
-//	std::string PrintPCConuters() const;
-	std::string PrintPCFlow() const;
 };
 
 } /* namespace fuzzon */

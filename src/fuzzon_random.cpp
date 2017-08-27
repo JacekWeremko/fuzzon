@@ -1,10 +1,3 @@
-/*
- * fuzzon_random.cpp
- *
- *  Created on: Aug 25, 2017
- *      Author: dablju
- */
-
 #include "fuzzon_random.h"
 #include "utils/logger.h"
 
@@ -42,10 +35,15 @@ Random::Random()
 			alphabets_[AlphabetType::SmallLetters]);
 }
 
+void Random::SetAlphabet(std::string alphabet)
+{
+	alphabet_ = alphabet;
+}
+
 int Random::GenerateInt(int min, int max)
 {
 	static const int default_min = 1;
-	static const int default_max = 5;
+	static const int default_max = 100;
 
 	BOOST_ASSERT(min <= max);
 	min = min == -1 ? default_min : min;
@@ -58,10 +56,9 @@ int Random::GenerateInt(int min, int max)
 
 std::string Random::GenerateString(int length)
 {
-	static const int max_length = 5;
+	static const int max_length = 10;
 
 	length = length == -1 ? max_length : length;
-
 
 	const auto string_length = GenerateInt(1, max_length);
 	std::stringstream random;
@@ -86,7 +83,7 @@ char Random::GenerateChar(char same_type_as_me)
 		return alphabet[GenerateInt(0, alphabet.size() - 1)];
 
 	}
-	Logger::Get()->debug("Alphabet not found!");
+	Logger::Get()->critical("Alphabet not found! Generating random");
 	return GenerateChar();
 }
 
@@ -100,43 +97,6 @@ Random::AlphabetType Random::FindCharType(char what_is_my_type)
 		}
 	}
 	return AlphabetType::Unknown;
-}
-
-//template<typename generate_type>
-//generate_type Random::Generate(int min, int max)
-//{
-//	static const int default_min = 1;
-//	static const int default_max = 10;
-//
-//	BOOST_ASSERT(min <= max);
-//	min = min == -1 ? default_min : min;
-//	max = max == -1 ? default_max : max;
-//
-//
-//	boost::random::uniform_int_distribution<> min_to_max(min, max);
-//	return min_to_max(generator_);
-//}
-//
-//template<typename generate_type>
-//generate_type Random::Generate(int length)
-//{
-//	static const int max_length = 5;
-//
-//	length = length == -1 ? max_length : length;
-//
-//
-//	const auto string_length = Generate<int>(1, max_length);
-//	std::stringstream random;
-//	for (size_t i=0; i<string_length; i++)
-//	{
-//		random << alphabet_[Generate<int>(0, (sizeof(alphabet_) - 1))];
-//	}
-//	return random.str();
-//}
-
-Random::~Random()
-{
-	// TODO Auto-generated destructor stub
 }
 
 } /* namespace fuzzon */

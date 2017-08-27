@@ -14,7 +14,6 @@ int main(int argc, char **argv)
 	auto time_now     = boost::posix_time::second_clock::local_time();
 	auto time_now_str = boost::posix_time::to_simple_string(time_now);
 	auto output_dir   = boost::filesystem::path("Output").append(time_now_str);
-	//	boost::filesystem::path output_path(boost::filesystem::current_path().append("output"));
 
 	std::string sut_path, intput_format;
 	if (argc == 1)
@@ -35,15 +34,25 @@ int main(int argc, char **argv)
 		sut_path = sut_pathb.string();
 		intput_format = intput_formatb.string();
 	}
-	else
+	else if(argc == 3)
 	{
 		sut_path = std::string(argv[1]);
 		intput_format = std::string(argv[2]);
 	}
+	else
+	{
+		return -1;
+	}
 
+	auto iterations = 50;
+	auto test_cases_to_generate = 5;
+	auto test_cases_to_mutate = 200;
+	auto statistics_print_interval = 10;
 
 	fuzzon::Fuzzon crazy_fuzzer = fuzzon::Fuzzon(output_dir.string());
-	return crazy_fuzzer.Run(sut_path, intput_format);
+	return crazy_fuzzer.Run(sut_path, intput_format, iterations,
+			test_cases_to_generate, test_cases_to_mutate,
+			statistics_print_interval);
 }
 
 
