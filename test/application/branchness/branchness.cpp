@@ -8,6 +8,7 @@
 
 #include <cstring>
 #include <string>
+#include <iostream>
 
 #include <stdint.h>
 #include <stddef.h>
@@ -44,14 +45,23 @@ void crash_me()
 	return;
 }
 
-int FuzzonSUTEntryPoint(int argc, char **argv)
+int main(int argc, char **argv)
 {
 	int guard = 0;
 
 	if (argc < 2)
 	{
-		return guard;
+		return 2;
 	}
+//	std::string test_stdin1, test_stdin2, test_stdin3;
+
+//	std::cout << "cout test1";
+//	std::cerr << "cerr test1";
+//	std::cout << "cout test2";
+//	std::cerr << "cerr test2";
+//	std::cerr << "cerr test1";
+//	std::cout << "cout test3";
+//	std::cin >> test_stdin1;
 
 	std::string argv1 = std::string(argv[1]);
 	char data[8] = { 0 };
@@ -75,6 +85,8 @@ int FuzzonSUTEntryPoint(int argc, char **argv)
 		}
 	}
 
+//	crash_me();
+
 	if (func_a(data[4]))
 	{
 		guard++;
@@ -92,6 +104,6 @@ int FuzzonSUTEntryPoint(int argc, char **argv)
 			}
 		}
 	}
-	return 0;
+	return 1;
 }
 

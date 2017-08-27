@@ -14,10 +14,10 @@ Coverage::Coverage(TrackMode mode) : lact_pc_(0), mode_(mode)
 	std::fill_n(pc_flow_, ARRAY_ELEMENTS(pc_flow_), 0);
 }
 
-Coverage::~Coverage()
-{
-	// TODO Auto-generated destructor stub
-}
+//Coverage::~Coverage()
+//{
+//	// TODO Auto-generated destructor stub
+//}
 
 void Coverage::Compress(CompreseMode comprese_mode)
 {
@@ -54,6 +54,7 @@ bool Coverage::operator!=(const Coverage& compare_with_me) const
 
 void Coverage::TracePC(uintptr_t PC)
 {
+	Logger::Get()->info("Coverage::TracePC	: " + std::to_string(PC));
 	uintptr_t current = 0;
 	if (mode_ == TrackMode::Raw)
 	{
@@ -64,10 +65,10 @@ void Coverage::TracePC(uintptr_t PC)
 		current = lact_pc_ == 0 ? PC : (PC ^ lact_pc_);
 	}
 
-	pc_trace_.push_back(current);
-
-	auto it = pc_counter_.find(current);
-	pc_counter_[current] = it == pc_counter_.end() ? 1 : it->second + 1;
+//	pc_trace_.push_back(current);
+//
+//	auto it = pc_counter_.find(current);
+//	pc_counter_[current] = it == pc_counter_.end() ? 1 : it->second + 1;
 
 	pc_flow_[current % ARRAY_ELEMENTS(pc_flow_)]++;
 
@@ -81,25 +82,25 @@ void Coverage::PrintTrace() const
 	Logger::Get()->info("pc_flow	: " + PrintPCFlow());
 }
 
-std::string Coverage::PrintPCTraces() const
-{
-	std::stringstream output;
-	for (const auto& elem : pc_trace_)
-	{
-		output << std::hex << elem << " ";
-	}
-	return output.str();
-}
-
-std::string Coverage::PrintPCConuters() const
-{
-	std::stringstream output;
-	for (const auto& elem : pc_counter_)
-	{
-		output << std::hex << elem.first << ":" << elem.second << " ";
-	}
-	return output.str();
-}
+//std::string Coverage::PrintPCTraces() const
+//{
+//	std::stringstream output;
+//	for (const auto& elem : pc_trace_)
+//	{
+//		output << std::hex << elem << " ";
+//	}
+//	return output.str();
+//}
+//
+//std::string Coverage::PrintPCConuters() const
+//{
+//	std::stringstream output;
+//	for (const auto& elem : pc_counter_)
+//	{
+//		output << std::hex << elem.first << ":" << elem.second << " ";
+//	}
+//	return output.str();
+//}
 
 std::string Coverage::PrintPCFlow() const
 {

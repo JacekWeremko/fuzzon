@@ -2,11 +2,10 @@
 #ifndef FUZZON_EXECUTOR_H_
 #define FUZZON_EXECUTOR_H_
 
-#include <string>
-
 #include "fuzzon_testcase.h"
-#include "fuzzon_executionmonitor.h"
 #include "fuzzon_executiondata.h"
+#include <string>
+#include <memory>
 
 namespace fuzzon {
 
@@ -16,10 +15,11 @@ public:
 	virtual ~Executor();
 
 	ExecutionData ExecuteBlocking(TestCase& input);
+//	std::unique_ptr<ExecutionData> ExecuteBlocking(TestCase& input);
 
 private:
 	std::string sut_path_;
-//	ExecutionMonitor monitor_;
+	const int execution_timeout_sec_ = 60 * 1; // 60 sec
 };
 
 } /* namespace fuzzon */

@@ -1,7 +1,7 @@
 
 
+#include "fuzzon_executiontracker.h"
 #include "utils/logger.h"
-#include "fuzzon_executionmonitor.h"
 
 
 
@@ -22,7 +22,7 @@ void __sanitizer_cov_module_init(uint32_t *guards, uintptr_t npcs, const char *m
 	Logger::Get()->trace("__sanitizer_cov_module_init");
 	Logger::Get()->trace("  module_name: " + std::string(module_name));
 	Logger::Get()->trace("  PC: " + std::to_string(PC));
-	fuzzon::ExecutionMonitor::Get()->TracePC(PC);
+	fuzzon::ExecutionTracker::Get()->TracePC(PC);
 }
 
 void __sanitizer_cov(uint32_t *Guard)
@@ -31,7 +31,7 @@ void __sanitizer_cov(uint32_t *Guard)
 	uint32_t Idx = *Guard;
 	Logger::Get()->trace("__sanitizer_cov");
 	Logger::Get()->trace("  PC: " + std::to_string(PC) + "    Idx: " + std::to_string(Idx));
-	fuzzon::ExecutionMonitor::Get()->TracePC(PC);
+	fuzzon::ExecutionTracker::Get()->TracePC(PC);
 }
 
 void __sanitizer_cov_trace_pc_guard(uint32_t *Guard)
@@ -40,15 +40,15 @@ void __sanitizer_cov_trace_pc_guard(uint32_t *Guard)
 	uint32_t Idx = *Guard;
 	Logger::Get()->trace("__sanitizer_cov_trace_pc_guard");
 	Logger::Get()->trace("  PC: " + std::to_string(PC) + "    Idx: " + std::to_string(Idx));
-	fuzzon::ExecutionMonitor::Get()->TracePC(PC);
+	fuzzon::ExecutionTracker::Get()->TracePC(PC);
 }
 
 void __sanitizer_cov_trace_pc()
 {
 	uintptr_t PC = reinterpret_cast<uintptr_t>(__builtin_return_address(0));
-//	Logger::Get()->trace("__sanitizer_cov_trace_pc");
-//	Logger::Get()->trace("  PC: " + std::to_string(PC));
-	fuzzon::ExecutionMonitor::Get()->TracePC(PC);
+	Logger::Get()->trace("__sanitizer_cov_trace_pc");
+	Logger::Get()->trace("  PC: " + std::to_string(PC));
+	fuzzon::ExecutionTracker::Get()->TracePC(PC);
 }
 
 void __sanitizer_cov_trace_pc_guard_init(uint32_t *start, uint32_t *stop)

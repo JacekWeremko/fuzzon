@@ -12,7 +12,7 @@
 #include <stddef.h>
 
 
-int FuzzonSUTEntryPoint(int argc, char **argv)
+int main(int argc, char **argv)
 {
 	int arrays_defs = 0;
 	std::cin >> arrays_defs;

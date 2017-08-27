@@ -3,6 +3,7 @@
 	<name>arrayness</name>
 	<comment></comment>
 	<projects>
+		<project>fuzzon</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
