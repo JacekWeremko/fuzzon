@@ -15,7 +15,6 @@ public:
 	virtual ~Executor();
 
 	ExecutionData ExecuteBlocking(TestCase& input);
-//	std::unique_ptr<ExecutionData> ExecuteBlocking(TestCase& input);
 
 private:
 	std::string sut_path_;
