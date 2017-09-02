@@ -1,0 +1,15 @@
+{
+  "properties": {
+    "test_cases": 2,
+    "test_case": {
+      "items":{"properties":{"k":3,"m":2,"values":{"items":[7,3,12]}}},
+      "items":{"properties":{"k":1,"m":1,"values":{"items":[11]}}}
+      }
+    }
+  }
+}
+
+
+
+
+

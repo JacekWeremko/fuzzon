@@ -27,8 +27,8 @@ private:
 	int StripJson(rapidjson::Value& current, std::stringstream& output);
 	rapidjson::Value* GetLast(rapidjson::Value& top, const rapidjson::Pointer& find_me);
 
-	bool JsonInsertInteger(rapidjson::Document& document, rapidjson::Value& current, std::string new_value_name);
-	bool JsonInsertString(rapidjson::Document& document, rapidjson::Value& current, std::string new_value_name);
+	bool JsonInsertInteger(rapidjson::Document& document, rapidjson::Value& current, std::string new_value_name, int minimum, int maximum);
+	bool JsonInsertString(rapidjson::Document& document, rapidjson::Value& current, std::string new_value_name, int length);
 
 	bool JsonInsert(rapidjson::Document& document, rapidjson::Value& current,
 					std::string new_element_name, rapidjson::Value& new_element_value);

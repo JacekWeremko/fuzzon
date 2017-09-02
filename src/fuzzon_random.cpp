@@ -43,7 +43,7 @@ void Random::SetAlphabet(std::string alphabet)
 int Random::GenerateInt(int min, int max)
 {
 	static const int default_min = 1;
-	static const int default_max = 100;
+	static const int default_max = 3;
 
 	BOOST_ASSERT(min <= max);
 	min = min == -1 ? default_min : min;
@@ -56,6 +56,7 @@ int Random::GenerateInt(int min, int max)
 
 std::string Random::GenerateString(int length)
 {
+	static const int min_length = 1;
 	static const int max_length = 10;
 
 	length = length == -1 ? max_length : length;
