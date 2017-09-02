@@ -15,7 +15,7 @@ public:
 
 	void AddExecutionData(ExecutionData& add_me_to_corpus);
 
-	TestCase SelectFavorite();
+	TestCase* SelectFavorite();
 
 	std::stringstream GetStatistics();
 

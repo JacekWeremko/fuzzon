@@ -72,8 +72,8 @@ int Fuzzon::Run(std::string sut_path, std::string input_format, int iterations,
 			auto test_cases_to_mutate_counter = test_cases_to_mutate;
 			while(test_cases_to_mutate_counter--)
 			{
-				TestCase favorite = corpus.SelectFavorite();
-				TestCase mutated = test_cases_mutator.Mutate(favorite);
+				auto favorite = corpus.SelectFavorite();
+				auto mutated = test_cases_mutator.Mutate(*favorite);
 				auto execution_data = execution_monitor.ExecuteBlocking(mutated);
 				if (corpus.IsInteresting(execution_data))
 				{

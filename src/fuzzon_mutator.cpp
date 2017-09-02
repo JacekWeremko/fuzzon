@@ -10,9 +10,9 @@ Mutator::Mutator(std::string input_alphabet) :
 {
 }
 
-TestCase Mutator::Mutate(TestCase mutate_me)
+TestCase Mutator::Mutate(const TestCase& mutate_me)
 {
-	auto new_test_case = TestCase(mutate_me.string());
+	auto new_test_case = TestCase(mutate_me);
 	//TODO: add strategy selection
 	auto result = ChangeByte(new_test_case.data(), new_test_case.length());
 	return new_test_case;

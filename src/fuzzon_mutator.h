@@ -11,7 +11,7 @@ class Mutator
 public:
 	Mutator(std::string input_alphabet);
 
-	TestCase Mutate(TestCase mutate_me);
+	TestCase Mutate(const TestCase& mutate_me);
 
 	int FlipBit(uint8_t* data, size_t data_size);
 	int FlipByte(uint8_t* data, size_t data_size);

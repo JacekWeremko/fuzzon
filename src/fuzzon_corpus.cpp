@@ -33,7 +33,7 @@ void Corpus::AddExecutionData(ExecutionData& add_me_to_corpus)
 	execution_history_.push_back(add_me_to_corpus);
 }
 
-TestCase Corpus::SelectFavorite()
+TestCase* Corpus::SelectFavorite()
 {
 	BOOST_ASSERT(execution_history_.size() > 0);
 
@@ -99,7 +99,7 @@ TestCase Corpus::SelectFavorite()
 		}
 	}
 
-	return result->input;
+	return &result->input;
 }
 
 std::stringstream Corpus::GetStatistics()

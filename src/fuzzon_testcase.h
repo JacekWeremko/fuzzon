@@ -3,23 +3,25 @@
 
 #include <string>
 #include <memory>
+#include <vector>
 
 namespace fuzzon {
 
 class TestCase {
 public:
-	TestCase();
-	TestCase(uint8_t* data, size_t length);
-	TestCase(std::string serialized);
+	TestCase() = delete;
+	TestCase(uint8_t* data, size_t length); // move semantic
+	TestCase(TestCase&& move_me) noexcept;	// move semantic
+	TestCase(const TestCase& copy_me);		// copy semantic
+	TestCase(const std::string& serialized);// copy semantic
 
 	uint8_t* const data();
-	const size_t length();
+	size_t length();
 
 	std::string string();
 
 private:
-	size_t length_;
-	std::shared_ptr<uint8_t> data_;
+	std::vector<uint8_t> data_;
 };
 
 } /* namespace fuzzon */
