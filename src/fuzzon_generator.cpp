@@ -5,7 +5,6 @@
 #include <rapidjson/document.h>
 #include <rapidjson/writer.h>
 #include <rapidjson/stringbuffer.h>
-#include <rapidjson/pointer.h>
 #include <rapidjson/prettywriter.h>
 
 #include <boost/filesystem.hpp>
@@ -46,13 +45,13 @@ TestCase Generator::generateNext()
 		}
 	}
 
-//	PrintJson("Input format", input_format_);
-//	PrintJson("Generated input data", generated_input);
+	PrintJson("Input format", input_format_);
+	PrintJson("Generated input data", intput_data);
 	std::stringstream input_stripped;
 	int result = StripJson(intput_data, input_stripped);
-	BOOST_ASSERT(result == true);
+	BOOST_ASSERT(result == 0);
 
-//	Logger::Get()->debug("Stripped input data :" + output.str());
+	Logger::Get()->debug("Stripped input data :" + input_stripped.str());
     return TestCase(input_stripped.str());
 }
 
@@ -114,9 +113,11 @@ int Generator::ParseJson(rapidjson::Value& current, rapidjson::Document& new_doc
 				PrintJson("FindMember ", length);
 
 				auto length_ref = length->value.FindMember("$ref");
-//				PrintJson("FindMember ", length_ref);
+				PrintJson("FindMember ", length_ref);
 
-				auto array_length_value = rapidjson::Pointer(length_ref->value.GetString()).Get(new_document);
+//				auto new_array_item = new_document_array->value.MemberEnd() - 1;
+
+				auto array_length_value = GetLast(new_document, rapidjson::Pointer(length_ref->value.GetString()));
 				PrintJson("array_length", *array_length_value);
 
 				array_length = array_length_value->GetInt();
@@ -221,6 +222,39 @@ int Generator::StripJson(rapidjson::Value& current, std::stringstream& output)
 		Logger::Get()->critical("Stripping not supported for given type.");
 	}
 	return 0;
+}
+
+rapidjson::Value* Generator::GetLast(rapidjson::Value& top, const rapidjson::Pointer& find_me)
+{
+	rapidjson::Value* elem = &top;
+	for(auto i=0 ; i<find_me.GetTokenCount(); ++i)
+	{
+		auto current_token = find_me.GetTokens() + i;
+		if (elem->IsArray())
+		{
+			elem = &elem[elem->Size() - 1];
+		}
+		else if (elem->IsObject())
+		{
+			auto elem_member = elem->MemberEnd() - 1;
+			for(auto im=0; im < elem->MemberCount(); im++)
+			{
+				std::string elem_member_name = std::string(elem_member->name.GetString());
+				std::string current_token_name = std::string(current_token->name);
+				if (std::string(elem_member_name).compare(current_token_name) == 0)
+				{
+					elem = &elem_member->value;
+					break;
+				}
+				elem_member = elem_member - 1;
+			}
+		}
+		else
+		{
+			return NULL;
+		}
+	}
+	return elem;
 }
 
 bool Generator::IsValid(TestCase validate_me)

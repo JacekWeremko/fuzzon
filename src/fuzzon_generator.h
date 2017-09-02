@@ -5,6 +5,7 @@
 #include "fuzzon_testcase.h"
 
 #include <rapidjson/document.h>
+#include <rapidjson/pointer.h>
 #include <boost/random.hpp>
 #include <string>
 
@@ -24,6 +25,7 @@ public:
 private:
 	int ParseJson(rapidjson::Value& current, rapidjson::Document& new_document, rapidjson::Value& new_document_current);
 	int StripJson(rapidjson::Value& current, std::stringstream& output);
+	rapidjson::Value* GetLast(rapidjson::Value& top, const rapidjson::Pointer& find_me);
 
 	bool JsonInsertInteger(rapidjson::Document& document, rapidjson::Value& current, std::string new_value_name);
 	bool JsonInsertString(rapidjson::Document& document, rapidjson::Value& current, std::string new_value_name);
