@@ -28,14 +28,34 @@ uint8_t* const TestCase::data()
 	return data_.data();
 }
 
-size_t TestCase::length()
+size_t TestCase::length_bit()
+{
+	return length_byte() * 8;
+}
+
+size_t TestCase::length_byte()
 {
 	return data_.size();
 }
 
+size_t TestCase::length_word()
+{
+	return length_byte() / 2;
+}
+
+size_t TestCase::length_dword()
+{
+	return length_byte() / 4;
+}
+
+//size_t TestCase::length()
+//{
+//	return data_.size();
+//}
+
 std::string TestCase::string()
 {
-	return std::string(reinterpret_cast<char const*>(data()), length());
+	return std::string(reinterpret_cast<char const*>(data()), length_byte());
 }
 
 } /* namespace fuzzon */

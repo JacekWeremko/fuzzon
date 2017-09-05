@@ -20,8 +20,11 @@ struct ExecutionData
 			input(tc), error_code(erc), exit_code(exc), gracefully_finished(gracefully_finished),
 			execution_time(execution_time),
 			std_out(std_out.str()), std_err(std_err.str()), /* TODO: performance */
-			coverage(*cov), coverage_coutner_(0), mutation_counter_(0)
+			coverage(cov->mode_),
+			mutatation_exhausted(false), coverage_coutner_(0), mutation_counter_(0)
 	{
+		//coverage = *cov;
+		std::copy(std::begin(cov->pc_flow_), std::end(cov->pc_flow_), std::begin(coverage.pc_flow_));
 		coverage.Compress();
 	}
 
@@ -36,6 +39,7 @@ struct ExecutionData
 	Coverage coverage;
 
 	//TODO: shouln't be part of this class
+	bool mutatation_exhausted;
 	size_t coverage_coutner_;
 	size_t mutation_counter_;
 };

@@ -19,6 +19,7 @@ public:
 	};
 
 	Coverage(TrackMode mode);
+//	Coverage(Coverage& copy_me);
 
 	void Compress(CompreseMode comprese_mode = CompreseMode::Log2);
 
@@ -28,7 +29,7 @@ public:
 	void TracePC(uintptr_t PC);
 	void PrintTrace() const;
 
-private:
+//private:
 	uintptr_t lact_pc_;
 	TrackMode mode_;
 

@@ -1,6 +1,7 @@
 
 
 #include "fuzzon.h"
+#include "fuzzon_random.h"
 
 #include <boost/filesystem.hpp>
 #include <boost/date_time.hpp>
@@ -28,8 +29,11 @@ int main(int argc, char **argv)
 //		auto sut_path     = current_path/"test"/"application"/"branchness"/"Debug"/"branchness";
 //		auto intput_format= current_path/"test"/"application"/"branchness"/"branchness.json";
 
-		auto sut_pathb      = current_path/"test"/"application"/"branchness"/"Debug"/"branchness";
-		auto intput_formatb = sut_pathb/"test"/"application"/"branchness"/"branchness.json";
+//		auto sut_pathb      = current_path/"test"/"application"/"branchness"/"Debug"/"branchness";
+//		auto intput_formatb = current_path/"test"/"application"/"branchness"/"branchness.json";
+
+		auto sut_pathb      = current_path/"test"/"application"/"arrayness"/"Debug"/"arrayness";
+		auto intput_formatb = current_path/"test"/"application"/"arrayness"/"arrayness_propsal2.json";
 
 		sut_path = sut_pathb.string();
 		intput_format = intput_formatb.string();
@@ -44,15 +48,22 @@ int main(int argc, char **argv)
 		return -1;
 	}
 
+
+	auto sut_runtime_timeout = 10;
 	auto iterations = 50;
-	auto test_cases_to_generate = 5;
-	auto test_cases_to_mutate = 200;
+	auto test_cases_to_generate = 55;
+	auto test_cases_to_mutate = -1;
 	auto statistics_print_interval = 10;
 
-	fuzzon::Fuzzon crazy_fuzzer = fuzzon::Fuzzon(output_dir.string());
-	return crazy_fuzzer.Run(sut_path, intput_format, iterations,
-			test_cases_to_generate, test_cases_to_mutate,
-			statistics_print_interval);
+	std::string input_alphabet("abcd");
+	fuzzon::Random::Get()->SetAlphabet(input_alphabet);
+	fuzzon::Fuzzon crazy_fuzzer = fuzzon::Fuzzon(output_dir.string(), sut_path, sut_runtime_timeout);
+
+	crazy_fuzzer.GenerationPhase(intput_format, test_cases_to_generate);
+	crazy_fuzzer.MutationPhaseDeterministic();
+	crazy_fuzzer.MutationPhaseNonDeterministic(test_cases_to_mutate);
+
+	return 0;
 }
 
 

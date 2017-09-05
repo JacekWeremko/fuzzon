@@ -16,11 +16,17 @@ public:
 	TestCase(const std::string& serialized);// copy semantic
 
 	uint8_t* const data();
-	size_t length();
+//	size_t length();
+
+	size_t length_bit();
+	size_t length_byte();
+	size_t length_word();
+	size_t length_dword();
 
 	std::string string();
 
 private:
+
 	std::vector<uint8_t> data_;
 };
 

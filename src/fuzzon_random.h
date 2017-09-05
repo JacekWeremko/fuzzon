@@ -11,12 +11,12 @@ class Random {
 public:
 	enum AlphabetType
 	{
-			SmallLetters = 0,
-			CapitalLetters,
-			Nums,
-			NumsSpecials,
-			OtherSpecials,
-			Unknown,
+		SmallLetters = 0,
+		CapitalLetters,
+		Nums,
+		NumsSpecials,
+		OtherSpecials,
+		Unknown,
 	};
 
 	Random(Random const&) = delete;
@@ -28,12 +28,14 @@ public:
 		return &generator;
 	}
 
+	void AddAlphabet(AlphabetType type);
 	void SetAlphabet(std::string alphabet);
 
-	int GenerateInt(int min = -1, int max = -1);
 	std::string GenerateString(int length = -1);
+	int  GenerateInt(int min = -1, int max = -1);
 	char GenerateChar();
 	char GenerateChar(char same_type_as_me);
+	char GenerateChar(const std::string& alphabet);
 
 	AlphabetType FindCharType(char what_is_my_type);
 

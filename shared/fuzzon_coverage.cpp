@@ -13,6 +13,14 @@ Coverage::Coverage(TrackMode mode) : lact_pc_(0), mode_(mode)
 	std::fill_n(pc_flow_, ARRAY_ELEMENTS(pc_flow_), 0);
 }
 
+//Coverage::Coverage(Coverage& copy_me)
+//{
+//	std::copy(std::begin(copy_me.pc_flow_), std::end(copy_me.pc_flow_), std::begin(pc_flow_));
+//	lact_pc_ = copy_me.lact_pc_;
+//	mode_ = copy_me.mode_;
+//}
+
+
 void Coverage::Compress(CompreseMode comprese_mode)
 {
 	if (comprese_mode == CompreseMode::Log2)

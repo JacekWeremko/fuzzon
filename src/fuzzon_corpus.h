@@ -10,17 +10,25 @@
 namespace fuzzon {
 
 class Corpus {
+	using ExecutionDataT = std::vector<ExecutionData>;
 public:
-	bool IsInteresting(const ExecutionData& am_i);
+	Corpus(std::string output_path);
 
+	bool IsInteresting(const ExecutionData& am_i);
 	void AddExecutionData(ExecutionData& add_me_to_corpus);
 
+	bool AddIfInteresting(ExecutionData& add_me_to_corpus);
+
+	using iterator = ExecutionDataT::iterator;
+
 	TestCase* SelectFavorite();
+	TestCase* SelectNotMutated();
 
 	std::stringstream GetStatistics();
 
 private:
-	std::vector<ExecutionData> execution_history_;
+	std::string output_path_;
+	ExecutionDataT execution_history_;
 };
 
 } /* namespace fuzzon */

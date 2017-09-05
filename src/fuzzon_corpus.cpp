@@ -8,11 +8,28 @@
 #include <chrono>
 
 #include <boost/assert.hpp>
+#include <boost/filesystem.hpp>
+
+#define DIR_NAME_CORPUS "corpus"
 
 namespace fuzzon {
 
+
+Corpus::Corpus(std::string output_path) : output_path_((boost::filesystem::path(output_path)/DIR_NAME_CORPUS).string())
+{
+	boost::filesystem::create_directories(output_path_);
+}
+
 bool Corpus::IsInteresting(const ExecutionData& am_i)
 {
+	static int counter = 0;
+	const int statistics_print_interval = 1000;
+	if (counter % statistics_print_interval == 0)
+	{
+		Logger::Get()->info("Progress: \r\n" + GetStatistics().str());
+	}
+	counter++;
+
 	//TODO: calculate coverage (path) hash in order to improve performance
 	for(auto& current : execution_history_)
 	{
@@ -31,6 +48,16 @@ void Corpus::AddExecutionData(ExecutionData& add_me_to_corpus)
 	Logger::Get()->info("Adding new test case to corpus: " + add_me_to_corpus.input.string());
 	//TODO: optimize memory footprint
 	execution_history_.push_back(add_me_to_corpus);
+}
+
+bool Corpus::AddIfInteresting(ExecutionData& add_me_to_corpus)
+{
+	if (IsInteresting(add_me_to_corpus))
+	{
+		AddExecutionData(add_me_to_corpus);
+		return true;
+	}
+	return false;
 }
 
 TestCase* Corpus::SelectFavorite()
@@ -63,7 +90,6 @@ TestCase* Corpus::SelectFavorite()
 		}
 	}
 
-
 	std::vector<ExecutionData*> lowest_similar_execution_data;
 	// find min f(i) - lowest frequency path
 	{
@@ -90,7 +116,7 @@ TestCase* Corpus::SelectFavorite()
 		auto lowest_time_and_size = std::numeric_limits<double>::max();
 		for (auto& current : lowest_similar_execution_data)
 		{
-			double current_time_and_size = current->execution_time.count() * current->input.length();
+			double current_time_and_size = current->execution_time.count() * current->input.length_byte();
 			if (current_time_and_size < lowest_time_and_size)
 			{
 				result = current;
@@ -98,17 +124,36 @@ TestCase* Corpus::SelectFavorite()
 
 		}
 	}
-
 	return &result->input;
+}
+
+TestCase* Corpus::SelectNotMutated()
+{
+	for(auto& current : execution_history_)
+	{
+		if (current.mutatation_exhausted == false)
+		{
+			current.mutatation_exhausted = true; // ...blhh
+			//1:25 sobota : babol, nie zwraca sie pointerow do elemtow vectora przez ptr, po push_back staja sie niewazne
+			return &current.input;
+		}
+	}
+	return NULL;
 }
 
 std::stringstream Corpus::GetStatistics()
 {
+
 	std::stringstream stats;
 	stats << "Corpus size : " << std::to_string(execution_history_.size()) << std::endl;
 
 	stats << "Tested cases: " << std::accumulate(execution_history_.begin(), execution_history_.end(), 0,
 			[](int execution_counter, ExecutionData& arg) { return execution_counter + arg.coverage_coutner_; }) << std::endl;
+
+	if (execution_history_.size() == 0)
+	{
+		return stats;
+	}
 
 	stats << "Test case max mutation count: " << std::max_element(execution_history_.begin(), execution_history_.end(),
 			[](ExecutionData& arg1, ExecutionData& arg2) { return arg1.mutation_counter_ < arg2.mutation_counter_; })->mutation_counter_ << std::endl;

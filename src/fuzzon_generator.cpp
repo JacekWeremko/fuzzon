@@ -45,8 +45,8 @@ TestCase Generator::generateNext()
 		}
 	}
 
-	PrintJson("Input format", input_format_);
-	PrintJson("Generated input data", intput_data);
+//	PrintJson("Input format", input_format_);
+//	PrintJson("Generated input data", intput_data);
 	std::stringstream input_stripped;
 	int result = StripJson(intput_data, input_stripped);
 	BOOST_ASSERT(result == 0);
@@ -302,7 +302,7 @@ bool Generator::JsonInsert(rapidjson::Document& document,
 		current.AddMember(
 				rapidjson::Value(new_element_name.c_str(), document.GetAllocator()),
 				new_element_value, document.GetAllocator());
-		PrintJson("AddMember ", document);
+		PrintJson("AddMember", document);
 	}
 	else
 	{
@@ -318,7 +318,7 @@ void Generator::PrintJson(std::string document_title, const rapidjson::Document&
 	rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
 	print_me.Accept(writer);
 
-	Logger::Get()->debug(document_title + " : \r\n" + std::string(buffer.GetString()));
+//	Logger::Get()->debug(document_title + " : \r\n" + std::string(buffer.GetString()));
 	return;
 }
 
@@ -328,7 +328,7 @@ void Generator::PrintJson(std::string value_title, rapidjson::Value& print_me)
 	rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
 	print_me.Accept(writer);
 
-	Logger::Get()->debug(value_title + " : \r\n" + std::string(buffer.GetString()));
+//	Logger::Get()->debug(value_title + " : \r\n" + std::string(buffer.GetString()));
 	return;
 }
 
@@ -338,7 +338,7 @@ void Generator::PrintJson(std::string title, rapidjson::Value::ConstMemberIterat
 	rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
 	print_me->value.Accept(writer);
 
-	Logger::Get()->debug(title + std::string(print_me->name.GetString()) + " : \r\n" + std::string(buffer.GetString()));
+//	Logger::Get()->debug(title + std::string(print_me->name.GetString()) + " : \r\n" + std::string(buffer.GetString()));
 	return;
 }
 
@@ -348,7 +348,7 @@ void Generator::PrintJson(std::string title, rapidjson::Value::ConstMemberIterat
 	rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
 	print_me->value.Accept(writer);
 
-	Logger::Get()->debug(title + std::string(print_me->name.GetString()) + " : \r\n" + std::string(buffer.GetString()));
+//	Logger::Get()->debug(title + std::string(print_me->name.GetString()) + " : \r\n" + std::string(buffer.GetString()));
 	return;
 }
 
