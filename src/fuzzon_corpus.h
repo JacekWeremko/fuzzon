@@ -1,36 +1,43 @@
-#ifndef FUZZON_CORPUS_H_
-#define FUZZON_CORPUS_H_
+/*
+ * Copyright [2017] Jacek Weremko
+ */
 
-#include "fuzzon_executiondata.h"
-#include "fuzzon_testcase.h"
+#ifndef SRC_FUZZON_CORPUS_H_
+#define SRC_FUZZON_CORPUS_H_
+
+#include "./fuzzon_executiondata.h"
+
 #include <vector>
 #include <sstream>
+#include <string>
 
+#include "./fuzzon_testcase.h"
 
 namespace fuzzon {
 
 class Corpus {
-	using ExecutionDataT = std::vector<ExecutionData>;
-public:
-	Corpus(std::string output_path);
+  using ExecutionDataT = std::vector<ExecutionData>;
 
-	bool IsInteresting(const ExecutionData& am_i);
-	void AddExecutionData(ExecutionData& add_me_to_corpus);
+ public:
+  explicit Corpus(std::string output_path);
 
-	bool AddIfInteresting(ExecutionData& add_me_to_corpus);
+  bool IsInteresting(const ExecutionData& am_i);
+  void AddExecutionData(ExecutionData& add_me_to_corpus);
 
-	using iterator = ExecutionDataT::iterator;
+  bool AddIfInteresting(ExecutionData& add_me_to_corpus);
 
-	TestCase* SelectFavorite();
-	TestCase* SelectNotMutated();
+  using iterator = ExecutionDataT::iterator;
 
-	std::stringstream GetStatistics();
+  TestCase* SelectFavorite();
+  TestCase* SelectNotMutated();
 
-private:
-	std::string output_path_;
-	ExecutionDataT execution_history_;
+  std::stringstream GetStatistics();
+
+ private:
+  std::string output_path_;
+  ExecutionDataT execution_history_;
 };
 
 } /* namespace fuzzon */
 
-#endif /* FUZZON_CORPUS_H_ */
+#endif /* SRC_FUZZON_CORPUS_H_ */

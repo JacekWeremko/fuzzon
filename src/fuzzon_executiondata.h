@@ -1,49 +1,64 @@
-#ifndef FUZZON_EXECUTIONDATA_H_
-#define FUZZON_EXECUTIONDATA_H_
+/*
+ * Copyright [2017] Jacek Weremko
+ */
 
-#include "fuzzon_testcase.h"
-#include "fuzzon_coverage.h"
+#ifndef SRC_FUZZON_EXECUTIONDATA_H_
+#define SRC_FUZZON_EXECUTIONDATA_H_
 
-#include <system_error>
+#include "./fuzzon_testcase.h"
+
 #include <sstream>
+#include <string>
+#include <algorithm>
+#include <system_error>
 #include <chrono>
 
-namespace fuzzon
-{
+#include "./fuzzon_coverage.h"
 
-struct ExecutionData
-{
-	ExecutionData(TestCase tc, std::error_code erc, int exc, bool gracefully_finished,
-			std::chrono::microseconds execution_time,
-			std::stringstream& std_out, std::stringstream& std_err,
-			const Coverage* cov) :
-			input(tc), error_code(erc), exit_code(exc), gracefully_finished(gracefully_finished),
-			execution_time(execution_time),
-			std_out(std_out.str()), std_err(std_err.str()), /* TODO: performance */
-			coverage(cov->mode_),
-			mutatation_exhausted(false), coverage_coutner_(0), mutation_counter_(0)
-	{
-		//coverage = *cov;
-		std::copy(std::begin(cov->pc_flow_), std::end(cov->pc_flow_), std::begin(coverage.pc_flow_));
-		coverage.Compress();
-	}
+namespace fuzzon {
 
-	TestCase input;
-	std::error_code error_code;
-	int exit_code;
-	bool gracefully_finished;
-	std::chrono::microseconds execution_time;
+struct ExecutionData {
+  ExecutionData(TestCase tc,
+                std::error_code erc,
+                int exc,
+                bool gracefully_finished,
+                std::chrono::microseconds execution_time,
+                std::stringstream& std_out,
+                std::stringstream& std_err,
+                const Coverage* cov)
+      : input(tc),
+        error_code(erc),
+        exit_code(exc),
+        gracefully_finished(gracefully_finished),
+        execution_time(execution_time),
+        std_out(std_out.str()),
+        std_err(std_err.str()), /* TODO: performance */
+        coverage(cov->mode_),
+        mutatation_exhausted(false),
+        coverage_coutner_(0),
+        mutation_counter_(0) {
+    // coverage = *cov;
+    std::copy(std::begin(cov->pc_flow_), std::end(cov->pc_flow_),
+              std::begin(coverage.pc_flow_));
+    coverage.Compress();
+  }
 
-	std::string std_out;
-	std::string std_err;
-	Coverage coverage;
+  TestCase input;
+  std::error_code error_code;
+  int exit_code;
+  bool gracefully_finished;
+  std::chrono::microseconds execution_time;
 
-	//TODO: shouln't be part of this class
-	bool mutatation_exhausted;
-	size_t coverage_coutner_;
-	size_t mutation_counter_;
+  std::string std_out;
+  std::string std_err;
+  Coverage coverage;
+
+  // TODO: shouln't be part of this class
+  bool mutatation_exhausted;
+  size_t coverage_coutner_;
+  size_t mutation_counter_;
 };
 
 } /* namespace fuzzon */
 
-#endif /* FUZZON_EXECUTIONDATA_H_ */
+#endif  // SRC_FUZZON_EXECUTIONDATA_H_

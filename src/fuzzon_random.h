@@ -1,5 +1,9 @@
-#ifndef FUZZON_RANDOM_H_
-#define FUZZON_RANDOM_H_
+/*
+ * Copyright [2017] Jacek Weremko
+ */
+
+#ifndef SRC_FUZZON_RANDOM_H_
+#define SRC_FUZZON_RANDOM_H_
 
 #include <boost/random.hpp>
 #include <map>
@@ -8,46 +12,44 @@
 namespace fuzzon {
 
 class Random {
-public:
-	enum AlphabetType
-	{
-		SmallLetters = 0,
-		CapitalLetters,
-		Nums,
-		NumsSpecials,
-		OtherSpecials,
-		Unknown,
-	};
+ public:
+  enum AlphabetType {
+    SmallLetters = 0,
+    CapitalLetters,
+    Nums,
+    NumsSpecials,
+    OtherSpecials,
+    Unknown,
+  };
 
-	Random(Random const&) = delete;
-	void operator=(Random const&) = delete;
+  Random(Random const&) = delete;
+  void operator=(Random const&) = delete;
 
-	static Random* Get()
-	{
-		static Random generator;
-		return &generator;
-	}
+  static Random* Get() {
+    static Random generator;
+    return &generator;
+  }
 
-	void AddAlphabet(AlphabetType type);
-	void SetAlphabet(std::string alphabet);
+  void AddAlphabet(AlphabetType type);
+  void SetAlphabet(std::string alphabet);
 
-	std::string GenerateString(int length = -1);
-	int  GenerateInt(int min = -1, int max = -1);
-	char GenerateChar();
-	char GenerateChar(char same_type_as_me);
-	char GenerateChar(const std::string& alphabet);
+  std::string GenerateString(int length = -1);
+  int GenerateInt(int min = -1, int max = -1);
+  char GenerateChar();
+  char GenerateChar(char same_type_as_me);
+  char GenerateChar(const std::string& alphabet);
 
-	AlphabetType FindCharType(char what_is_my_type);
+  AlphabetType FindCharType(char what_is_my_type);
 
-private:
-	Random();
+ private:
+  Random();
 
-	boost::random::mt19937 generator_;
-	std::string alphabet_;
+  boost::random::mt19937 generator_;
+  std::string alphabet_;
 
-	std::map<AlphabetType, std::string> alphabets_;
+  std::map<AlphabetType, std::string> alphabets_;
 };
 
 } /* namespace fuzzon */
 
-#endif /* FUZZON_RANDOM_H_ */
+#endif  // SRC_FUZZON_RANDOM_H_

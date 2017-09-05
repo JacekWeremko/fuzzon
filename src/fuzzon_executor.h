@@ -1,24 +1,30 @@
-#ifndef FUZZON_EXECUTOR_H_
-#define FUZZON_EXECUTOR_H_
+/*
+ * Copyright [2017] Jacek Weremko
+ */
 
-#include "fuzzon_testcase.h"
-#include "fuzzon_executiondata.h"
+#ifndef SRC_FUZZON_EXECUTOR_H_
+#define SRC_FUZZON_EXECUTOR_H_
+
+#include "./fuzzon_testcase.h"
+
 #include <string>
 #include <memory>
+
+#include "./fuzzon_executiondata.h"
 
 namespace fuzzon {
 
 class Executor {
-public:
-	Executor(std::string sut_path, int execution_timeout_sec);
+ public:
+  explicit Executor(std::string sut_path, int execution_timeout_sec);
 
-	ExecutionData ExecuteBlocking(TestCase& input);
+  ExecutionData ExecuteBlocking(TestCase& input);
 
-private:
-	std::string sut_path_;
-	const int execution_timeout_sec_;
+ private:
+  std::string sut_path_;
+  const int execution_timeout_sec_;
 };
 
 } /* namespace fuzzon */
 
-#endif /* FUZZON_EXECUTOR_H_ */
+#endif  // SRC_FUZZON_EXECUTOR_H_

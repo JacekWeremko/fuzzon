@@ -1,8 +1,16 @@
-#include "fuzzon.h"
-#include "fuzzon_generator.h"
-#include "fuzzon_mutator.h"
-#include "fuzzon_random.h"
-#include "utils/logger.h"
+/*
+ * Copyright [2017] Jacek Weremko
+ */
+
+#include "./fuzzon.h"
+
+#include <string>
+#include <vector>
+
+#include "./fuzzon_generator.h"
+#include "./fuzzon_mutator.h"
+#include "./fuzzon_random.h"
+#include "./utils/logger.h"
 
 namespace fuzzon {
 
@@ -52,7 +60,7 @@ void Fuzzon::MutationPhaseDeterministic() {
       for (auto bite_index = 0; bite_index < not_mutated.length_bit();
            ++bite_index) {
         auto mutated = not_mutated;
-        //				test_cases_mutator.FlipBit(mutated.data(),
+        // test_cases_mutator.FlipBit(mutated.data(),
         // mutated.length_byte(), bite_index, bits_to_flip);
 
         auto execution_data = execution_monitor_.ExecuteBlocking(mutated);
@@ -130,4 +138,5 @@ void Fuzzon::MutationPhaseNonDeterministic(int test_cases_to_mutate) {
   }
   return;
 }
-}
+
+}  // namespace fuzzon

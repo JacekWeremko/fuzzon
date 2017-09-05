@@ -1,29 +1,33 @@
-#ifndef FUZZON_H_
-#define FUZZON_H_
+/*
+ * Copyright [2017] Jacek Weremko
+ */
 
-#include "fuzzon_executor.h"
-#include "fuzzon_corpus.h"
+#ifndef SRC_FUZZON_H_
+#define SRC_FUZZON_H_
+
+#include "./fuzzon_executor.h"
 
 #include <boost/filesystem.hpp>
+#include <string>
 
-namespace fuzzon
-{
+#include "./fuzzon_corpus.h"
 
-class Fuzzon
-{
-public:
-	Fuzzon(std::string output_dir, std::string sut_path, int sut_runtime_timeout);
+namespace fuzzon {
 
-	void GenerationPhase(std::string input_format, int test_cases_to_generate);
-	void MutationPhaseDeterministic();
-	void MutationPhaseNonDeterministic(int test_cases_to_mutate = -1);
+class Fuzzon {
+ public:
+  Fuzzon(std::string output_dir, std::string sut_path, int sut_runtime_timeout);
 
-private:
-	std::string output_dir_;
-	Corpus corpus_;
-	Executor execution_monitor_;
+  void GenerationPhase(std::string input_format, int test_cases_to_generate);
+  void MutationPhaseDeterministic();
+  void MutationPhaseNonDeterministic(int test_cases_to_mutate = -1);
+
+ private:
+  std::string output_dir_;
+  Corpus corpus_;
+  Executor execution_monitor_;
 };
 
-}
+}  // namespace fuzzon
 
-#endif /* FUZZON_H_ */
+#endif  // SRC_FUZZON_H_
