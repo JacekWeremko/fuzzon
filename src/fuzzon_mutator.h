@@ -50,6 +50,10 @@ class Mutator {
     return true;
   }
 
+  bool FlipBit(TestCase& base, size_t bit_start_idx, size_t bits_count) const {
+    return FlipBit(base.vec(), bit_start_idx, bits_count);
+  }
+
   bool FlipByte(std::vector<char>& base,
                 size_t byte_start_idx,
                 size_t bytes_count) const {
@@ -64,6 +68,12 @@ class Mutator {
     return true;
   }
 
+  bool FlipByte(TestCase& base,
+                size_t byte_start_idx,
+                size_t bytes_count) const {
+    return FlipByte(base.vec(), byte_start_idx, bytes_count);
+  }
+
   bool SimpleArithmetics(std::vector<char>& base,
                          size_t byte_idx,
                          char value) const {
@@ -72,6 +82,10 @@ class Mutator {
     auto& selected_byte = base[byte_idx];
     selected_byte += value;
     return true;
+  }
+
+  bool SimpleArithmetics(TestCase& base, size_t byte_idx, char value) const {
+    return SimpleArithmetics(base.vec(), byte_idx, value);
   }
 
   bool KnownIntegers(std::vector<char>& base,
@@ -84,31 +98,50 @@ class Mutator {
     return true;
   }
 
+  bool KnownIntegers(TestCase& base, size_t byte_idx, char value) const {
+    return KnownIntegers(base.vec(), byte_idx, value);
+  }
+
   bool BlockInsertion(std::vector<char>& base,
                       size_t base_start_idx,
-                      const std::vector<char>& insert_me,
-                      size_t insert_me_start_idx,
+                      const std::vector<char>& insertme,
+                      size_t insertme_start_idx,
                       size_t block_length) {
     SAFE_CHECK(base.size() > base_start_idx, false);
-    SAFE_CHECK(insert_me.size() > insert_me_start_idx, false);
-    SAFE_CHECK(insert_me.size() > insert_me_start_idx + block_length - 1,
-               false);
+    SAFE_CHECK(insertme.size() > insertme_start_idx, false);
+    SAFE_CHECK(insertme.size() > insertme_start_idx + block_length - 1, false);
 
+    //    std::copy(insertme.begin() + insertme_start_idx,
+    //              insertme.begin() + insertme_start_idx + block_length,
+    //              base.begin() + base_start_idx);
     base.insert(base.begin() + base_start_idx,
-                insert_me.begin() + insert_me_start_idx,
-                insert_me.begin() + insert_me_start_idx + block_length);
+                insertme.begin() + insertme_start_idx,
+                insertme.begin() + insertme_start_idx + block_length);
     return true;
+  }
+
+  bool BlockInsertion(TestCase& base,
+                      size_t base_start_idx,
+                      TestCase& insertme,
+                      size_t insertme_start_idx,
+                      size_t block_length) {
+    return BlockInsertion(base.vec(), base_start_idx, insertme.vec(),
+                          insertme_start_idx, block_length);
   }
 
   bool BlockDeletion(std::vector<char>& base,
                      size_t start_idx,
-                     size_t block_length) const {
+                     size_t block_length) {
     SAFE_CHECK(base.size() > start_idx, false);
     SAFE_CHECK(base.size() > start_idx + block_length, false);
 
     base.erase(base.begin() + start_idx,
                base.begin() + start_idx + block_length);
     return true;
+  }
+
+  bool BlockDeletion(TestCase& base, size_t start_idx, size_t block_length) {
+    return BlockDeletion(base.vec(), start_idx, block_length);
   }
 
   bool BlockMemset(std::vector<char>& base,
@@ -122,6 +155,13 @@ class Mutator {
                   base.begin() + start_idx + block_length,
                   [new_value](char& current) { current = new_value; });
     return true;
+  }
+
+  bool BlockMemset(TestCase& base,
+                   size_t start_idx,
+                   size_t block_length,
+                   char new_value) const {
+    return BlockMemset(base.vec(), start_idx, block_length, new_value);
   }
 
   bool BlockOverriding(std::vector<char>& base,
@@ -139,6 +179,15 @@ class Mutator {
               base.begin() + base_start_idx + block_length,
               new_values.begin() + new_values_start_idx);
     return true;
+  }
+
+  bool BlockOverriding(TestCase& base,
+                       size_t base_start_idx,
+                       TestCase& new_values,
+                       size_t new_values_start_idx,
+                       size_t block_length) const {
+    return BlockOverriding(base.vec(), base_start_idx, new_values.vec(),
+                           new_values_start_idx, block_length);
   }
 
  private:

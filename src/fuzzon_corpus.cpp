@@ -14,6 +14,7 @@
 #include <algorithm>
 #include <numeric>
 #include <chrono>
+#include <memory>
 
 #include "./utils/logger.h"
 
@@ -36,8 +37,8 @@ bool Corpus::IsInteresting(const ExecutionData& am_i) {
   counter++;
 
   // TODO: calculate coverage (path) hash in order to improve performance
-  for (auto& current : execution_history_) {
-    // if (current.second.coverage_.pc_flow_hash ==
+  for (auto& current : data_) {
+    // if (current->second.coverage_.pc_flow_hash ==
     // am_i.coverage_.pc_flow_hash)
     if (current.coverage == am_i.coverage) {
       current.coverage_coutner_++;
@@ -50,8 +51,11 @@ bool Corpus::IsInteresting(const ExecutionData& am_i) {
 void Corpus::AddExecutionData(ExecutionData& add_me_to_corpus) {
   Logger::Get()->info("Adding new test case to corpus: " +
                       add_me_to_corpus.input.string());
+
   // TODO: optimize memory footprint
-  execution_history_.push_back(add_me_to_corpus);
+  //  auto new_element = std::make_shared<ExecutionData>(add_me_to_corpus);
+  //  data_.push_back(new_element);
+  data_.push_back(add_me_to_corpus);
 }
 
 bool Corpus::AddIfInteresting(ExecutionData& add_me_to_corpus) {
@@ -62,20 +66,20 @@ bool Corpus::AddIfInteresting(ExecutionData& add_me_to_corpus) {
   return false;
 }
 
-TestCase* Corpus::SelectFavorite() {
-  BOOST_ASSERT(execution_history_.size() > 0);
+const TestCase* Corpus::SelectFavorite() {
+  BOOST_ASSERT(data_.size() > 0);
 
-  // FIXME: ...
-  std::vector<ExecutionData*> execution_hisotry_copy;
-  for (auto& current : execution_history_) {
-    execution_hisotry_copy.push_back(&current);
+  // FIXME: dat should implement score_, container should sort automatically
+  std::vector<ExecutionData*> data_copy_;
+  for (auto& current : data_) {
+    data_copy_.push_back(&current);
   }
 
   std::vector<ExecutionData*> lowest_usage_data;
   // find min s(i) - test cases used as mutation base
   {
     auto lowest_usage_count = std::numeric_limits<size_t>::max();
-    for (auto& current : execution_hisotry_copy) {
+    for (auto& current : data_copy_) {
       if (current->mutation_counter_ < lowest_usage_count) {
         lowest_usage_data.clear();
         lowest_usage_count = current->mutation_counter_;
@@ -117,92 +121,88 @@ TestCase* Corpus::SelectFavorite() {
   return &result->input;
 }
 
-TestCase* Corpus::SelectNotMutated() {
-  for (auto& current : execution_history_) {
+const TestCase* Corpus::SelectNotMutated() {
+  for (auto& current : data_) {
     if (current.mutatation_exhausted == false) {
-      current.mutatation_exhausted = true;  // ...blhh
-      // 1:25 sobota : babol, nie zwraca sie pointerow do elemtow vectora przez
-      // ptr, po push_back staja sie niewazne
+      current.mutatation_exhausted = true;
       return &current.input;
     }
   }
-  return NULL;
+  return nullptr;
 }
 
 std::stringstream Corpus::GetStatistics() {
   std::stringstream stats;
-  stats << "Corpus size : " << std::to_string(execution_history_.size())
-        << std::endl;
+  stats << "Corpus size : " << std::to_string(data_.size()) << std::endl;
 
   stats << "Tested cases: "
-        << std::accumulate(execution_history_.begin(), execution_history_.end(),
-                           0,
+        << std::accumulate(data_.begin(), data_.end(), 0,
                            [](int execution_counter, ExecutionData& arg) {
                              return execution_counter + arg.coverage_coutner_;
                            })
         << std::endl;
 
-  if (execution_history_.size() == 0) {
+  if (data_.size() == 0) {
     return stats;
   }
 
   stats << "Test case max mutation count: "
-        << std::max_element(
-               execution_history_.begin(), execution_history_.end(),
-               [](ExecutionData& arg1, ExecutionData& arg2) {
-                 return arg1.mutation_counter_ < arg2.mutation_counter_;
-               })
+        << std::max_element(data_.begin(), data_.end(),
+                            [](ExecutionData& arg1, ExecutionData& arg2) {
+                              return arg1.mutation_counter_ <
+                                     arg2.mutation_counter_;
+                            })
                ->mutation_counter_
         << std::endl;
   stats << "Test case min mutation count: "
-        << std::max_element(
-               execution_history_.begin(), execution_history_.end(),
-               [](ExecutionData& arg1, ExecutionData& arg2) {
-                 return arg1.mutation_counter_ > arg2.mutation_counter_;
-               })
+        << std::max_element(data_.begin(), data_.end(),
+                            [](ExecutionData& arg1, ExecutionData& arg2) {
+                              return arg1.mutation_counter_ >
+                                     arg2.mutation_counter_;
+                            })
                ->mutation_counter_
         << std::endl;
 
   stats << "Test case max similar executions count: "
-        << std::max_element(
-               execution_history_.begin(), execution_history_.end(),
-               [](ExecutionData& arg1, ExecutionData& arg2) {
-                 return arg1.coverage_coutner_ < arg2.coverage_coutner_;
-               })
+        << std::max_element(data_.begin(), data_.end(),
+                            [](ExecutionData& arg1, ExecutionData& arg2) {
+                              return arg1.coverage_coutner_ <
+                                     arg2.coverage_coutner_;
+                            })
                ->coverage_coutner_
         << std::endl;
   stats << "Test case min similar executions count: "
-        << std::max_element(
-               execution_history_.begin(), execution_history_.end(),
-               [](ExecutionData& arg1, ExecutionData& arg2) {
-                 return arg1.coverage_coutner_ > arg2.coverage_coutner_;
-               })
+        << std::max_element(data_.begin(), data_.end(),
+                            [](ExecutionData& arg1, ExecutionData& arg2) {
+                              return arg1.coverage_coutner_ >
+                                     arg2.coverage_coutner_;
+                            })
                ->coverage_coutner_
         << std::endl;
 
   stats << "Test case max execution time[ms]: "
         << std::chrono::duration_cast<std::chrono::milliseconds>(
-               std::max_element(
-                   execution_history_.begin(), execution_history_.end(),
-                   [](ExecutionData& arg1, ExecutionData& arg2) {
-                     return arg1.execution_time < arg2.execution_time;
-                   })
+               std::max_element(data_.begin(), data_.end(),
+                                [](ExecutionData& arg1, ExecutionData& arg2) {
+                                  return arg1.execution_time <
+                                         arg2.execution_time;
+                                })
                    ->execution_time)
                .count()
         << std::endl;
   stats << "Test case min execution time[ms]: "
         << std::chrono::duration_cast<std::chrono::milliseconds>(
-               std::max_element(
-                   execution_history_.begin(), execution_history_.end(),
-                   [](ExecutionData& arg1, ExecutionData& arg2) {
-                     return arg1.execution_time > arg2.execution_time;
-                   })
+               std::max_element(data_.begin(), data_.end(),
+                                [](ExecutionData& arg1, ExecutionData& arg2) {
+                                  return arg1.execution_time >
+                                         arg2.execution_time;
+                                })
                    ->execution_time)
                .count()
         << std::endl;
 
   stats << "Gracefully finished: "
-        << std::count_if(execution_history_.begin(), execution_history_.end(),
+        << std::count_if(data_.begin(), data_.end(),
                          [](ExecutionData& arg) {
                            return arg.gracefully_finished == true;
                          })
@@ -210,17 +210,17 @@ std::stringstream Corpus::GetStatistics() {
 
   stats << "Non zero error code: "
         << std::count_if(
-               execution_history_.begin(), execution_history_.end(),
+               data_.begin(), data_.end(),
                [](ExecutionData& arg) { return arg.error_code.value() != 0; })
         << std::endl;
 
   stats << "Non zero return code: "
-        << std::count_if(execution_history_.begin(), execution_history_.end(),
+        << std::count_if(data_.begin(), data_.end(),
                          [](ExecutionData& arg) { return arg.exit_code != 0; })
         << std::endl;
 
   stats << "Faulty test cases: "
-        << std::count_if(execution_history_.begin(), execution_history_.end(),
+        << std::count_if(data_.begin(), data_.end(),
                          [](ExecutionData& arg) {
                            return arg.gracefully_finished == false &&
                                   arg.error_code.value() != 0;

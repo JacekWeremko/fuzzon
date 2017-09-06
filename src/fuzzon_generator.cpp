@@ -278,7 +278,7 @@ rapidjson::Value* Generator::GetLast(rapidjson::Value& top,
         elem_member = elem_member - 1;
       }
     } else {
-      return NULL;
+      return nullptr;
     }
   }
   return elem;

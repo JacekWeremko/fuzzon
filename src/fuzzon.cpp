@@ -45,77 +45,58 @@ void Fuzzon::MutationPhaseDeterministic() {
   bool all_posibilities_checked = false;
   Mutator test_cases_mutator;
   while (!all_posibilities_checked) {
-    auto favorite_ = corpus_.SelectNotMutated();
-    if (favorite_ == NULL) {
+    auto favorite = corpus_.SelectNotMutated();
+    if (favorite == nullptr) {
       all_posibilities_checked = true;
       break;
     }
-    auto not_mutated = *favorite_;
 
     // walking: exhaust bit flips
-    for (auto bits_to_flip_exp = 0; bits_to_flip_exp <= 2; ++bits_to_flip_exp) {
-      const auto bits_to_flip = std::pow(2, bits_to_flip_exp);
-      // for(auto bite_index = 0; bite_index <= (not_mutated.length_bit() - 1 -
-      // (bits_to_flip - 1)); ++bite_index)
-      for (auto bite_index = 0; bite_index < not_mutated.length_bit();
-           ++bite_index) {
-        auto mutated = not_mutated;
-        // test_cases_mutator.FlipBit(mutated.data(),
-        // mutated.length_byte(), bite_index, bits_to_flip);
-
-        auto execution_data = execution_monitor_.ExecuteBlocking(mutated);
+    for (auto exp = 0; exp <= 2; ++exp) {
+      const auto bits_to_flip = std::pow(2, exp);
+      for (auto bite_idx = 0; bite_idx < favorite->length_bit(); ++bite_idx) {
+        auto mutate_me = *favorite;
+        test_cases_mutator.FlipBit(mutate_me, bite_idx, bits_to_flip);
+        auto execution_data = execution_monitor_.ExecuteBlocking(mutate_me);
         corpus_.AddIfInteresting(execution_data);
       }
     }
 
     // walking: exhaust byte flips
-    for (auto bytes_to_flip_exp = 0; bytes_to_flip_exp <= 2;
-         ++bytes_to_flip_exp) {
-      const auto bytes_to_flip = std::pow(2, bytes_to_flip_exp);
-      // for(auto byte_index = 0; byte_index < (not_mutated.length_byte() - 1 -
-      // (bytes_to_flip - 1)); ++byte_index)
-      for (auto byte_index = 0; byte_index < not_mutated.length_byte();
-           ++byte_index) {
-        auto mutated = not_mutated;
-        //        test_cases_mutator.FlipByte(mutated.data(),
-        //        mutated.length_byte(),
-        //                                    byte_index, bytes_to_flip);
-
-        auto execution_data = execution_monitor_.ExecuteBlocking(mutated);
+    for (auto exp = 0; exp <= 2; ++exp) {
+      const auto bytes_to_flip = std::pow(2, exp);
+      for (auto byte_idx = 0; byte_idx < favorite->length_byte(); ++byte_idx) {
+        auto mutate_me = *favorite;
+        test_cases_mutator.FlipByte(mutate_me, byte_idx, bytes_to_flip);
+        auto execution_data = execution_monitor_.ExecuteBlocking(mutate_me);
         corpus_.AddIfInteresting(execution_data);
       }
     }
 
     // walking: simple arithmetic
     for (auto value = -35; value <= 35; value += (2 * 35)) {
-      for (auto byte_index = 0; byte_index < not_mutated.length_byte() - 1;
-           ++byte_index) {
-        auto mutated = not_mutated;
-        //        test_cases_mutator.SimpleArithmetics(
-        //            mutated.data(), mutated.length_byte(), byte_index, value);
-
-        auto execution_data = execution_monitor_.ExecuteBlocking(mutated);
+      for (auto byte_idx = 0; byte_idx < favorite->length_byte(); ++byte_idx) {
+        auto mutate_me = *favorite;
+        test_cases_mutator.SimpleArithmetics(mutate_me, byte_idx, value);
+        auto execution_data = execution_monitor_.ExecuteBlocking(mutate_me);
         corpus_.AddIfInteresting(execution_data);
       }
     }
 
-    {
-      // std::vector<int> interesting_limits = { 1, 7,8,9, 15,16,17, 31,32,33,
-      // 63,64,65, 127,128,129 };
-      std::vector<int> interesting_limits = {-1, 16, 32, 64, 127};
-      for (const auto& value : interesting_limits) {
-        for (auto byte_index = 0; byte_index < not_mutated.length_byte() - 1;
-             ++byte_index) {
-          auto mutated = not_mutated;
-          //          test_cases_mutator.KnownIntegers(
-          //              mutated.data(), mutated.length_byte(), byte_index,
-          //              value);
+    // std::vector<int> interesting_limits = { 1, 7,8,9, 15,16,17, 31,32,33,
+    // 63,64,65, 127,128,129 };
+    std::vector<int> interesting_limits = {-1, 16, 32, 64, 127};
+    for (const auto& value : interesting_limits) {
+      for (auto byte_idx = 0; byte_idx < favorite->length_byte(); ++byte_idx) {
+        auto mutate_me = *favorite;
+        test_cases_mutator.KnownIntegers(mutate_me, byte_idx, value);
 
-          auto execution_data = execution_monitor_.ExecuteBlocking(mutated);
-          corpus_.AddIfInteresting(execution_data);
-        }
+        auto execution_data = execution_monitor_.ExecuteBlocking(mutate_me);
+        corpus_.AddIfInteresting(execution_data);
       }
     }
+
+    // something more?
   }
   return;
 }
