@@ -53,16 +53,12 @@ class Coverage {
   size_t pc_total_;
   uintptr_t last_pc_;
 
-  // static const int pc_flow_size_ = 64 * 1024;
-  static const int pc_flow_size_ = 15;
+  //   static const int pc_flow_size_ = 64 * 1024;
+  static const int pc_flow_size_ = 1024;
+  //  static const int pc_flow_size_ = 15;
   std::array<uint32_t, pc_flow_size_> pc_flow_;
 
-  //  static const int guards_nax_lookup_size_ = 1024;
-  // std::array<uint32_t, guards_lookup_size_> guards_lookup_;
-  //  std::map<uint32_t, uint32_t> guards_lookup_;
-
   std::array<unsigned char, MD5_DIGEST_LENGTH> hash_;
-  // uint32_t pc_flow_[pc_flow_size / (sizeof(uint32_t))];
 };
 
 } /* namespace fuzzon */

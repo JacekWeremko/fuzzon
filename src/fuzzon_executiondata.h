@@ -37,12 +37,8 @@ struct ExecutionData {
         mutatation_exhausted(false),
         similar_path_coutner_(0),
         mutation_counter_(0) {
-    //    path = *cov;
-    //    ,
-    // path(cov->mode_),
-    //    std::copy(std::begin(cov->pc_flow_), std::end(cov->pc_flow_),
-    //              std::begin(path.pc_flow_));
     path.Compress();
+    path.ComputeHash();
   }
 
   TestCase input;
