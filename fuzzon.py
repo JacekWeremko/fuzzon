@@ -36,6 +36,13 @@ class Builder(object):
             cflags.append("-std=c++1y")
          
         cflags.append("-emit-llvm")
+        
+        
+         
+#         cflags.append("-fsanitizer-coverage-level=3")
+#         cflags.append("-fsanitize-coverage=inline-8bit-counters")
+#         cflags.append("-fsanitize-coverage=pc-table")
+#         cflags.append("-fsanitize-coverage=trace-pc-guard")
         cflags.append("-fsanitize-coverage=edge,trace-pc-guard")
          
         args = []
@@ -78,6 +85,7 @@ class Builder(object):
         args.append(output_file)
         args.append(obj_file)
         args.append("-lstdc++")
+        args.append("-lcrypto")
         args.append("-lfuzzon")
          
         print("args: " + str(args))

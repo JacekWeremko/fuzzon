@@ -33,13 +33,10 @@ struct ExecutionData {
         execution_time(execution_time),
         std_out(std_out.str()),
         std_err(std_err.str()), /* TODO: performance */
-        path(cov->mode_),
+        path(*cov),
         mutatation_exhausted(false),
         similar_path_coutner_(0),
         mutation_counter_(0) {
-    // coverage = *cov;
-    std::copy(std::begin(cov->pc_flow_), std::end(cov->pc_flow_),
-              std::begin(path.pc_flow_));
     path.Compress();
   }
 

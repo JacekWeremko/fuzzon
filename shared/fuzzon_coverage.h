@@ -1,42 +1,70 @@
-#ifndef FUZZON_COVERAGE_H_
-#define FUZZON_COVERAGE_H_
+/*
+ * Copyright [2017] Jacek Weremko
+ */
+
+#ifndef SHARED_FUZZON_COVERAGE_H_
+#define SHARED_FUZZON_COVERAGE_H_
 
 #include <stdint.h>
+#include <openssl/md5.h>
+
+#include <iostream>
+#include <array>
 
 namespace fuzzon {
 
 class Coverage {
-public:
-	enum TrackMode
-	{
-		Raw,
-		Flow
-	};
+ public:
+  enum TrackMode { Raw, Flow };
+  enum CompreseMode { Log2 };
 
-	enum CompreseMode
-	{
-		Log2
-	};
+  explicit Coverage(TrackMode mode);
 
-	Coverage(TrackMode mode);
-//	Coverage(Coverage& copy_me);
+  void Compress(CompreseMode comprese_mode = CompreseMode::Log2);
+  void ComputeHash();
 
-	void Compress(CompreseMode comprese_mode = CompreseMode::Log2);
+  // Operators compare hash
+  bool operator==(const Coverage&) const;
+  bool operator!=(const Coverage&) const;
 
-	bool operator==(const Coverage&) const;
-	bool operator!=(const Coverage&) const;
+  // Compares content
+  bool IsTheSame(const Coverage&) const;
 
-	void TracePC(uintptr_t PC);
-	void PrintTrace() const;
+  void SetPCLimit(size_t value);
+  void TracePC(uintptr_t PC);
+  void PrintTrace() const;
 
-//private:
-	uintptr_t lact_pc_;
-	TrackMode mode_;
+  //  friend ostream &operator<<( ostream &output, const Distance &D ) {
+  friend std::ostream& operator<<(std::ostream& output,
+                                  const Coverage& print_me) {
+    for (auto i = 0; i < print_me.pc_flow_.size(); i++) {
+      if (print_me.pc_flow_[i] != 0) {
+        output << i;
+        output << ":" << std::hex << print_me.pc_flow_[i] << " ";
+        output << print_me.pc_flow_[i] << " ";
+        //        output << i << ":" << std::hex << pc_flow_[i] << " ";
+      }
+    }
+    return output;
+  }
 
-	static const int pc_flow_size = 64 * 1024;
-	uint32_t pc_flow_[pc_flow_size / (sizeof(uint32_t))];
+ private:
+  TrackMode mode_;
+  size_t pc_total_;
+  uintptr_t last_pc_;
+
+  // static const int pc_flow_size_ = 64 * 1024;
+  static const int pc_flow_size_ = 15;
+  std::array<uint32_t, pc_flow_size_> pc_flow_;
+
+  //  static const int guards_nax_lookup_size_ = 1024;
+  // std::array<uint32_t, guards_lookup_size_> guards_lookup_;
+  //  std::map<uint32_t, uint32_t> guards_lookup_;
+
+  std::array<unsigned char, MD5_DIGEST_LENGTH> hash_;
+  // uint32_t pc_flow_[pc_flow_size / (sizeof(uint32_t))];
 };
 
 } /* namespace fuzzon */
 
-#endif /* FUZZON_COVERAGE_H_ */
+#endif  // SHARED_FUZZON_COVERAGE_H_

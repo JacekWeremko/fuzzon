@@ -9,46 +9,34 @@
 namespace fuzzon {
 
 class ExecutionTracker {
-public:
-	ExecutionTracker(ExecutionTracker const&) = delete;
-	void operator=(ExecutionTracker const&) = delete;
+ public:
+  ExecutionTracker(ExecutionTracker const&) = delete;
+  void operator=(ExecutionTracker const&) = delete;
 
-	virtual ~ExecutionTracker();
+  virtual ~ExecutionTracker();
 
+  enum WorkingMode { SUT, Monitor };
 
-	enum WorkingMode
-	{
-		SUT,
-		Monitor
-	};
+  static ExecutionTracker* Get(WorkingMode mode = WorkingMode::SUT) {
+    static ExecutionTracker monitor_(mode);
+    return &monitor_;
+  }
 
-	static ExecutionTracker* Get(WorkingMode mode = WorkingMode::SUT)
-	{
-		static ExecutionTracker monitor_(mode);
-		return &monitor_;
-	}
+  void Reset();
 
-	void Reset();
+  const Coverage* GetCoverage() { return cov_; }
 
-	const Coverage* GetCoverage()
-	{
-		return cov_;
-	}
+  void SetPCLimit(size_t value) { cov_->SetPCLimit(value); }
+  void TracePC(uintptr_t PC) { cov_->TracePC(PC); }
 
+ private:
+  ExecutionTracker(WorkingMode mode);
 
-	void TracePC(uintptr_t PC)
-	{
-		cov_->TracePC(PC);
-	}
-
-private:
-	ExecutionTracker(WorkingMode mode);
-
-	const std::string shared_memory_buffer_name = "fuzzon_cov";
-	boost::interprocess::shared_memory_object shared_memory_;
-	boost::interprocess::mapped_region region_;
-	WorkingMode mode_;
-	Coverage* cov_;
+  const std::string shared_memory_buffer_name = "fuzzon_cov";
+  boost::interprocess::shared_memory_object shared_memory_;
+  boost::interprocess::mapped_region region_;
+  WorkingMode mode_;
+  Coverage* cov_;
 };
 
 } /* namespace fuzzon */

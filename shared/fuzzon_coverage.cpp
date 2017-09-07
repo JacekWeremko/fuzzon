@@ -1,86 +1,87 @@
-#include "fuzzon_coverage.h"
-#include "utils/logger.h"
+/*
+ * Copyright [2017] Jacek Weremko
+ */
+
+#include "./fuzzon_coverage.h"
 
 #include <sstream>
 #include <cmath>
+#include <limits>
 
-#define ARRAY_ELEMENTS(array) (sizeof(array) / sizeof(array[0]))
+#include "./utils/logger.h"
 
 namespace fuzzon {
 
-Coverage::Coverage(TrackMode mode) : lact_pc_(0), mode_(mode)
-{
-	std::fill_n(pc_flow_, ARRAY_ELEMENTS(pc_flow_), 0);
+Coverage::Coverage(TrackMode mode)
+    : mode_(mode),
+      pc_total_(std::numeric_limits<uint32_t>::max()),
+      last_pc_(0) {
+  pc_flow_.fill(0);
 }
 
-//Coverage::Coverage(Coverage& copy_me)
-//{
-//	std::copy(std::begin(copy_me.pc_flow_), std::end(copy_me.pc_flow_), std::begin(pc_flow_));
-//	lact_pc_ = copy_me.lact_pc_;
-//	mode_ = copy_me.mode_;
-//}
-
-
-void Coverage::Compress(CompreseMode comprese_mode)
-{
-	if (comprese_mode == CompreseMode::Log2)
-	{
-		for (size_t idx=0; idx<ARRAY_ELEMENTS(pc_flow_); idx++)
-		{
-			if (pc_flow_[idx] == 0)
-			{
-				continue;
-			}
-			pc_flow_[idx] = std::log2(pc_flow_[idx]) + 1;
-		}
-	}
-	return;
+void Coverage::Compress(CompreseMode comprese_mode) {
+  if (comprese_mode == CompreseMode::Log2) {
+    for (auto& elem : pc_flow_) {
+      if (elem == 0) {
+        continue;
+      }
+      elem = std::log2(elem) + 1;
+    }
+  }
 }
 
-bool Coverage::operator==(const Coverage& compare_with_me) const
-{
-	for (size_t idx=0; idx<ARRAY_ELEMENTS(pc_flow_); idx++)
-	{
-		if (pc_flow_[idx] != compare_with_me.pc_flow_[idx])
-		{
-			return false;
-		}
-	}
-	return true;
+void Coverage::ComputeHash() {
+  MD5(reinterpret_cast<const unsigned char*>(pc_flow_.data()),
+      pc_flow_.size() * sizeof(pc_flow_[0]), hash_.data());
 }
 
-bool Coverage::operator!=(const Coverage& compare_with_me) const
-{
-	return !(*this == compare_with_me);
+bool Coverage::operator==(const Coverage& compare_with_me) const {
+  return hash_ == compare_with_me.hash_;
 }
 
-void Coverage::TracePC(uintptr_t PC)
-{
-	uintptr_t current = 0;
-	if (mode_ == TrackMode::Raw)
-	{
-		current = PC;
-	}
-	else
-	{
-		current = lact_pc_ == 0 ? PC : (PC ^ lact_pc_);
-	}
-	pc_flow_[current % ARRAY_ELEMENTS(pc_flow_)]++;
-	lact_pc_ = PC >> 1;
+bool Coverage::operator!=(const Coverage& compare_with_me) const {
+  return !(*this == compare_with_me);
 }
 
-void Coverage::PrintTrace() const
-{
-	std::stringstream output;
-	for (size_t i=0; i< ARRAY_ELEMENTS(pc_flow_); i++)
-	{
-		if (pc_flow_[i] != 0)
-		{
-			output << i << ":" << std::hex << pc_flow_[i] << " ";
-		}
-	}
-	Logger::Get()->info("pc_flow	: " + output.str());
-	return;
+bool Coverage::IsTheSame(const Coverage& compare_with_me) const {
+  for (size_t idx = 0; idx < pc_flow_.size(); idx++) {
+    if (pc_flow_[idx] != compare_with_me.pc_flow_[idx]) {
+      return false;
+    }
+  }
+  return true;
 }
 
+void Coverage::SetPCLimit(size_t value) {
+  pc_total_ = value;
+}
+
+void Coverage::TracePC(uintptr_t PC) {
+  uintptr_t current = 0;
+  if (mode_ == TrackMode::Raw) {
+    current = PC;
+  } else {
+    current = last_pc_ == 0 ? PC : (PC ^ last_pc_);
+  }
+
+  //  if (pc_total_ < guards_nax_lookup_size_) {
+  //    auto idx = guards_lookup_.insert(current);
+  //    pc_flow_[*idx.first]++;
+  //  } else {
+  pc_flow_[current % pc_flow_.size()]++;
+  //  }
+
+  last_pc_ = PC >> 1;
+}
+
+void Coverage::PrintTrace() const {
+  std::stringstream output;
+  for (size_t i = 0; i < pc_flow_.size(); i++) {
+    if (pc_flow_[i] != 0) {
+      output << i << ":" << std::hex << pc_flow_[i] << " ";
+    }
+  }
+  Logger::Get()->info("pc_flow : " + output.str());
+  return;
+}
 } /* namespace fuzzon */
