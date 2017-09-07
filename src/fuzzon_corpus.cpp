@@ -40,8 +40,8 @@ bool Corpus::IsInteresting(const ExecutionData& am_i) {
   for (auto& current : data_) {
     // if (current->second.coverage_.pc_flow_hash ==
     // am_i.coverage_.pc_flow_hash)
-    if (current.coverage == am_i.coverage) {
-      current.coverage_coutner_++;
+    if (current.path == am_i.path) {
+      current.similar_path_coutner_++;
       return false;
     }
   }
@@ -75,33 +75,33 @@ const TestCase* Corpus::SelectFavorite() {
     data_copy_.push_back(&current);
   }
 
-  std::vector<ExecutionData*> lowest_usage_data;
+  std::vector<ExecutionData*> lowest_mutation_counter;
   // find min s(i) - test cases used as mutation base
   {
     auto lowest_usage_count = std::numeric_limits<size_t>::max();
     for (auto& current : data_copy_) {
       if (current->mutation_counter_ < lowest_usage_count) {
-        lowest_usage_data.clear();
+        lowest_mutation_counter.clear();
         lowest_usage_count = current->mutation_counter_;
-        lowest_usage_data.push_back(current);
+        lowest_mutation_counter.push_back(current);
       } else if (current->mutation_counter_ == lowest_usage_count) {
-        lowest_usage_data.push_back(current);
+        lowest_mutation_counter.push_back(current);
       }
     }
   }
 
-  std::vector<ExecutionData*> lowest_similar_execution_data;
+  std::vector<ExecutionData*> lowest_similar_path_coutner;
   // find min f(i) - lowest frequency path
   {
     auto lowest_similar_execution_coutner = std::numeric_limits<size_t>::max();
-    for (auto& current : lowest_usage_data) {
-      if (current->coverage_coutner_ < lowest_similar_execution_coutner) {
-        lowest_similar_execution_data.clear();
-        lowest_similar_execution_coutner = current->coverage_coutner_;
-        lowest_similar_execution_data.push_back(current);
-      } else if (current->coverage_coutner_ ==
+    for (auto& current : lowest_mutation_counter) {
+      if (current->similar_path_coutner_ < lowest_similar_execution_coutner) {
+        lowest_similar_path_coutner.clear();
+        lowest_similar_execution_coutner = current->similar_path_coutner_;
+        lowest_similar_path_coutner.push_back(current);
+      } else if (current->similar_path_coutner_ ==
                  lowest_similar_execution_coutner) {
-        lowest_similar_execution_data.push_back(current);
+        lowest_similar_path_coutner.push_back(current);
       }
     }
   }
@@ -110,7 +110,7 @@ const TestCase* Corpus::SelectFavorite() {
   // find min t(i) time and size
   {
     auto lowest_time_and_size = std::numeric_limits<double>::max();
-    for (auto& current : lowest_similar_execution_data) {
+    for (auto& current : lowest_similar_path_coutner) {
       double current_time_and_size =
           current->execution_time.count() * current->input.length_byte();
       if (current_time_and_size < lowest_time_and_size) {
@@ -121,7 +121,7 @@ const TestCase* Corpus::SelectFavorite() {
   return &result->input;
 }
 
-const TestCase* Corpus::SelectNotMutated() {
+const TestCase* Corpus::SelectNotYetExhaustMutated() {
   for (auto& current : data_) {
     if (current.mutatation_exhausted == false) {
       current.mutatation_exhausted = true;
@@ -138,7 +138,7 @@ std::stringstream Corpus::GetStatistics() {
   stats << "Tested cases: "
         << std::accumulate(data_.begin(), data_.end(), 0,
                            [](int execution_counter, ExecutionData& arg) {
-                             return execution_counter + arg.coverage_coutner_;
+                             return execution_counter + arg.similar_path_coutner_;
                            })
         << std::endl;
 
@@ -166,18 +166,18 @@ std::stringstream Corpus::GetStatistics() {
   stats << "Test case max similar executions count: "
         << std::max_element(data_.begin(), data_.end(),
                             [](ExecutionData& arg1, ExecutionData& arg2) {
-                              return arg1.coverage_coutner_ <
-                                     arg2.coverage_coutner_;
+                              return arg1.similar_path_coutner_ <
+                                     arg2.similar_path_coutner_;
                             })
-               ->coverage_coutner_
+               ->similar_path_coutner_
         << std::endl;
   stats << "Test case min similar executions count: "
         << std::max_element(data_.begin(), data_.end(),
                             [](ExecutionData& arg1, ExecutionData& arg2) {
-                              return arg1.coverage_coutner_ >
-                                     arg2.coverage_coutner_;
+                              return arg1.similar_path_coutner_ >
+                                     arg2.similar_path_coutner_;
                             })
-               ->coverage_coutner_
+               ->similar_path_coutner_
         << std::endl;
 
   stats << "Test case max execution time[ms]: "

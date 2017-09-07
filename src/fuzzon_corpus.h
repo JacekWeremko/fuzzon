@@ -23,7 +23,7 @@ class Corpus {
   bool AddIfInteresting(ExecutionData& add_me_to_corpus);
 
   const TestCase* SelectFavorite();
-  const TestCase* SelectNotMutated();
+  const TestCase* SelectNotYetExhaustMutated();
 
   std::stringstream GetStatistics();
 

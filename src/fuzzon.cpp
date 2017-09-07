@@ -45,7 +45,7 @@ void Fuzzon::MutationPhaseDeterministic() {
   bool all_posibilities_checked = false;
   Mutator test_cases_mutator;
   while (!all_posibilities_checked) {
-    auto favorite = corpus_.SelectNotMutated();
+    auto favorite = corpus_.SelectNotYetExhaustMutated();
     if (favorite == nullptr) {
       all_posibilities_checked = true;
       break;

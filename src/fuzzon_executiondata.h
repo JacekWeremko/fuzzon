@@ -33,14 +33,14 @@ struct ExecutionData {
         execution_time(execution_time),
         std_out(std_out.str()),
         std_err(std_err.str()), /* TODO: performance */
-        coverage(cov->mode_),
+        path(cov->mode_),
         mutatation_exhausted(false),
-        coverage_coutner_(0),
+        similar_path_coutner_(0),
         mutation_counter_(0) {
     // coverage = *cov;
     std::copy(std::begin(cov->pc_flow_), std::end(cov->pc_flow_),
-              std::begin(coverage.pc_flow_));
-    coverage.Compress();
+              std::begin(path.pc_flow_));
+    path.Compress();
   }
 
   TestCase input;
@@ -51,11 +51,11 @@ struct ExecutionData {
 
   std::string std_out;
   std::string std_err;
-  Coverage coverage;
+  Coverage path;
 
   // TODO: shouln't be part of this class
   bool mutatation_exhausted;
-  size_t coverage_coutner_;
+  size_t similar_path_coutner_;
   size_t mutation_counter_;
 };
 
