@@ -28,6 +28,7 @@ class ExecutionTracker {
 
   void SetPCLimit(size_t value) { cov_->SetPCLimit(value); }
   void TracePC(uintptr_t PC) { cov_->TracePC(PC); }
+  void TracePC(uint32_t idx, uintptr_t PC) { cov_->TracePC(idx, PC); }
 
  private:
   ExecutionTracker(WorkingMode mode);

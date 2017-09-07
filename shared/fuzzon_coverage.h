@@ -32,6 +32,7 @@ class Coverage {
 
   void SetPCLimit(size_t value);
   void TracePC(uintptr_t PC);
+  void TracePC(uint32_t idx, uintptr_t PC);
   void PrintTrace() const;
 
   //  friend ostream &operator<<( ostream &output, const Distance &D ) {
@@ -54,7 +55,7 @@ class Coverage {
   uintptr_t last_pc_;
 
   //   static const int pc_flow_size_ = 64 * 1024;
-  static const int pc_flow_size_ = 1024;
+  static const int pc_flow_size_ = 128;
   //  static const int pc_flow_size_ = 15;
   std::array<uint32_t, pc_flow_size_> pc_flow_;
 

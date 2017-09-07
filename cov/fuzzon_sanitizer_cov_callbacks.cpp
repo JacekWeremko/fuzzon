@@ -36,7 +36,7 @@ void __sanitizer_cov_trace_pc_guard(uint32_t* Guard) {
   Logger::Get()->trace("__sanitizer_cov_trace_pc_guard");
   Logger::Get()->trace("  PC: " + std::to_string(PC) +
                        "    Idx: " + std::to_string(Idx));
-  fuzzon::ExecutionTracker::Get()->TracePC(PC);
+  fuzzon::ExecutionTracker::Get()->TracePC(Idx, PC);
 }
 
 void __sanitizer_cov_trace_pc() {
@@ -53,8 +53,9 @@ void __sanitizer_cov_trace_pc_guard_init(uint32_t* start, uint32_t* stop) {
 
   int pc_total = 0;
   for (uint32_t* P = start; P < stop; P++) {
+    *P = pc_total;
     pc_total++;
-    //    Logger::Get()->trace("  P : " + std::to_string(*P));
+    Logger::Get()->trace("  guard : " + std::to_string(*P));
   }
   Logger::Get()->trace("  PC_total : " + std::to_string(pc_total));
   fuzzon::ExecutionTracker::Get()->SetPCLimit(pc_total);

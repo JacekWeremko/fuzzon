@@ -64,13 +64,11 @@ void Coverage::TracePC(uintptr_t PC) {
     current = last_pc_ == 0 ? PC : (PC ^ last_pc_);
   }
 
-  //  if (pc_total_ < guards_nax_lookup_size_) {
-  //    auto idx = guards_lookup_.insert(current);
-  //    pc_flow_[*idx.first]++;
-  //  } else {
-  pc_flow_[current % pc_flow_.size()]++;
-  //  }
+  TracePC(current % pc_flow_.size(), PC);
+}
 
+void Coverage::TracePC(uint32_t idx, uintptr_t PC) {
+  pc_flow_[idx]++;
   last_pc_ = PC >> 1;
 }
 
