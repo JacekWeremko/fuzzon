@@ -65,9 +65,9 @@ int main(int argc, char** argv) {
   fuzzon::Fuzzon crazy_fuzzer =
       fuzzon::Fuzzon(output_dir.string(), sut_path, sut_runtime_timeout);
 
-  crazy_fuzzer.GenerationPhase(intput_format, test_cases_to_generate);
-  crazy_fuzzer.MutationPhaseDeterministic();
-  crazy_fuzzer.MutationPhaseNonDeterministic(test_cases_to_mutate);
+  crazy_fuzzer.Generation(intput_format, test_cases_to_generate);
+  crazy_fuzzer.MutationDeterministic();
+  crazy_fuzzer.MutationNonDeterministic(test_cases_to_mutate);
 
   return 0;
 }
