@@ -29,8 +29,8 @@ Fuzzon::Fuzzon(std::string output_dir,
   Logger::Get()->info("Base directory is " + output_dir_);
 }
 
-void Fuzzon::GenerationPhase(std::string input_format,
-                             int test_cases_to_generate) {
+void Fuzzon::Generation(std::string input_format, int test_cases_to_generate) {
+  Logger::Get()->info("Generation start!");
   Logger::Get()->info("input_format : " + input_format);
   Generator test_cases_generator(input_format);
   while (test_cases_to_generate--) {
@@ -38,10 +38,12 @@ void Fuzzon::GenerationPhase(std::string input_format,
     auto execution_data = execution_monitor_.ExecuteBlocking(new_test_case);
     corpus_.AddIfInteresting(execution_data);
   }
+  Logger::Get()->info("Generation finished!");
   return;
 }
 
-void Fuzzon::MutationPhaseDeterministic() {
+void Fuzzon::MutationDeterministic() {
+  Logger::Get()->info("MutationDeterministic start!");
   bool all_posibilities_checked = false;
   Mutator test_cases_mutator;
   while (!all_posibilities_checked) {
@@ -56,9 +58,10 @@ void Fuzzon::MutationPhaseDeterministic() {
       const auto bits_to_flip = std::pow(2, exp);
       for (auto bite_idx = 0; bite_idx < favorite->length_bit(); ++bite_idx) {
         auto mutate_me = *favorite;
-        test_cases_mutator.FlipBit(mutate_me, bite_idx, bits_to_flip);
-        auto execution_data = execution_monitor_.ExecuteBlocking(mutate_me);
-        corpus_.AddIfInteresting(execution_data);
+        if (test_cases_mutator.FlipBit(mutate_me, bite_idx, bits_to_flip)) {
+          auto execution_data = execution_monitor_.ExecuteBlocking(mutate_me);
+          corpus_.AddIfInteresting(execution_data);
+        }
       }
     }
 
@@ -67,9 +70,10 @@ void Fuzzon::MutationPhaseDeterministic() {
       const auto bytes_to_flip = std::pow(2, exp);
       for (auto byte_idx = 0; byte_idx < favorite->length_byte(); ++byte_idx) {
         auto mutate_me = *favorite;
-        test_cases_mutator.FlipByte(mutate_me, byte_idx, bytes_to_flip);
-        auto execution_data = execution_monitor_.ExecuteBlocking(mutate_me);
-        corpus_.AddIfInteresting(execution_data);
+        if (test_cases_mutator.FlipByte(mutate_me, byte_idx, bytes_to_flip)) {
+          auto execution_data = execution_monitor_.ExecuteBlocking(mutate_me);
+          corpus_.AddIfInteresting(execution_data);
+        }
       }
     }
 
@@ -77,9 +81,10 @@ void Fuzzon::MutationPhaseDeterministic() {
     for (auto value = -35; value <= 35; value += (2 * 35)) {
       for (auto byte_idx = 0; byte_idx < favorite->length_byte(); ++byte_idx) {
         auto mutate_me = *favorite;
-        test_cases_mutator.SimpleArithmetics(mutate_me, byte_idx, value);
-        auto execution_data = execution_monitor_.ExecuteBlocking(mutate_me);
-        corpus_.AddIfInteresting(execution_data);
+        if (test_cases_mutator.SimpleArithmetics(mutate_me, byte_idx, value)) {
+          auto execution_data = execution_monitor_.ExecuteBlocking(mutate_me);
+          corpus_.AddIfInteresting(execution_data);
+        }
       }
     }
 
@@ -89,19 +94,21 @@ void Fuzzon::MutationPhaseDeterministic() {
     for (const auto& value : interesting_limits) {
       for (auto byte_idx = 0; byte_idx < favorite->length_byte(); ++byte_idx) {
         auto mutate_me = *favorite;
-        test_cases_mutator.KnownIntegers(mutate_me, byte_idx, value);
-
-        auto execution_data = execution_monitor_.ExecuteBlocking(mutate_me);
-        corpus_.AddIfInteresting(execution_data);
+        if (test_cases_mutator.KnownIntegers(mutate_me, byte_idx, value)) {
+          auto execution_data = execution_monitor_.ExecuteBlocking(mutate_me);
+          corpus_.AddIfInteresting(execution_data);
+        }
       }
     }
 
     // something more?
   }
+  Logger::Get()->info("MutationDeterministic finished!");
   return;
 }
 
-void Fuzzon::MutationPhaseNonDeterministic(int test_cases_to_mutate) {
+void Fuzzon::MutationNonDeterministic(int test_cases_to_mutate) {
+  Logger::Get()->info("MutationNonDeterministic start!");
   Mutator test_cases_mutator;
   bool stop_testing = false;
 
@@ -117,6 +124,7 @@ void Fuzzon::MutationPhaseNonDeterministic(int test_cases_to_mutate) {
       stop_testing = true;
     }
   }
+  Logger::Get()->info("MutationNonDeterministic finished!");
   return;
 }
 

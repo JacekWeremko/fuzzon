@@ -27,7 +27,9 @@ namespace fuzzon {
 
 class Mutator {
  public:
-  explicit Mutator(std::string input_alphabet =
+  explicit Mutator(bool white_chars_preservation = false,
+                   bool type_preservation = false,
+                   std::string output_alphabet =
                        "abcdefghijklmnopqrstuvwxyz"
                        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                        "1234567890");
@@ -36,37 +38,23 @@ class Mutator {
 
   int ChangeByte(uint8_t* data, size_t data_size);
 
+  /*
+   * FlipBit mutations
+   */
   bool FlipBit(std::vector<char>& base,
                size_t bit_start_idx,
-               size_t bits_count) const {
-    SAFE_CHECK(base.size() > (bit_start_idx) / 8, false);
-    SAFE_CHECK(base.size() > (bit_start_idx + bits_count - 1) / 8, false);
-
-    for (auto i = 0; i < bits_count; ++i) {
-      const auto& byte_idx = (bit_start_idx + i) / 8;
-      auto& selected_byte = base[byte_idx];
-      selected_byte = selected_byte ^ (1 << ((bit_start_idx + i) % 8));
-    }
-    return true;
-  }
+               size_t bits_count) const;
 
   bool FlipBit(TestCase& base, size_t bit_start_idx, size_t bits_count) const {
     return FlipBit(base.vec(), bit_start_idx, bits_count);
   }
 
+  /*
+   * FlipByte mutations
+   */
   bool FlipByte(std::vector<char>& base,
                 size_t byte_start_idx,
-                size_t bytes_count) const {
-    SAFE_CHECK(base.size() > byte_start_idx, false);
-    SAFE_CHECK(base.size() > byte_start_idx + bytes_count - 1, false);
-
-    for (size_t i = 0; i < bytes_count; ++i) {
-      const auto& byte_index = byte_start_idx + i;
-      auto& selected_byte = base[byte_index];
-      selected_byte = ~selected_byte;
-    }
-    return true;
-  }
+                size_t bytes_count) const;
 
   bool FlipByte(TestCase& base,
                 size_t byte_start_idx,
@@ -74,88 +62,65 @@ class Mutator {
     return FlipByte(base.vec(), byte_start_idx, bytes_count);
   }
 
+  /*
+   * SimpleArithmetics mutations
+   */
   bool SimpleArithmetics(std::vector<char>& base,
                          size_t byte_idx,
-                         char value) const {
-    SAFE_CHECK(base.size() > byte_idx, false);
-
-    auto& selected_byte = base[byte_idx];
-    selected_byte += value;
-    return true;
-  }
+                         char value) const;
 
   bool SimpleArithmetics(TestCase& base, size_t byte_idx, char value) const {
     return SimpleArithmetics(base.vec(), byte_idx, value);
   }
 
+  /*
+   * KnownIntegers mutations
+   */
   bool KnownIntegers(std::vector<char>& base,
                      size_t byte_idx,
-                     char value) const {
-    SAFE_CHECK(base.size() > byte_idx, false);
-
-    auto& selected_byte = base[byte_idx];
-    selected_byte = value;
-    return true;
-  }
+                     char value) const;
 
   bool KnownIntegers(TestCase& base, size_t byte_idx, char value) const {
     return KnownIntegers(base.vec(), byte_idx, value);
   }
 
+  /*
+   * BlockInsertion mutations
+   */
   bool BlockInsertion(std::vector<char>& base,
                       size_t base_start_idx,
                       const std::vector<char>& insertme,
                       size_t insertme_start_idx,
-                      size_t block_length) {
-    SAFE_CHECK(base.size() > base_start_idx, false);
-    SAFE_CHECK(insertme.size() > insertme_start_idx, false);
-    SAFE_CHECK(insertme.size() > insertme_start_idx + block_length - 1, false);
-
-    //    std::copy(insertme.begin() + insertme_start_idx,
-    //              insertme.begin() + insertme_start_idx + block_length,
-    //              base.begin() + base_start_idx);
-    base.insert(base.begin() + base_start_idx,
-                insertme.begin() + insertme_start_idx,
-                insertme.begin() + insertme_start_idx + block_length);
-    return true;
-  }
-
+                      size_t block_length) const;
   bool BlockInsertion(TestCase& base,
                       size_t base_start_idx,
                       TestCase& insertme,
                       size_t insertme_start_idx,
-                      size_t block_length) {
+                      size_t block_length) const {
     return BlockInsertion(base.vec(), base_start_idx, insertme.vec(),
                           insertme_start_idx, block_length);
   }
 
+  /*
+   * BlockDeletion mutations
+   */
   bool BlockDeletion(std::vector<char>& base,
                      size_t start_idx,
-                     size_t block_length) {
-    SAFE_CHECK(base.size() > start_idx, false);
-    SAFE_CHECK(base.size() > start_idx + block_length, false);
+                     size_t block_length) const;
 
-    base.erase(base.begin() + start_idx,
-               base.begin() + start_idx + block_length);
-    return true;
-  }
-
-  bool BlockDeletion(TestCase& base, size_t start_idx, size_t block_length) {
+  bool BlockDeletion(TestCase& base,
+                     size_t start_idx,
+                     size_t block_length) const {
     return BlockDeletion(base.vec(), start_idx, block_length);
   }
 
+  /*
+   * BlockMemset mutations
+   */
   bool BlockMemset(std::vector<char>& base,
                    size_t start_idx,
                    size_t block_length,
-                   char new_value) const {
-    SAFE_CHECK(base.size() > start_idx, false);
-    SAFE_CHECK(base.size() > start_idx + block_length - 1, false);
-
-    std::for_each(base.begin() + start_idx,
-                  base.begin() + start_idx + block_length,
-                  [new_value](char& current) { current = new_value; });
-    return true;
-  }
+                   char new_value) const;
 
   bool BlockMemset(TestCase& base,
                    size_t start_idx,
@@ -164,22 +129,14 @@ class Mutator {
     return BlockMemset(base.vec(), start_idx, block_length, new_value);
   }
 
+  /*
+   * BlockOverriding mutations
+   */
   bool BlockOverriding(std::vector<char>& base,
                        size_t base_start_idx,
                        std::vector<char>& new_values,
                        size_t new_values_start_idx,
-                       size_t block_length) const {
-    SAFE_CHECK(base.size() > base_start_idx, false);
-    SAFE_CHECK(base.size() > base_start_idx + block_length - 1, false);
-    SAFE_CHECK(new_values.size() > new_values_start_idx, false);
-    SAFE_CHECK(new_values.size() > new_values_start_idx + block_length - 1,
-               false);
-
-    std::copy(base.begin() + base_start_idx,
-              base.begin() + base_start_idx + block_length,
-              new_values.begin() + new_values_start_idx);
-    return true;
-  }
+                       size_t block_length) const;
 
   bool BlockOverriding(TestCase& base,
                        size_t base_start_idx,
@@ -191,7 +148,11 @@ class Mutator {
   }
 
  private:
-  bool type_preservation_;
+  bool ChangeAllowed(const char& check_me) const;
+
+  const bool white_chars_preservation_;
+  const bool type_preservation_;
+  std::string output_alphabet_;
   std::string input_alphabet_;
 };
 

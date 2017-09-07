@@ -232,6 +232,20 @@ void TestMutatorBlockMemsetCorrectnesImpl() {
   }
 }
 
+void TestMutatorWhiteSpacePreservationImpl() {
+  fuzzon::Mutator mutator(true);
+
+  const std::vector<char> test_data = {'a', ' ', 11, '\r', '\n', 'b'};
+  std::vector<char> mutate_me = test_data;
+
+  BOOST_TEST(mutator.FlipByte(mutate_me, 0, 1));
+  BOOST_TEST(!mutator.FlipByte(mutate_me, 1, 1));
+  BOOST_TEST(!mutator.FlipByte(mutate_me, 2, 1));
+  BOOST_TEST(!mutator.FlipByte(mutate_me, 3, 1));
+  BOOST_TEST(!mutator.FlipByte(mutate_me, 4, 1));
+  BOOST_TEST(mutator.FlipByte(mutate_me, 5, 1));
+}
+
 //
 // void TestIfMutatorByteFlipChangesOnlySingleByteImpl() {
 //  std::string input_alphabet(
@@ -345,6 +359,10 @@ BOOST_AUTO_TEST_CASE(TestMutatorBlockDeletionCorrectnes) {
 }
 BOOST_AUTO_TEST_CASE(TestMutatorBlockMemsetCorrectnes) {
   TestMutatorBlockMemsetCorrectnesImpl();
+}
+
+BOOST_AUTO_TEST_CASE(TestMutatorWhiteSpacePreservation) {
+  TestMutatorWhiteSpacePreservationImpl();
 }
 
 BOOST_AUTO_TEST_SUITE_END()
