@@ -38,8 +38,7 @@ void Coverage::ComputeHash() {
 }
 
 void Coverage::Merge(const Coverage& merge_me) {
-  pc_total_ += merge_me.pc_total_;
-  pc_visited_ += merge_me.pc_visited_;
+  pc_total_ = merge_me.pc_total_;
   for (size_t idx = 0; idx < pc_flow_.size(); idx++) {
     pc_flow_[idx] += merge_me.pc_flow_[idx];
   }
@@ -49,7 +48,14 @@ void Coverage::Merge(const Coverage& merge_me) {
 int Coverage::GetTotalPCCounter() const {
   return pc_total_;
 }
-int Coverage::GetVisitedPCCounter() const {
+
+int Coverage::GetVisitedPCCounter() {
+  pc_visited_ = 0;
+  for (size_t idx = 0; idx < pc_flow_.size(); ++idx) {
+    if (pc_flow_[idx]) {
+      pc_visited_ += 1;
+    }
+  }
   return pc_visited_;
 }
 

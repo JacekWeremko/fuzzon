@@ -27,7 +27,7 @@ class Coverage {
 
   // Info getters
   int GetTotalPCCounter() const;
-  int GetVisitedPCCounter() const;
+  int GetVisitedPCCounter();
 
   // Operators compare hash
   bool operator==(const Coverage&) const;
