@@ -4,6 +4,7 @@
 
 #include "./fuzzon.h"
 
+#include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/date_time.hpp>
 #include <string>
@@ -12,62 +13,67 @@
 
 #ifndef UNIT_TEST
 
+// using namespace std;
+namespace po = boost::program_options;
+namespace fs = boost::filesystem;
+
 int main(int argc, char** argv) {
   // TODO: configure w.r.t **argv
 
   auto time_now = boost::posix_time::second_clock::local_time();
   auto time_now_str = boost::posix_time::to_simple_string(time_now);
-  auto output_dir = boost::filesystem::path("Output").append(time_now_str);
 
-  std::string sut_path, intput_format;
-  if (argc == 1) {
-    auto current_path = boost::filesystem::current_path();
-    //    auto sut_path     =
-    // current_path/".."/"test"/"application"/"branchness"/"Debug"/"branchness";
-    //    auto intput_format=
-    // current_path/".."/"test"/"application"/"branchness"/"branchness.json";
-    //
-    //    auto sut_path     = current_path/"branchness";
-    //    auto intput_format= current_path/"branchness.json";
-    //
-    //    auto sut_path     =
-    // current_path/"test"/"application"/"branchness"/"Debug"/"branchness";
-    //    auto intput_format=
-    // current_path/"test"/"application"/"branchness"/"branchness.json";
+  po::options_description desc("Options");
+  desc.add_options()("help", "produce help message");
+  desc.add_options()("sut,s", po::value<fs::path>(),
+                     "Software under test path");
+  desc.add_options()("input_format,i", po::value<fs::path>(),
+                     "JSON Input format file path");
+  desc.add_options()("out,o", po::value<fs::path>(), "Output directory path");
+  desc.add_options()("sut_timeout,t", po::value<int>(),
+                     "Max allowed time to execute SUT");
+  desc.add_options()("generate,g", po::value<int>(),
+                     "Number of test cases to exercise in generation phase.");
+  desc.add_options()("mutate,m", po::value<int>(),
+                     "Number of test cases to mutate in mutation phase.");
+  desc.add_options()("white_chars_preservation,w", po::value<int>(),
+                     "Preserve white characters during mutations.");
 
-    //    auto sut_pathb      =
-    // current_path/"test"/"application"/"branchness"/"Debug"/"branchness";
-    //    auto intput_formatb =
-    // current_path/"test"/"application"/"branchness"/"branchness.json";
+  po::variables_map vm;
+  po::store(po::parse_command_line(argc, argv, desc), vm);
+  po::notify(vm);
 
-    auto sut_pathb = current_path / "test" / "application" / "arrayness" /
-                     "Debug" / "arrayness";
-    auto intput_formatb = current_path / "test" / "application" / "arrayness" /
-                          "arrayness_propsal2.json";
-
-    sut_path = sut_pathb.string();
-    intput_format = intput_formatb.string();
-  } else if (argc == 3) {
-    sut_path = std::string(argv[1]);
-    intput_format = std::string(argv[2]);
-  } else {
-    return -1;
+  if (vm.empty() || vm.count("help")) {
+    std::cout << desc << std::endl;
+    return 1;
   }
 
-  auto sut_runtime_timeout = 10;
-  auto iterations = 50;
-  auto test_cases_to_generate = 55;
-  auto test_cases_to_mutate = -1;
-  auto statistics_print_interval = 10;
+  if (!vm.count("sut") || !vm.count("input_format")) {
+    std::cout << "REQUIRED : sut and input_format" << std::endl;
+    return 2;
+  }
+
+  auto sut = vm["sut"].as<fs::path>();
+  auto input_format = vm["input_format"].as<fs::path>();
+
+  auto output = vm.count("out") ? vm["out"].as<fs::path>() : sut.parent_path();
+  output /= (fs::path("fuzzon_").concat(sut.filename().c_str())) / time_now_str;
+
+  auto sut_timeout = vm.count("t") ? vm["t"].as<int>() : 1000;
+  auto generate = vm.count("generate") ? vm["generate"].as<int>() : 100;
+  auto mutate = vm.count("mutate") ? vm["mutate"].as<int>() : -1;
+  auto white_chars_preservation =
+      vm.count("white_chars_preservation")
+          ? vm["white_chars_preservation"].as<bool>()
+          : true;
 
   std::string input_alphabet("abcd");
   fuzzon::Random::Get()->SetAlphabet(input_alphabet);
-  fuzzon::Fuzzon crazy_fuzzer =
-      fuzzon::Fuzzon(output_dir.string(), sut_path, sut_runtime_timeout);
+  fuzzon::Fuzzon crazy_fuzzer(output.string(), sut.string(), sut_timeout);
 
-  crazy_fuzzer.Generation(intput_format, test_cases_to_generate);
-  crazy_fuzzer.MutationDeterministic();
-  crazy_fuzzer.MutationNonDeterministic(test_cases_to_mutate);
+  crazy_fuzzer.Generation(input_format.string(), generate);
+  crazy_fuzzer.MutationDeterministic(white_chars_preservation);
+  crazy_fuzzer.MutationNonDeterministic(mutate, white_chars_preservation);
 
   return 0;
 }
