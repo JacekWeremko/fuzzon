@@ -42,10 +42,10 @@ void Fuzzon::Generation(std::string input_format, int test_cases_to_generate) {
   return;
 }
 
-void Fuzzon::MutationDeterministic() {
+void Fuzzon::MutationDeterministic(bool white_chars_preservation) {
   Logger::Get()->info("MutationDeterministic start!");
   bool all_posibilities_checked = false;
-  Mutator test_cases_mutator;
+  Mutator test_cases_mutator(white_chars_preservation);
   while (!all_posibilities_checked) {
     auto favorite = corpus_.SelectNotYetExhaustMutated();
     if (favorite == nullptr) {
@@ -107,9 +107,10 @@ void Fuzzon::MutationDeterministic() {
   return;
 }
 
-void Fuzzon::MutationNonDeterministic(int test_cases_to_mutate) {
+void Fuzzon::MutationNonDeterministic(int test_cases_to_mutate,
+                                      bool white_chars_preservation) {
   Logger::Get()->info("MutationNonDeterministic start!");
-  Mutator test_cases_mutator;
+  Mutator test_cases_mutator(white_chars_preservation);
   bool stop_testing = false;
 
   while (!stop_testing) {

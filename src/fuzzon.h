@@ -19,8 +19,9 @@ class Fuzzon {
   Fuzzon(std::string output_dir, std::string sut_path, int sut_runtime_timeout);
 
   void Generation(std::string input_format, int test_cases_to_generate);
-  void MutationDeterministic();
-  void MutationNonDeterministic(int test_cases_to_mutate = -1);
+  void MutationDeterministic(bool white_chars_preservation);
+  void MutationNonDeterministic(int test_cases_to_mutate,
+                                bool white_chars_preservation);
 
  private:
   std::string output_dir_;
