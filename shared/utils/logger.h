@@ -16,7 +16,7 @@ class Logger {
   Logger(Logger const&) = delete;
   void operator=(Logger const&) = delete;
 
-  static Logger* Get(std::string output_direcotry = "", int logging_level = 0) {
+  static Logger* Get(std::string output_direcotry = "", int logging_level = 6) {
     static Logger logger(output_direcotry, logging_level);
     return &logger;
   }

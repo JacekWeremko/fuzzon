@@ -20,7 +20,7 @@
 // namespace src = boost::log::sources;
 // namespace keywords = boost::log::keywords;
 
-Logger::Logger(std::string output_direcotry, int logging_level = 0) {
+Logger::Logger(std::string output_direcotry, int logging_level) {
   static const std::string log_format(
       "[%TimeStamp%][%Severity%][%LineID%]: %Message%");
 
