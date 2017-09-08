@@ -36,7 +36,7 @@ ExecutionData Executor::ExecuteBlocking(TestCase& input) {
   std::error_code ec;
   auto start = std::chrono::system_clock::now();
   auto gracefully_finished =
-      sut.wait_for(std::chrono::seconds(execution_timeout_sec_), ec);
+      sut.wait_for(std::chrono::milliseconds(execution_timeout_sec_), ec);
   auto finish = std::chrono::system_clock::now();
   if (!gracefully_finished) {
     sut.terminate(ec);

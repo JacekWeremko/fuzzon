@@ -59,7 +59,7 @@ int main(int argc, char** argv) {
   auto output = vm.count("out") ? vm["out"].as<fs::path>() : sut.parent_path();
   output /= (fs::path("fuzzon_").concat(sut.filename().c_str())) / time_now_str;
 
-  auto sut_timeout = vm.count("t") ? vm["t"].as<int>() : 1000;
+  auto sut_timeout = vm.count("t") ? vm["t"].as<int>() : 3000;
   auto generate = vm.count("generate") ? vm["generate"].as<int>() : 100;
   auto mutate = vm.count("mutate") ? vm["mutate"].as<int>() : -1;
   auto white_chars_preservation =
