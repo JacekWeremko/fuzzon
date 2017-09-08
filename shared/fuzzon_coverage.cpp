@@ -15,6 +15,7 @@ namespace fuzzon {
 Coverage::Coverage(TrackMode mode)
     : mode_(mode),
       pc_total_(std::numeric_limits<uint32_t>::max()),
+      pc_visited_(0),
       last_pc_(0) {
   pc_flow_.fill(0);
 }
@@ -26,6 +27,7 @@ void Coverage::Compress(CompreseMode comprese_mode) {
         continue;
       }
       elem = std::log2(elem) + 1;
+      pc_visited_++;
     }
   }
 }
@@ -33,6 +35,22 @@ void Coverage::Compress(CompreseMode comprese_mode) {
 void Coverage::ComputeHash() {
   MD5(reinterpret_cast<const unsigned char*>(pc_flow_.data()),
       pc_flow_.size() * sizeof(pc_flow_[0]), hash_.data());
+}
+
+void Coverage::Merge(const Coverage& merge_me) {
+  pc_total_ += merge_me.pc_total_;
+  pc_visited_ += merge_me.pc_visited_;
+  for (size_t idx = 0; idx < pc_flow_.size(); idx++) {
+    pc_flow_[idx] += merge_me.pc_flow_[idx];
+  }
+}
+
+// Info getters
+int Coverage::GetTotalPCCounter() const {
+  return pc_total_;
+}
+int Coverage::GetVisitedPCCounter() const {
+  return pc_visited_;
 }
 
 bool Coverage::operator==(const Coverage& compare_with_me) const {
@@ -74,12 +92,9 @@ void Coverage::TracePC(uint32_t idx, uintptr_t PC) {
 
 void Coverage::PrintTrace() const {
   std::stringstream output;
-  for (size_t i = 0; i < pc_flow_.size(); i++) {
-    if (pc_flow_[i] != 0) {
-      output << i << ":" << std::hex << pc_flow_[i] << " ";
-    }
-  }
+  output << this;
   Logger::Get()->info("pc_flow : " + output.str());
   return;
 }
+
 } /* namespace fuzzon */

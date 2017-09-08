@@ -18,13 +18,13 @@
 
 #include "./utils/logger.h"
 
-#define DIR_NAME_CORPUS "corpus"
+namespace fs = boost::filesystem;
 
 namespace fuzzon {
 
 Corpus::Corpus(std::string output_path)
-    : output_path_(
-          (boost::filesystem::path(output_path) / DIR_NAME_CORPUS).string()) {
+    : output_path_((fs::path(output_path) / DIR_NAME_CORPUS).string()),
+      total_(Coverage::Raw) {
   boost::filesystem::create_directories(output_path_);
 }
 
@@ -36,10 +36,7 @@ bool Corpus::IsInteresting(const ExecutionData& am_i) {
   }
   counter++;
 
-  // TODO: calculate coverage (path) hash in order to improve performance
   for (auto& current : data_) {
-    // if (current->second.coverage_.pc_flow_hash ==
-    // am_i.coverage_.pc_flow_hash)
     if (current.path == am_i.path) {
       current.similar_path_coutner_++;
       return false;
@@ -48,13 +45,13 @@ bool Corpus::IsInteresting(const ExecutionData& am_i) {
   return true;
 }
 
+// TODO: move semantic
 void Corpus::AddExecutionData(ExecutionData& add_me_to_corpus) {
   Logger::Get()->info("Adding new test case to corpus: " +
                       add_me_to_corpus.input.string());
-
   // TODO: optimize memory footprint
-  //  auto new_element = std::make_shared<ExecutionData>(add_me_to_corpus);
-  //  data_.push_back(new_element);
+
+  total_.Merge(add_me_to_corpus.path);
   data_.push_back(add_me_to_corpus);
 }
 
@@ -135,10 +132,17 @@ std::stringstream Corpus::GetStatistics() {
   std::stringstream stats;
   stats << "Corpus size : " << std::to_string(data_.size()) << std::endl;
 
+  stats << "Total coverage: "
+        << (static_cast<double>(total_.GetVisitedPCCounter()) /
+            static_cast<double>(total_.GetTotalPCCounter())) *
+               100
+        << std::endl;
+
   stats << "Tested cases: "
         << std::accumulate(data_.begin(), data_.end(), 0,
                            [](int execution_counter, ExecutionData& arg) {
-                             return execution_counter + arg.similar_path_coutner_;
+                             return execution_counter +
+                                    arg.similar_path_coutner_;
                            })
         << std::endl;
 

@@ -20,8 +20,14 @@ class Coverage {
 
   explicit Coverage(TrackMode mode);
 
+  // Helpers
   void Compress(CompreseMode comprese_mode = CompreseMode::Log2);
   void ComputeHash();
+  void Merge(const Coverage& merge_me);
+
+  // Info getters
+  int GetTotalPCCounter() const;
+  int GetVisitedPCCounter() const;
 
   // Operators compare hash
   bool operator==(const Coverage&) const;
@@ -30,28 +36,27 @@ class Coverage {
   // Compares content
   bool IsTheSame(const Coverage&) const;
 
+  // Tracing interface
   void SetPCLimit(size_t value);
   void TracePC(uintptr_t PC);
   void TracePC(uint32_t idx, uintptr_t PC);
+
+  // Printers
   void PrintTrace() const;
 
-  //  friend ostream &operator<<( ostream &output, const Distance &D ) {
-  friend std::ostream& operator<<(std::ostream& output,
-                                  const Coverage& print_me) {
+  friend std::ostream& operator<<(std::ostream& os, const Coverage& print_me) {
     for (auto i = 0; i < print_me.pc_flow_.size(); i++) {
       if (print_me.pc_flow_[i] != 0) {
-        output << i;
-        output << ":" << std::hex << print_me.pc_flow_[i] << " ";
-        output << print_me.pc_flow_[i] << " ";
-        //        output << i << ":" << std::hex << pc_flow_[i] << " ";
+        os << i << ":" << std::hex << print_me.pc_flow_[i] << " ";
       }
     }
-    return output;
+    return os;
   }
 
  private:
   TrackMode mode_;
-  size_t pc_total_;
+  uint32_t pc_total_;
+  uint32_t pc_visited_;
   uintptr_t last_pc_;
 
   //   static const int pc_flow_size_ = 64 * 1024;
