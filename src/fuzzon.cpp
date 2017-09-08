@@ -29,6 +29,13 @@ Fuzzon::Fuzzon(std::string output_dir,
   Logger::Get()->info("Base directory is " + output_dir_);
 }
 
+void Fuzzon::TestInput(std::string test_me) {
+  auto new_test_case = TestCase(test_me);
+  auto execution_data = execution_monitor_.ExecuteBlocking(new_test_case);
+  corpus_.AddIfInteresting(execution_data);
+  return;
+}
+
 void Fuzzon::Generation(std::string input_format, int test_cases_to_generate) {
   Logger::Get()->info("Generation start!");
   Logger::Get()->info("input_format : " + input_format);
