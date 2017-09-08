@@ -7,9 +7,11 @@
 #include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/date_time.hpp>
+#include <vector>
 #include <string>
 
 #include "./fuzzon_random.h"
+#include "./utils/logger.h"
 
 #ifndef UNIT_TEST
 
@@ -23,8 +25,13 @@ int main(int argc, char** argv) {
   auto time_now = boost::posix_time::second_clock::local_time();
   auto time_now_str = boost::posix_time::to_simple_string(time_now);
 
+  std::string verbosity_values;
+
   po::options_description desc("Options");
   desc.add_options()("help", "produce help message");
+  desc.add_options()("verbose,v",
+                     po::value<>(&verbosity_values)->implicit_value(""),
+                     "Logging level");
   desc.add_options()("sut,s", po::value<fs::path>(),
                      "Software under test path");
   desc.add_options()("input_format,i", po::value<fs::path>(),
@@ -67,9 +74,18 @@ int main(int argc, char** argv) {
           ? vm["white_chars_preservation"].as<bool>()
           : true;
 
+  auto verbose_level = verbosity_values.length() + 1;
+  Logger::Get(output.string(), verbose_level);
+
   std::string input_alphabet("abcd");
   fuzzon::Random::Get()->SetAlphabet(input_alphabet);
   fuzzon::Fuzzon crazy_fuzzer(output.string(), sut.string(), sut_timeout);
+
+  //  std::vector<std::string> samples = {"a",     "ab",     "abc",    "abcd",
+  //                                      "abcda", "abcdab", "abcdabc"};
+  //  for (auto& sample : samples) {
+  //    crazy_fuzzer.TestInput(sample);
+  //  }
 
   crazy_fuzzer.Generation(input_format.string(), generate);
   crazy_fuzzer.MutationDeterministic(white_chars_preservation);

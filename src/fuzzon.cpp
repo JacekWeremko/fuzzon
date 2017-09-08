@@ -25,7 +25,6 @@ Fuzzon::Fuzzon(std::string output_dir,
     : output_dir_(output_dir),
       corpus_(output_dir),
       execution_monitor_(sut_path, sut_runtime_timeout) {
-  Logger::Get(output_dir_);
   Logger::Get()->info("Base directory is " + output_dir_);
 }
 
