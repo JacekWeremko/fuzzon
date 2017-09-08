@@ -20,11 +20,11 @@ class Fuzzon {
 
   void TestInput(std::string test_me);
   void Generation(std::string input_format, int test_cases_to_generate);
-  void MutationDeterministic(bool white_chars_preservation);
-  void MutationNonDeterministic(int test_cases_to_mutate,
-                                bool white_chars_preservation);
+  void MutationDeterministic(int level, bool white_chars_preservation);
+  void MutationNonDeterministic(int test_cases_to_mutate, bool white_chars_preservation);
 
   void PrintStats();
+  void Dump();
 
  private:
   std::string output_dir_;

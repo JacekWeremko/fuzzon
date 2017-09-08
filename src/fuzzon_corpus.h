@@ -7,6 +7,7 @@
 
 #include "./fuzzon_executiondata.h"
 
+#include <boost/filesystem.hpp>
 #include <list>
 #include <sstream>
 #include <string>
@@ -28,11 +29,13 @@ class Corpus {
   std::stringstream GetShortStats();
   std::stringstream GetFullStats();
 
+  void Dump();
+
  private:
   const std::string DIR_NAME_CORPUS = "corpus";
   const std::chrono::system_clock::time_point start_;
 
-  std::string output_path_;
+  boost::filesystem::path output_path_;
   std::list<ExecutionData> data_;
   Coverage total_;
 

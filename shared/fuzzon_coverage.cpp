@@ -13,10 +13,7 @@
 namespace fuzzon {
 
 Coverage::Coverage(TrackMode mode)
-    : mode_(mode),
-      pc_total_(std::numeric_limits<uint32_t>::max()),
-      pc_visited_(0),
-      last_pc_(0) {
+    : mode_(mode), pc_total_(std::numeric_limits<uint32_t>::max()), pc_visited_(0), last_pc_(0) {
   pc_flow_.fill(0);
 }
 
@@ -33,8 +30,7 @@ void Coverage::Compress(CompreseMode comprese_mode) {
 }
 
 void Coverage::ComputeHash() {
-  MD5(reinterpret_cast<const unsigned char*>(pc_flow_.data()),
-      pc_flow_.size() * sizeof(pc_flow_[0]), hash_.data());
+  MD5(reinterpret_cast<const unsigned char*>(pc_flow_.data()), pc_flow_.size() * sizeof(pc_flow_[0]), hash_.data());
 }
 
 void Coverage::Merge(const Coverage& merge_me) {
@@ -77,6 +73,7 @@ bool Coverage::IsTheSame(const Coverage& compare_with_me) const {
 }
 
 void Coverage::SetPCLimit(size_t value) {
+  std::cout << value << std::endl;
   pc_total_ = value;
 }
 

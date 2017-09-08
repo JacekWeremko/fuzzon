@@ -25,11 +25,9 @@
 
 namespace fuzzon {
 
-Generator::Generator(std::string format_filepath)
-    : input_format_filepath_(format_filepath) {
+Generator::Generator(std::string format_filepath) : input_format_filepath_(format_filepath) {
   std::ifstream t(input_format_filepath_);
-  std::string format_filepath_content((std::istreambuf_iterator<char>(t)),
-                                      std::istreambuf_iterator<char>());
+  std::string format_filepath_content((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());
 
   input_format_.Parse(format_filepath_content.c_str());
   //    assert(input_format_.IsObject());
@@ -41,11 +39,8 @@ TestCase Generator::generateNext() {
 
   for (auto& current : input_format_.GetObject()) {
     if (current.value.IsObject()) {
-      intput_data.AddMember("properties",
-                            rapidjson::Value(rapidjson::kObjectType),
-                            intput_data.GetAllocator());
-      ParseJson(current.value, intput_data,
-                intput_data.FindMember("properties")->value);
+      intput_data.AddMember("properties", rapidjson::Value(rapidjson::kObjectType), intput_data.GetAllocator());
+      ParseJson(current.value, intput_data, intput_data.FindMember("properties")->value);
     }
   }
 
@@ -63,23 +58,19 @@ int Generator::ParseJson(rapidjson::Value& current,
                          rapidjson::Document& new_document,
                          rapidjson::Value& new_document_current) {
   if (!current.IsObject()) {
-    Logger::Get()->critical(std::string(current.GetString()) +
-                            " is not an object!");
+    Logger::Get()->critical(std::string(current.GetString()) + " is not an object!");
     return -1;
   }
 
-  for (auto cuttent_it = current.MemberBegin();
-       cuttent_it != current.MemberEnd(); ++cuttent_it) {
+  for (auto cuttent_it = current.MemberBegin(); cuttent_it != current.MemberEnd(); ++cuttent_it) {
     {
-      static const char* kTypeNames[] = {"Null",  "False",  "True",  "Object",
-                                         "Array", "String", "Number"};
+      static const char* kTypeNames[] = {"Null", "False", "True", "Object", "Array", "String", "Number"};
       std::string name = cuttent_it->name.GetString();
       std::string type = std::string(kTypeNames[cuttent_it->value.GetType()]);
       //      Logger::Get()->trace("Parse: " +
       // std::string(name) + " is " + std::string((type)));
 
-      static const std::vector<std::string> reserved = {
-          "id", "type", "uniqueItems", "length"};
+      static const std::vector<std::string> reserved = {"id", "type", "uniqueItems", "length"};
       if (std::find(reserved.begin(), reserved.end(), name) != reserved.end()) {
         continue;
       }
@@ -93,37 +84,25 @@ int Generator::ParseJson(rapidjson::Value& current,
       return -1;
     }
 
-    auto element_type =
-        std::string(cuttent_it->value.FindMember("type")->value.GetString());
+    auto element_type = std::string(cuttent_it->value.FindMember("type")->value.GetString());
     if (std::string("integer").compare(element_type) == 0) {
       auto minimum = cuttent_it->value.FindMember("minimum");
-      auto minimum_value = minimum == cuttent_it->value.MemberEnd()
-                               ? -1
-                               : minimum->value.GetInt();
+      auto minimum_value = minimum == cuttent_it->value.MemberEnd() ? -1 : minimum->value.GetInt();
 
       auto maximum = cuttent_it->value.FindMember("maximum");
-      auto maximum_value = maximum == cuttent_it->value.MemberEnd()
-                               ? -1
-                               : maximum->value.GetInt();
+      auto maximum_value = maximum == cuttent_it->value.MemberEnd() ? -1 : maximum->value.GetInt();
 
-      JsonInsertInteger(new_document, new_document_current,
-                        std::string(cuttent_it->name.GetString()),
-                        minimum_value, maximum_value);
+      JsonInsertInteger(new_document, new_document_current, std::string(cuttent_it->name.GetString()), minimum_value,
+                        maximum_value);
     }
     if (std::string("string").compare(element_type) == 0) {
       auto length = cuttent_it->value.FindMember("length");
-      auto length_value =
-          length == cuttent_it->value.MemberEnd() ? -1 : length->value.GetInt();
-      JsonInsertString(new_document, new_document_current,
-                       std::string(cuttent_it->name.GetString()), length_value);
+      auto length_value = length == cuttent_it->value.MemberEnd() ? -1 : length->value.GetInt();
+      JsonInsertString(new_document, new_document_current, std::string(cuttent_it->name.GetString()), length_value);
     } else if (std::string("object").compare(element_type) == 0) {
-      new_document_current.AddMember(
-          rapidjson::Value(cuttent_it->name, new_document.GetAllocator()),
-          rapidjson::Value(rapidjson::kObjectType),
-          new_document.GetAllocator());
-      PrintJson(
-          "AddMember object1 " + std::string(cuttent_it->name.GetString()),
-          new_document);
+      new_document_current.AddMember(rapidjson::Value(cuttent_it->name, new_document.GetAllocator()),
+                                     rapidjson::Value(rapidjson::kObjectType), new_document.GetAllocator());
+      PrintJson("AddMember object1 " + std::string(cuttent_it->name.GetString()), new_document);
       // auto new_document_obect =
       // new_document_current.FindMember(cuttent_it->name);
       auto new_document_obect = new_document_current.MemberEnd() - 1;
@@ -141,98 +120,67 @@ int Generator::ParseJson(rapidjson::Value& current,
         // auto new_array_item =
         // new_document_array->value.MemberEnd() - 1;
 
-        auto array_length_value = GetLast(
-            new_document, rapidjson::Pointer(length_ref->value.GetString()));
+        auto array_length_value = GetLast(new_document, rapidjson::Pointer(length_ref->value.GetString()));
         PrintJson("array_length", *array_length_value);
 
         array_length = array_length_value->GetInt();
       }
 
-      new_document_current.AddMember(
-          rapidjson::Value(cuttent_it->name, new_document.GetAllocator()),
-          rapidjson::Value(rapidjson::kObjectType),
-          new_document.GetAllocator());
-      PrintJson("AddMember array " + std::string(cuttent_it->name.GetString()),
-                new_document);
-      auto new_document_array =
-          new_document_current.FindMember(cuttent_it->name);
+      new_document_current.AddMember(rapidjson::Value(cuttent_it->name, new_document.GetAllocator()),
+                                     rapidjson::Value(rapidjson::kObjectType), new_document.GetAllocator());
+      PrintJson("AddMember array " + std::string(cuttent_it->name.GetString()), new_document);
+      auto new_document_array = new_document_current.FindMember(cuttent_it->name);
 
       auto items = cuttent_it->value.FindMember("items");
       // auto properties =
       // items->value.FindMember("properties");
       auto type_of_array_elements = items->value.FindMember("type");
-      if ((std::string("object").compare(
-               std::string(type_of_array_elements->value.GetString())) == 0) ||
-          (std::string("array").compare(
-               std::string(type_of_array_elements->value.GetString())) == 0)) {
+      if ((std::string("object").compare(std::string(type_of_array_elements->value.GetString())) == 0) ||
+          (std::string("array").compare(std::string(type_of_array_elements->value.GetString())) == 0)) {
         for (size_t idx = 0; idx < array_length; idx++) {
-          new_document_array->value.AddMember(
-              rapidjson::Value(items->name, new_document.GetAllocator()),
-              rapidjson::Value(rapidjson::kObjectType),
-              new_document.GetAllocator());
-          PrintJson(
-              "AddMember array/object " + std::string(items->name.GetString()),
-              new_document);
+          new_document_array->value.AddMember(rapidjson::Value(items->name, new_document.GetAllocator()),
+                                              rapidjson::Value(rapidjson::kObjectType), new_document.GetAllocator());
+          PrintJson("AddMember array/object " + std::string(items->name.GetString()), new_document);
           // auto new_array_item =
           // new_document_array->value.FindMember(items->name);
           auto new_array_item = new_document_array->value.MemberEnd() - 1;
 
           ParseJson(items->value, new_document, new_array_item->value);
         }
-      } else if (std::string("integer").compare(std::string(
-                     type_of_array_elements->value.GetString())) == 0) {
-        new_document_array->value.AddMember(
-            rapidjson::Value(items->name, new_document.GetAllocator()),
-            rapidjson::Value(rapidjson::kArrayType),
-            new_document.GetAllocator());
-        PrintJson("AddMember integer " + std::string(items->name.GetString()),
-                  new_document);
+      } else if (std::string("integer").compare(std::string(type_of_array_elements->value.GetString())) == 0) {
+        new_document_array->value.AddMember(rapidjson::Value(items->name, new_document.GetAllocator()),
+                                            rapidjson::Value(rapidjson::kArrayType), new_document.GetAllocator());
+        PrintJson("AddMember integer " + std::string(items->name.GetString()), new_document);
         auto new_array_item = new_document_array->value.MemberEnd() - 1;
 
         auto minimum = cuttent_it->value.FindMember("minimum");
-        auto minimum_value = minimum == cuttent_it->value.MemberEnd()
-                                 ? -1
-                                 : minimum->value.GetInt();
+        auto minimum_value = minimum == cuttent_it->value.MemberEnd() ? -1 : minimum->value.GetInt();
 
         auto maximum = cuttent_it->value.FindMember("maximum");
-        auto maximum_value = maximum == cuttent_it->value.MemberEnd()
-                                 ? -1
-                                 : maximum->value.GetInt();
+        auto maximum_value = maximum == cuttent_it->value.MemberEnd() ? -1 : maximum->value.GetInt();
         for (size_t idx = 0; idx < array_length; idx++) {
-          JsonInsertInteger(new_document, new_array_item->value,
-                            std::string(cuttent_it->name.GetString()),
+          JsonInsertInteger(new_document, new_array_item->value, std::string(cuttent_it->name.GetString()),
                             minimum_value, maximum_value);
         }
-      } else if (std::string("string").compare(std::string(
-                     type_of_array_elements->value.GetString())) == 0) {
-        new_document_array->value.AddMember(
-            rapidjson::Value(items->name, new_document.GetAllocator()),
-            rapidjson::Value(rapidjson::kArrayType),
-            new_document.GetAllocator());
-        PrintJson("AddMember string " + std::string(items->name.GetString()),
-                  new_document);
+      } else if (std::string("string").compare(std::string(type_of_array_elements->value.GetString())) == 0) {
+        new_document_array->value.AddMember(rapidjson::Value(items->name, new_document.GetAllocator()),
+                                            rapidjson::Value(rapidjson::kArrayType), new_document.GetAllocator());
+        PrintJson("AddMember string " + std::string(items->name.GetString()), new_document);
         auto new_array_item = new_document_array->value.MemberEnd() - 1;
 
         auto length = cuttent_it->value.FindMember("length");
-        auto length_value = length == cuttent_it->value.MemberEnd()
-                                ? -1
-                                : length->value.GetInt();
+        auto length_value = length == cuttent_it->value.MemberEnd() ? -1 : length->value.GetInt();
         for (size_t idx = 0; idx < array_length; idx++) {
-          JsonInsertString(new_document, new_array_item->value,
-                           std::string(cuttent_it->name.GetString()),
+          JsonInsertString(new_document, new_array_item->value, std::string(cuttent_it->name.GetString()),
                            length_value);
         }
       } else {
-        Logger::Get()->critical(
-            std::string(type_of_array_elements->value.GetString()) +
-            " handling of array element type not implemented yet!");
+        Logger::Get()->critical(std::string(type_of_array_elements->value.GetString()) +
+                                " handling of array element type not implemented yet!");
       }
 
     } else {
-      // throw std::string(type)
-      //+ " handling is not implemented yet";
-      Logger::Get()->critical(element_type +
-                              " handling is not implemented yet");
+      Logger::Get()->trace(element_type + " handling is not implemented yet");
     }
   }
   return 0;
@@ -258,8 +206,7 @@ int Generator::StripJson(rapidjson::Value& current, std::stringstream& output) {
   return 0;
 }
 
-rapidjson::Value* Generator::GetLast(rapidjson::Value& top,
-                                     const rapidjson::Pointer& find_me) {
+rapidjson::Value* Generator::GetLast(rapidjson::Value& top, const rapidjson::Pointer& find_me) {
   rapidjson::Value* elem = &top;
   for (auto i = 0; i < find_me.GetTokenCount(); ++i) {
     auto current_token = find_me.GetTokens() + i;
@@ -268,8 +215,7 @@ rapidjson::Value* Generator::GetLast(rapidjson::Value& top,
     } else if (elem->IsObject()) {
       auto elem_member = elem->MemberEnd() - 1;
       for (auto im = 0; im < elem->MemberCount(); im++) {
-        std::string elem_member_name =
-            std::string(elem_member->name.GetString());
+        std::string elem_member_name = std::string(elem_member->name.GetString());
         std::string current_token_name = std::string(current_token->name);
         if (std::string(elem_member_name).compare(current_token_name) == 0) {
           elem = &elem_member->value;
@@ -294,8 +240,7 @@ bool Generator::JsonInsertInteger(rapidjson::Document& document,
                                   std::string new_value_name,
                                   int minimum,
                                   int maximum) {
-  rapidjson::Value new_element_value =
-      rapidjson::Value(Random::Get()->GenerateInt(minimum, maximum));
+  rapidjson::Value new_element_value = rapidjson::Value(Random::Get()->GenerateInt(minimum, maximum));
   return JsonInsert(document, current, new_value_name, new_element_value);
 }
 
@@ -303,8 +248,8 @@ bool Generator::JsonInsertString(rapidjson::Document& document,
                                  rapidjson::Value& current,
                                  std::string new_value_name,
                                  int length) {
-  rapidjson::Value new_element_value = rapidjson::Value(
-      Random::Get()->GenerateString(length).c_str(), document.GetAllocator());
+  rapidjson::Value new_element_value =
+      rapidjson::Value(Random::Get()->GenerateString(length).c_str(), document.GetAllocator());
   return JsonInsert(document, current, new_value_name, new_element_value);
 }
 
@@ -316,26 +261,22 @@ bool Generator::JsonInsert(rapidjson::Document& document,
     current.PushBack(new_element_value, document.GetAllocator());
     PrintJson("AddMember", document);
   } else if (current.IsObject()) {
-    current.AddMember(
-        rapidjson::Value(new_element_name.c_str(), document.GetAllocator()),
-        new_element_value, document.GetAllocator());
+    current.AddMember(rapidjson::Value(new_element_name.c_str(), document.GetAllocator()), new_element_value,
+                      document.GetAllocator());
     PrintJson("AddMember", document);
   } else {
-    Logger::Get()->critical(std::string(current.GetString()) +
-                            " insertion failed.");
+    Logger::Get()->critical(std::string(current.GetString()) + " insertion failed.");
     return false;
   }
   return true;
 }
 
-void Generator::PrintJson(std::string document_title,
-                          const rapidjson::Document& print_me) {
+void Generator::PrintJson(std::string document_title, const rapidjson::Document& print_me) {
   rapidjson::StringBuffer buffer;
   rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
   print_me.Accept(writer);
 
-  Logger::Get()->debug(document_title + " : \r\n" +
-                       std::string(buffer.GetString()));
+  Logger::Get()->trace(document_title + " : \r\n" + std::string(buffer.GetString()));
   return;
 }
 
@@ -344,30 +285,25 @@ void Generator::PrintJson(std::string value_title, rapidjson::Value& print_me) {
   rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
   print_me.Accept(writer);
 
-  Logger::Get()->debug(value_title + " : \r\n" +
-                       std::string(buffer.GetString()));
+  Logger::Get()->trace(value_title + " : \r\n" + std::string(buffer.GetString()));
   return;
 }
 
-void Generator::PrintJson(std::string title,
-                          rapidjson::Value::ConstMemberIterator print_me) {
+void Generator::PrintJson(std::string title, rapidjson::Value::ConstMemberIterator print_me) {
   rapidjson::StringBuffer buffer;
   rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
   print_me->value.Accept(writer);
 
-  Logger::Get()->debug(title + std::string(print_me->name.GetString()) +
-                       ": \r\n" + std::string(buffer.GetString()));
+  Logger::Get()->trace(title + std::string(print_me->name.GetString()) + ": \r\n" + std::string(buffer.GetString()));
   return;
 }
 
-void Generator::PrintJson(std::string title,
-                          rapidjson::Value::ConstMemberIterator& print_me) {
+void Generator::PrintJson(std::string title, rapidjson::Value::ConstMemberIterator& print_me) {
   rapidjson::StringBuffer buffer;
   rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
   print_me->value.Accept(writer);
 
-  Logger::Get()->debug(title + std::string(print_me->name.GetString()) +
-                       ": \r\n" + std::string(buffer.GetString()));
+  Logger::Get()->trace(title + std::string(print_me->name.GetString()) + ": \r\n" + std::string(buffer.GetString()));
   return;
 }
 

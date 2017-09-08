@@ -9,6 +9,7 @@
 #include <openssl/md5.h>
 
 #include <iostream>
+#include <algorithm>
 #include <array>
 
 namespace fuzzon {
@@ -45,11 +46,30 @@ class Coverage {
   void PrintTrace() const;
 
   friend std::ostream& operator<<(std::ostream& os, const Coverage& print_me) {
-    for (auto i = 0; i < print_me.pc_flow_.size(); i++) {
+    os << "{" << std::endl;
+    os << "\"mode\" : " << print_me.mode_ << "," << std::endl;
+    os << "\"pc_total\" : " << print_me.pc_total_ << "," << std::endl;
+    os << "\"pc_visited\" : " << print_me.pc_visited_ << "," << std::endl;
+    os << "\"last_pc\" : " << print_me.last_pc_ << "," << std::endl;
+    os << "\"pc_flow\" : {" << std::endl;
+    for (auto i = 0, j = 0; i < print_me.pc_flow_.size(); i++) {
       if (print_me.pc_flow_[i] != 0) {
-        os << i << ":" << std::hex << print_me.pc_flow_[i] << " ";
+        if (j == 0) {
+          os << "\"" << std::to_string(i) << "\" : " << print_me.pc_flow_[i];
+        } else {
+          os << "," << std::endl;
+          os << "\"" << std::to_string(i) << "\" : " << print_me.pc_flow_[i];
+        }
+        j++;
       }
     }
+    os << std::endl << "}," << std::endl;
+    os << "\"hash\" : \"";
+    for (const auto& elem : print_me.hash_) {
+      os << std::hex << static_cast<int>(elem);
+    }
+    os << "\"" << std::endl;
+    os << "}";
     return os;
   }
 

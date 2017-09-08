@@ -50,8 +50,7 @@ bool Corpus::IsInteresting(const ExecutionData& am_i) {
 
 // TODO: move semantic
 void Corpus::AddExecutionData(ExecutionData& add_me_to_corpus) {
-  Logger::Get()->debug("Adding new test case to corpus: " +
-                       add_me_to_corpus.input.string());
+  Logger::Get()->debug("Adding new test case to corpus: " + add_me_to_corpus.input.string());
   // TODO: optimize memory footprint
 
   total_.Merge(add_me_to_corpus.path);
@@ -99,8 +98,7 @@ const TestCase* Corpus::SelectFavorite() {
         lowest_similar_path_coutner.clear();
         lowest_similar_execution_coutner = current->similar_path_coutner_;
         lowest_similar_path_coutner.push_back(current);
-      } else if (current->similar_path_coutner_ ==
-                 lowest_similar_execution_coutner) {
+      } else if (current->similar_path_coutner_ == lowest_similar_execution_coutner) {
         lowest_similar_path_coutner.push_back(current);
       }
     }
@@ -111,8 +109,7 @@ const TestCase* Corpus::SelectFavorite() {
   {
     auto lowest_time_and_size = std::numeric_limits<double>::max();
     for (auto& current : lowest_similar_path_coutner) {
-      double current_time_and_size =
-          current->execution_time.count() * current->input.length_byte();
+      double current_time_and_size = current->execution_time.count() * current->input.length_byte();
       if (current_time_and_size < lowest_time_and_size) {
         result = current;
       }
@@ -138,24 +135,19 @@ std::stringstream Corpus::GetShortStats() {
   auto ms = stdch::duration_cast<stdch::milliseconds>(now - start_);
   auto hh = stdch::duration_cast<stdch::hours>(ms).count();
   auto mm = stdch::duration_cast<stdch::minutes>(ms % stdch::hours(1)).count();
-  auto ss =
-      stdch::duration_cast<stdch::seconds>(ms % stdch::minutes(1)).count();
-  auto mi =
-      stdch::duration_cast<stdch::milliseconds>(ms % stdch::seconds(1)).count();
+  auto ss = stdch::duration_cast<stdch::seconds>(ms % stdch::minutes(1)).count();
+  auto mi = stdch::duration_cast<stdch::milliseconds>(ms % stdch::seconds(1)).count();
 
   // and print durations and values:
 
-  stats << hh << ":" << mm << ":" << ss << ":" << mi << "    Runs:"
-        << std::accumulate(data_.begin(), data_.end(), 0,
-                           [](int execution_counter, ExecutionData& arg) {
-                             return execution_counter +
-                                    arg.similar_path_coutner_;
-                           })
-        << "    cor:" << std::to_string(data_.size())
-        << "    cov:" << total_.GetVisitedPCCounter() << "/"
+  stats << hh << ":" << mm << ":" << ss << ":" << mi
+        << "    Runs:" << std::accumulate(data_.begin(), data_.end(), 0,
+                                          [](int execution_counter, ExecutionData& arg) {
+                                            return execution_counter + arg.similar_path_coutner_;
+                                          })
+        << "    cor:" << std::to_string(data_.size()) << "    cov:" << total_.GetVisitedPCCounter() << "/"
         << total_.GetTotalPCCounter() << "  "
-        << ((static_cast<double>(total_.GetVisitedPCCounter()) /
-             static_cast<double>(total_.GetTotalPCCounter())) *
+        << ((static_cast<double>(total_.GetVisitedPCCounter()) / static_cast<double>(total_.GetTotalPCCounter())) *
             100);
   return stats;
 }
@@ -165,107 +157,99 @@ std::stringstream Corpus::GetFullStats() {
   stats << "Corpus size : " << std::to_string(data_.size()) << std::endl;
 
   stats << "Total coverage: "
-        << (static_cast<double>(total_.GetVisitedPCCounter()) /
-            static_cast<double>(total_.GetTotalPCCounter())) *
-               100
+        << (static_cast<double>(total_.GetVisitedPCCounter()) / static_cast<double>(total_.GetTotalPCCounter())) * 100
         << std::endl;
   stats << "Visited pc: " << total_.GetVisitedPCCounter() << std::endl;
   stats << "Total   pc: " << total_.GetTotalPCCounter() << std::endl;
 
-  stats << "Test cases: "
-        << std::accumulate(data_.begin(), data_.end(), 0,
-                           [](int execution_counter, ExecutionData& arg) {
-                             return execution_counter +
-                                    arg.similar_path_coutner_;
-                           })
-        << std::endl;
+  stats << "Test cases: " << std::accumulate(data_.begin(), data_.end(), 0, [](int execution_counter,
+                                                                               ExecutionData& arg) {
+    return execution_counter + arg.similar_path_coutner_;
+  }) << std::endl;
 
   if (data_.size() == 0) {
     return stats;
   }
 
   stats << "Test case max mutation count: "
-        << std::max_element(data_.begin(), data_.end(),
-                            [](ExecutionData& arg1, ExecutionData& arg2) {
-                              return arg1.mutation_counter_ <
-                                     arg2.mutation_counter_;
-                            })
+        << std::max_element(
+               data_.begin(), data_.end(),
+               [](ExecutionData& arg1, ExecutionData& arg2) { return arg1.mutation_counter_ < arg2.mutation_counter_; })
                ->mutation_counter_
         << std::endl;
   stats << "Test case min mutation count: "
-        << std::max_element(data_.begin(), data_.end(),
-                            [](ExecutionData& arg1, ExecutionData& arg2) {
-                              return arg1.mutation_counter_ >
-                                     arg2.mutation_counter_;
-                            })
+        << std::max_element(
+               data_.begin(), data_.end(),
+               [](ExecutionData& arg1, ExecutionData& arg2) { return arg1.mutation_counter_ > arg2.mutation_counter_; })
                ->mutation_counter_
         << std::endl;
 
   stats << "Test case max similar executions count: "
         << std::max_element(data_.begin(), data_.end(),
                             [](ExecutionData& arg1, ExecutionData& arg2) {
-                              return arg1.similar_path_coutner_ <
-                                     arg2.similar_path_coutner_;
+                              return arg1.similar_path_coutner_ < arg2.similar_path_coutner_;
                             })
                ->similar_path_coutner_
         << std::endl;
   stats << "Test case min similar executions count: "
         << std::max_element(data_.begin(), data_.end(),
                             [](ExecutionData& arg1, ExecutionData& arg2) {
-                              return arg1.similar_path_coutner_ >
-                                     arg2.similar_path_coutner_;
+                              return arg1.similar_path_coutner_ > arg2.similar_path_coutner_;
                             })
                ->similar_path_coutner_
         << std::endl;
 
   stats << "Test case max execution time[ms]: "
-        << stdch::duration_cast<stdch::milliseconds>(
-               std::max_element(data_.begin(), data_.end(),
-                                [](ExecutionData& arg1, ExecutionData& arg2) {
-                                  return arg1.execution_time <
-                                         arg2.execution_time;
-                                })
-                   ->execution_time)
+        << stdch::duration_cast<stdch::milliseconds>(std::max_element(data_.begin(), data_.end(),
+                                                                      [](ExecutionData& arg1, ExecutionData& arg2) {
+                                                                        return arg1.execution_time <
+                                                                               arg2.execution_time;
+                                                                      })
+                                                         ->execution_time)
                .count()
         << std::endl;
   stats << "Test case min execution time[ms]: "
-        << stdch::duration_cast<stdch::milliseconds>(
-               std::max_element(data_.begin(), data_.end(),
-                                [](ExecutionData& arg1, ExecutionData& arg2) {
-                                  return arg1.execution_time >
-                                         arg2.execution_time;
-                                })
-                   ->execution_time)
+        << stdch::duration_cast<stdch::milliseconds>(std::max_element(data_.begin(), data_.end(),
+                                                                      [](ExecutionData& arg1, ExecutionData& arg2) {
+                                                                        return arg1.execution_time >
+                                                                               arg2.execution_time;
+                                                                      })
+                                                         ->execution_time)
                .count()
         << std::endl;
 
-  stats << "Gracefully finished: "
-        << std::count_if(data_.begin(), data_.end(),
-                         [](ExecutionData& arg) {
-                           return arg.gracefully_finished == true;
-                         })
-        << std::endl;
+  stats << "Gracefully finished: " << std::count_if(data_.begin(), data_.end(), [](ExecutionData& arg) {
+    return arg.gracefull_close == true;
+  }) << std::endl;
 
-  stats << "Non zero error code: "
-        << std::count_if(
-               data_.begin(), data_.end(),
-               [](ExecutionData& arg) { return arg.error_code.value() != 0; })
-        << std::endl;
+  stats << "Non zero error code: " << std::count_if(data_.begin(), data_.end(), [](ExecutionData& arg) {
+    return arg.error_code.value() != 0;
+  }) << std::endl;
 
-  stats << "Non zero return code: "
-        << std::count_if(data_.begin(), data_.end(),
-                         [](ExecutionData& arg) { return arg.exit_code != 0; })
-        << std::endl;
+  stats << "Non zero return code: " << std::count_if(data_.begin(), data_.end(), [](ExecutionData& arg) {
+    return arg.exit_code != 0;
+  }) << std::endl;
 
-  stats << "Faulty test cases: "
-        << std::count_if(data_.begin(), data_.end(),
-                         [](ExecutionData& arg) {
-                           return arg.gracefully_finished == false &&
-                                  arg.error_code.value() != 0;
-                         })
-        << std::endl;
+  stats << "Faulty test cases: " << std::count_if(data_.begin(), data_.end(), [](ExecutionData& arg) {
+    return arg.gracefull_close == false && arg.error_code.value() != 0;
+  }) << std::endl;
 
   return stats;
+}
+
+void Corpus::Dump() {
+  fs::ofstream(output_path_ / "stats.txt") << GetFullStats().str();
+  fs::ofstream(output_path_ / "total.json") << total_;
+
+  {
+    auto index = 1;
+    for (auto& elem : data_) {
+      fs::ofstream(output_path_ / fs::path(std::to_string(index) + ".json")) << elem;
+      index++;
+    }
+  }
+
+  return;
 }
 
 } /* namespace fuzzon */

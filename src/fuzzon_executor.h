@@ -16,13 +16,13 @@ namespace fuzzon {
 
 class Executor {
  public:
-  explicit Executor(std::string sut_path, int execution_timeout_sec);
+  explicit Executor(std::string sut_path, int execution_timeout_ms);
 
   ExecutionData ExecuteBlocking(TestCase& input);
 
  private:
   std::string sut_path_;
-  const int execution_timeout_sec_;
+  const std::chrono::milliseconds execution_timeout_;
 };
 
 } /* namespace fuzzon */

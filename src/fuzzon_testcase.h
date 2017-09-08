@@ -10,6 +10,7 @@
 #include <vector>
 #include <utility>
 #include <algorithm>
+#include <ostream>
 
 namespace fuzzon {
 
@@ -20,9 +21,7 @@ class TestCase {
   TestCase() = delete;
 
   // move semantic
-  explicit TestCase(uint8_t* data, size_t length) {
-    data_.assign(data, data + length);
-  }
+  explicit TestCase(uint8_t* data, size_t length) { data_.assign(data, data + length); }
   explicit TestCase(std::vector<char>&& move_me) noexcept : data_(move_me) {}
   TestCase(TestCase&& move_me) noexcept : data_(std::move(move_me.data_)) {}
 
@@ -57,6 +56,17 @@ class TestCase {
   std::string string() const { return std::string(data_.data(), data_.size()); }
 
   std::vector<char>& vec() { return data_; }
+
+  friend std::ostream& operator<<(std::ostream& os, const TestCase& print_me) {
+    os << "{" << std::endl;
+    os << "\"data\" : ";
+    for (const auto& elem : print_me.data_) {
+      os << elem;
+    }
+    os << std::endl;
+    os << "}";
+    return os;
+  }
 
  private:
   std::vector<char> data_;

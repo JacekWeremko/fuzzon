@@ -19,12 +19,8 @@ namespace fuzzon {
 #define DIR_NAME_PATHS "paths"
 #define DIR_NAME_TMP "tmp"
 
-Fuzzon::Fuzzon(std::string output_dir,
-               std::string sut_path,
-               int sut_runtime_timeout)
-    : output_dir_(output_dir),
-      corpus_(output_dir),
-      execution_monitor_(sut_path, sut_runtime_timeout) {
+Fuzzon::Fuzzon(std::string output_dir, std::string sut_path, int sut_runtime_timeout)
+    : output_dir_(output_dir), corpus_(output_dir), execution_monitor_(sut_path, sut_runtime_timeout) {
   Logger::Get()->info("Base directory is " + output_dir_);
 }
 
@@ -48,9 +44,8 @@ void Fuzzon::Generation(std::string input_format, int test_cases_to_generate) {
   return;
 }
 
-void Fuzzon::MutationDeterministic(bool white_chars_preservation) {
-  Logger::Get()->info(corpus_.GetShortStats().str() +
-                      " <- mutation deterministic start");
+void Fuzzon::MutationDeterministic(int level, bool white_chars_preservation) {
+  Logger::Get()->info(corpus_.GetShortStats().str() + " <- mutation deterministic start");
   bool all_posibilities_checked = false;
   Mutator test_cases_mutator(white_chars_preservation);
   while (!all_posibilities_checked) {
@@ -58,6 +53,10 @@ void Fuzzon::MutationDeterministic(bool white_chars_preservation) {
     if (favorite == nullptr) {
       all_posibilities_checked = true;
       break;
+    }
+
+    if (level == 0) {
+      continue;
     }
 
     // walking: exhaust bit flips
@@ -110,15 +109,12 @@ void Fuzzon::MutationDeterministic(bool white_chars_preservation) {
 
     // something more?
   }
-  Logger::Get()->info(corpus_.GetShortStats().str() +
-                      " <- mutation deterministic finish");
+  Logger::Get()->info(corpus_.GetShortStats().str() + " <- mutation deterministic finish");
   return;
 }
 
-void Fuzzon::MutationNonDeterministic(int test_cases_to_mutate,
-                                      bool white_chars_preservation) {
-  Logger::Get()->info(corpus_.GetShortStats().str() +
-                      " <- mutation non-deterministic start");
+void Fuzzon::MutationNonDeterministic(int test_cases_to_mutate, bool white_chars_preservation) {
+  Logger::Get()->info(corpus_.GetShortStats().str() + " <- mutation non-deterministic start");
   Mutator test_cases_mutator(white_chars_preservation);
   bool stop_testing = false;
 
@@ -134,13 +130,18 @@ void Fuzzon::MutationNonDeterministic(int test_cases_to_mutate,
       stop_testing = true;
     }
   }
-  Logger::Get()->info(corpus_.GetShortStats().str() +
-                      " <- mutation non-deterministic finish");
+  Logger::Get()->info(corpus_.GetShortStats().str() + " <- mutation non-deterministic finish");
   return;
 }
 
 void Fuzzon::PrintStats() {
   Logger::Get()->info(corpus_.GetFullStats().str());
+  return;
+}
+
+void Fuzzon::Dump() {
+  corpus_.Dump();
+  return;
 }
 
 }  // namespace fuzzon

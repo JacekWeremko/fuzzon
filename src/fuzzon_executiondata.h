@@ -29,7 +29,7 @@ struct ExecutionData {
       : input(tc),
         error_code(erc),
         exit_code(exc),
-        gracefully_finished(gracefully_finished),
+        gracefull_close(gracefully_finished),
         execution_time(execution_time),
         std_out(std_out.str()),
         std_err(std_err.str()), /* TODO: performance */
@@ -41,10 +41,24 @@ struct ExecutionData {
     path.ComputeHash();
   }
 
+  friend std::ostream& operator<<(std::ostream& os, const ExecutionData& print_me) {
+    os << "{" << std::endl;
+    os << "\"input\" : " << print_me.input << "," << std::endl;
+    os << "\"error_code\" : \"" << print_me.error_code << "\"," << std::endl;
+    os << "\"exit_code\" : " << print_me.exit_code << "," << std::endl;
+    os << "\"gracefull_close\" : " << print_me.gracefull_close << "," << std::endl;
+    os << "\"execution_time\" : " << print_me.execution_time.count() << "," << std::endl;
+    os << "\"std_out\" : \"" << print_me.std_out << "\"," << std::endl;
+    os << "\"std_err\" : \"" << print_me.std_err << "\"," << std::endl;
+    os << "\"path\" : " << print_me.path << std::endl;
+    os << "}";
+    return os;
+  }
+
   TestCase input;
   std::error_code error_code;
   int exit_code;
-  bool gracefully_finished;
+  bool gracefull_close;
   std::chrono::microseconds execution_time;
 
   std::string std_out;

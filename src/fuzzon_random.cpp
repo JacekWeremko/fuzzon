@@ -22,8 +22,7 @@ Random::Random() {
       {AlphabetType::NumsSpecials, "!@#$%^&*()"},
       {AlphabetType::OtherSpecials, "`~-_=+[{]}\\|;:'\",<.>/? "},
   };
-  alphabet_ = std::string(alphabets_[AlphabetType::SmallLetters] +
-                          alphabets_[AlphabetType::CapitalLetters] +
+  alphabet_ = std::string(alphabets_[AlphabetType::SmallLetters] + alphabets_[AlphabetType::CapitalLetters] +
                           alphabets_[AlphabetType::Nums]);
 }
 
