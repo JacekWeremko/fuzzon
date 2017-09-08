@@ -55,7 +55,7 @@ TestCase Generator::generateNext() {
   int result = StripJson(intput_data, input_stripped);
   BOOST_ASSERT(result == 0);
 
-  Logger::Get()->debug("Stripped input data :" + input_stripped.str());
+  //  Logger::Get()->debug("Stripped input data :" + input_stripped.str());
   return TestCase(input_stripped.str());
 }
 
