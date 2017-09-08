@@ -28,8 +28,11 @@ class Corpus {
   std::stringstream GetStatistics();
 
  private:
+  const std::string DIR_NAME_CORPUS = "corpus";
+
   std::string output_path_;
   std::list<ExecutionData> data_;
+  Coverage total_;
 
   bool IsInteresting(const ExecutionData& am_i);
   void AddExecutionData(ExecutionData& add_me_to_corpus);
