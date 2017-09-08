@@ -36,20 +36,21 @@ void Fuzzon::TestInput(std::string test_me) {
 }
 
 void Fuzzon::Generation(std::string input_format, int test_cases_to_generate) {
-  Logger::Get()->info("Generation start!");
-  Logger::Get()->info("input_format : " + input_format);
+  Logger::Get()->debug("input_format : " + input_format);
+  Logger::Get()->info(corpus_.GetShortStats().str() + " <- generation start");
   Generator test_cases_generator(input_format);
   while (test_cases_to_generate--) {
     auto new_test_case = test_cases_generator.generateNext();
     auto execution_data = execution_monitor_.ExecuteBlocking(new_test_case);
     corpus_.AddIfInteresting(execution_data);
   }
-  Logger::Get()->info("Generation finished!");
+  Logger::Get()->info(corpus_.GetShortStats().str() + " <- generation finish");
   return;
 }
 
 void Fuzzon::MutationDeterministic(bool white_chars_preservation) {
-  Logger::Get()->info("MutationDeterministic start!");
+  Logger::Get()->info(corpus_.GetShortStats().str() +
+                      " <- mutation deterministic start");
   bool all_posibilities_checked = false;
   Mutator test_cases_mutator(white_chars_preservation);
   while (!all_posibilities_checked) {
@@ -109,13 +110,15 @@ void Fuzzon::MutationDeterministic(bool white_chars_preservation) {
 
     // something more?
   }
-  Logger::Get()->info("MutationDeterministic finished!");
+  Logger::Get()->info(corpus_.GetShortStats().str() +
+                      " <- mutation deterministic finish");
   return;
 }
 
 void Fuzzon::MutationNonDeterministic(int test_cases_to_mutate,
                                       bool white_chars_preservation) {
-  Logger::Get()->info("MutationNonDeterministic start!");
+  Logger::Get()->info(corpus_.GetShortStats().str() +
+                      " <- mutation non-deterministic start");
   Mutator test_cases_mutator(white_chars_preservation);
   bool stop_testing = false;
 
@@ -131,8 +134,13 @@ void Fuzzon::MutationNonDeterministic(int test_cases_to_mutate,
       stop_testing = true;
     }
   }
-  Logger::Get()->info("MutationNonDeterministic finished!");
+  Logger::Get()->info(corpus_.GetShortStats().str() +
+                      " <- mutation non-deterministic finish");
   return;
+}
+
+void Fuzzon::PrintStats() {
+  Logger::Get()->info(corpus_.GetFullStats().str());
 }
 
 }  // namespace fuzzon

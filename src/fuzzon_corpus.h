@@ -25,10 +25,12 @@ class Corpus {
   const TestCase* SelectFavorite();
   const TestCase* SelectNotYetExhaustMutated();
 
-  std::stringstream GetStatistics();
+  std::stringstream GetShortStats();
+  std::stringstream GetFullStats();
 
  private:
   const std::string DIR_NAME_CORPUS = "corpus";
+  const std::chrono::system_clock::time_point start_;
 
   std::string output_path_;
   std::list<ExecutionData> data_;

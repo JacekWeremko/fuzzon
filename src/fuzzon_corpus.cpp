@@ -19,22 +19,25 @@
 #include "./utils/logger.h"
 
 namespace fs = boost::filesystem;
+namespace stdch = std::chrono;
 
 namespace fuzzon {
-
 Corpus::Corpus(std::string output_path)
-    : output_path_((fs::path(output_path) / DIR_NAME_CORPUS).string()),
+    : start_(stdch::system_clock::now()),
+      output_path_((fs::path(output_path) / DIR_NAME_CORPUS).string()),
       total_(Coverage::Raw) {
   boost::filesystem::create_directories(output_path_);
 }
 
 bool Corpus::IsInteresting(const ExecutionData& am_i) {
-  static int counter = 0;
-  const int statistics_print_interval = 1000;
-  if (counter % statistics_print_interval == 0) {
-    Logger::Get()->info("Progress: \r\n" + GetStatistics().str());
+  static auto last_print = stdch::system_clock::now();
+  auto now = stdch::system_clock::now();
+
+  const auto statistics_print_interval = stdch::milliseconds(1000);
+  if ((now - last_print) > statistics_print_interval) {
+    Logger::Get()->info(GetShortStats().str());
+    last_print = now;
   }
-  counter++;
 
   for (auto& current : data_) {
     if (current.path == am_i.path) {
@@ -47,8 +50,8 @@ bool Corpus::IsInteresting(const ExecutionData& am_i) {
 
 // TODO: move semantic
 void Corpus::AddExecutionData(ExecutionData& add_me_to_corpus) {
-  Logger::Get()->info("Adding new test case to corpus: " +
-                      add_me_to_corpus.input.string());
+  Logger::Get()->debug("Adding new test case to corpus: " +
+                       add_me_to_corpus.input.string());
   // TODO: optimize memory footprint
 
   total_.Merge(add_me_to_corpus.path);
@@ -128,7 +131,36 @@ const TestCase* Corpus::SelectNotYetExhaustMutated() {
   return nullptr;
 }
 
-std::stringstream Corpus::GetStatistics() {
+std::stringstream Corpus::GetShortStats() {
+  std::stringstream stats;
+
+  auto now = stdch::system_clock::now();
+  auto ms = stdch::duration_cast<stdch::milliseconds>(now - start_);
+  auto hh = stdch::duration_cast<stdch::hours>(ms).count();
+  auto mm = stdch::duration_cast<stdch::minutes>(ms % stdch::hours(1)).count();
+  auto ss =
+      stdch::duration_cast<stdch::seconds>(ms % stdch::minutes(1)).count();
+  auto mi =
+      stdch::duration_cast<stdch::milliseconds>(ms % stdch::seconds(1)).count();
+
+  // and print durations and values:
+
+  stats << hh << ":" << mm << ":" << ss << ":" << mi << "    Runs:"
+        << std::accumulate(data_.begin(), data_.end(), 0,
+                           [](int execution_counter, ExecutionData& arg) {
+                             return execution_counter +
+                                    arg.similar_path_coutner_;
+                           })
+        << "    cor:" << std::to_string(data_.size())
+        << "    cov:" << total_.GetVisitedPCCounter() << "/"
+        << total_.GetTotalPCCounter() << "  "
+        << ((static_cast<double>(total_.GetVisitedPCCounter()) /
+             static_cast<double>(total_.GetTotalPCCounter())) *
+            100);
+  return stats;
+}
+
+std::stringstream Corpus::GetFullStats() {
   std::stringstream stats;
   stats << "Corpus size : " << std::to_string(data_.size()) << std::endl;
 
@@ -137,8 +169,10 @@ std::stringstream Corpus::GetStatistics() {
             static_cast<double>(total_.GetTotalPCCounter())) *
                100
         << std::endl;
+  stats << "Visited pc: " << total_.GetVisitedPCCounter() << std::endl;
+  stats << "Total   pc: " << total_.GetTotalPCCounter() << std::endl;
 
-  stats << "Tested cases: "
+  stats << "Test cases: "
         << std::accumulate(data_.begin(), data_.end(), 0,
                            [](int execution_counter, ExecutionData& arg) {
                              return execution_counter +
@@ -185,7 +219,7 @@ std::stringstream Corpus::GetStatistics() {
         << std::endl;
 
   stats << "Test case max execution time[ms]: "
-        << std::chrono::duration_cast<std::chrono::milliseconds>(
+        << stdch::duration_cast<stdch::milliseconds>(
                std::max_element(data_.begin(), data_.end(),
                                 [](ExecutionData& arg1, ExecutionData& arg2) {
                                   return arg1.execution_time <
@@ -195,7 +229,7 @@ std::stringstream Corpus::GetStatistics() {
                .count()
         << std::endl;
   stats << "Test case min execution time[ms]: "
-        << std::chrono::duration_cast<std::chrono::milliseconds>(
+        << stdch::duration_cast<stdch::milliseconds>(
                std::max_element(data_.begin(), data_.end(),
                                 [](ExecutionData& arg1, ExecutionData& arg2) {
                                   return arg1.execution_time >

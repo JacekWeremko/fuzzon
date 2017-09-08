@@ -24,6 +24,8 @@ class Fuzzon {
   void MutationNonDeterministic(int test_cases_to_mutate,
                                 bool white_chars_preservation);
 
+  void PrintStats();
+
  private:
   std::string output_dir_;
   Corpus corpus_;
