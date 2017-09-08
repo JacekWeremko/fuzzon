@@ -1,7 +1,11 @@
+/*
+ * Copyright [2017] Jacek Weremko
+ */
 
+#include "./fuzzon_executiontracker.h"
 
-#include "fuzzon_executiontracker.h"
-#include "utils/logger.h"
+#include <string>
+#include "./utils/logger.h"
 
 #ifdef __x86_64
 #define ATTRIBUTE_TARGET_POPCNT __attribute__((target("popcnt")))
@@ -51,10 +55,13 @@ void __sanitizer_cov_trace_pc_guard_init(uint32_t* start, uint32_t* stop) {
   Logger::Get()->trace("  start: " + std::to_string(*start));
   Logger::Get()->trace("  stop : " + std::to_string(*stop));
 
+  if (start == stop || *start) {
+    return;
+  }
   int pc_total = 0;
   for (uint32_t* P = start; P < stop; P++) {
-    *P = pc_total;
     pc_total++;
+    *P = pc_total;
     Logger::Get()->trace("  guard : " + std::to_string(*P));
   }
   Logger::Get()->trace("  PC_total : " + std::to_string(pc_total));
