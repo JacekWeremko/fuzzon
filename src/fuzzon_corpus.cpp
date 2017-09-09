@@ -24,10 +24,10 @@ namespace stdch = std::chrono;
 
 namespace fuzzon {
 Corpus::Corpus(std::string output_path)
-    : start_(stdch::system_clock::now()),
-      output_path_((fs::path(output_path) / DIR_NAME_CORPUS).string()),
-      total_(Coverage::Raw) {
+    : start_(stdch::system_clock::now()), output_path_(fs::path(output_path)), total_(Coverage::Raw) {
   boost::filesystem::create_directories(output_path_);
+  boost::filesystem::create_directories(output_path_ / DIR_NAME_RESULTS);
+  boost::filesystem::create_directories(output_path_ / DIR_NAME_CORPUS);
 }
 
 bool Corpus::IsInteresting(const ExecutionData& am_i) {
@@ -223,12 +223,14 @@ std::stringstream Corpus::GetFullStats() {
 
 void Corpus::Dump() {
   fs::ofstream(output_path_ / "stats.txt") << GetFullStats().str();
-  fs::ofstream(output_path_ / "total.json") << total_;
+  fs::ofstream(output_path_ / DIR_NAME_RESULTS / "total.json") << total_;
 
   {
     auto index = 1;
     for (auto& elem : data_) {
-      fs::ofstream(output_path_ / fs::path(std::to_string(index) + ".json")) << elem;
+      fs::ofstream(output_path_ / DIR_NAME_RESULTS / fs::path(std::to_string(index) + ".json")) << elem;
+      fs::ofstream(output_path_ / DIR_NAME_CORPUS / fs::path(std::to_string(index) + ".txt")) << elem.input;
+
       index++;
     }
   }

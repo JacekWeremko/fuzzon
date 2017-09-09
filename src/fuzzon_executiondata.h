@@ -47,7 +47,7 @@ struct ExecutionData {
 
   friend std::ostream& operator<<(std::ostream& os, const ExecutionData& print_me) {
     os << "{" << std::endl;
-    os << "\"input\" : " << print_me.input << "," << std::endl;
+    os << "\"input\" : \"" << print_me.input << "\"," << std::endl;
     os << "\"error_code\" : \"" << print_me.error_code << "\"," << std::endl;
     os << "\"exit_code\" : " << print_me.exit_code << "," << std::endl;
     os << "\"gracefull_close\" : " << print_me.gracefull_close << "," << std::endl;
