@@ -26,14 +26,13 @@ Executor::Executor(std::string sut_path, int execution_timeout_ms_)
 
 ExecutionData Executor::ExecuteBlocking(TestCase& input) {
   ExecutionTracker::Get()->Reset();
-  // LOG_DEBUG(std::string("argv : ") + input.string());
 
   std::string sut_std_out_value, sut_std_err_value;
-  auto sut_std_out_ips = std::make_unique<boost::process::ipstream>();
-  auto sut_std_err_ips = std::make_unique<boost::process::ipstream>();
+  boost::process::ipstream sut_std_out_ips;
+  boost::process::ipstream sut_std_err_ips;
   boost::process::opstream sit_std_in_ips;
-  boost::process::child sut(sut_path_, input.string(), boost::process::std_out > *sut_std_out_ips.get(),
-                            boost::process::std_err > *sut_std_err_ips.get(), boost::process::std_in < sit_std_in_ips);
+  boost::process::child sut(sut_path_, input.string(), boost::process::std_out > sut_std_out_ips,
+                            boost::process::std_err > sut_std_err_ips, boost::process::std_in < sit_std_in_ips);
 
   sit_std_in_ips << input.string() << std::endl;
   std::error_code ec;
@@ -46,15 +45,20 @@ ExecutionData Executor::ExecuteBlocking(TestCase& input) {
   }
   auto exit_code = sut.exit_code();
 
-  LOG_TRACE(std::string("  ec: ") + std::to_string(ec.value()));
-  LOG_TRACE(std::string("  ec: ") + std::string(ec.message()));
-  LOG_TRACE(std::string("  stdin      : ") + input.string());
-  if (!gracefully_finished) {
-    LOG_TRACE(std::string("timeout"));
+  std::string line;
+  auto sut_std_out = std::make_unique<std::stringstream>();
+  while (std::getline(sut_std_out_ips, line)) {
+    *sut_std_out.get() << line << std::endl;
   }
 
-  return ExecutionData(input, ec, exit_code, gracefully_finished, std::chrono::microseconds((finish - start).count()),
-                       std::move(sut_std_out_ips), std::move(sut_std_err_ips), ExecutionTracker::Get()->GetCoverage());
+  auto sut_std_err = std::make_unique<std::stringstream>();
+  while (std::getline(sut_std_err_ips, line)) {
+    *sut_std_err.get() << line << std::endl;
+  }
+
+  return ExecutionData(input, ec, exit_code, gracefully_finished,
+                       std::chrono::duration_cast<std::chrono::milliseconds>(finish - start), std::move(sut_std_out),
+                       std::move(sut_std_err), ExecutionTracker::Get()->GetCoverage());
 }
 
 } /* namespace fuzzon */

@@ -6,6 +6,7 @@
 
 #include <boost/assert.hpp>
 #include <boost/filesystem.hpp>
+#include <utils/time.hpp>
 
 #include <string>
 #include <vector>
@@ -17,7 +18,6 @@
 #include <utility>
 
 #include "./utils/logger.h"
-#include "./utils/timeout.hpp"
 
 namespace fs = boost::filesystem;
 namespace stdch = std::chrono;
@@ -128,17 +128,7 @@ const TestCase* Corpus::SelectNotYetExhaustMutated() {
 
 std::stringstream Corpus::GetShortStats() {
   std::stringstream stats;
-
-  auto now = stdch::system_clock::now();
-  auto ms = stdch::duration_cast<stdch::milliseconds>(now - start_);
-  auto hh = stdch::duration_cast<stdch::hours>(ms).count();
-  auto mm = stdch::duration_cast<stdch::minutes>(ms % stdch::hours(1)).count();
-  auto ss = stdch::duration_cast<stdch::seconds>(ms % stdch::minutes(1)).count();
-  auto mi = stdch::duration_cast<stdch::milliseconds>(ms % stdch::seconds(1)).count();
-
-  // and print durations and values:
-
-  stats << hh << ":" << mm << ":" << ss << ":" << mi
+  stats << time_format(stdch::duration_cast<stdch::milliseconds>(stdch::system_clock::now() - start_))
         << "    Runs:" << std::accumulate(data_.begin(), data_.end(), 0,
                                           [](int execution_counter, ExecutionData& arg) {
                                             return execution_counter + arg.similar_path_coutner_;
@@ -197,23 +187,19 @@ std::stringstream Corpus::GetFullStats() {
                ->similar_path_coutner_
         << std::endl;
 
-  stats << "Test case max execution time[ms]: "
-        << stdch::duration_cast<stdch::milliseconds>(std::max_element(data_.begin(), data_.end(),
-                                                                      [](ExecutionData& arg1, ExecutionData& arg2) {
-                                                                        return arg1.execution_time <
-                                                                               arg2.execution_time;
-                                                                      })
-                                                         ->execution_time)
-               .count()
+  stats << "Test case max execution time: "
+        << time_format(std::max_element(data_.begin(), data_.end(),
+                                        [](ExecutionData& arg1, ExecutionData& arg2) {
+                                          return arg1.execution_time < arg2.execution_time;
+                                        })
+                           ->execution_time)
         << std::endl;
-  stats << "Test case min execution time[ms]: "
-        << stdch::duration_cast<stdch::milliseconds>(std::max_element(data_.begin(), data_.end(),
-                                                                      [](ExecutionData& arg1, ExecutionData& arg2) {
-                                                                        return arg1.execution_time >
-                                                                               arg2.execution_time;
-                                                                      })
-                                                         ->execution_time)
-               .count()
+  stats << "Test case min execution time: "
+        << time_format(std::max_element(data_.begin(), data_.end(),
+                                        [](ExecutionData& arg1, ExecutionData& arg2) {
+                                          return arg1.execution_time > arg2.execution_time;
+                                        })
+                           ->execution_time)
         << std::endl;
 
   stats << "Gracefully finished: " << std::count_if(data_.begin(), data_.end(), [](ExecutionData& arg) {

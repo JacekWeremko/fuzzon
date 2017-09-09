@@ -58,12 +58,12 @@ class TestCase {
   std::vector<char>& vec() { return data_; }
 
   friend std::ostream& operator<<(std::ostream& os, const TestCase& print_me) {
-    os << "{" << std::endl;
-    os << "\"data\" : ";
+    os << "{";
+    os << "\"data\" : \"";
     for (const auto& elem : print_me.data_) {
       os << elem;
     }
-    os << std::endl;
+    os << "\"";
     os << "}";
     return os;
   }

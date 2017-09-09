@@ -8,10 +8,10 @@
 #include "./fuzzon_executor.h"
 
 #include <boost/filesystem.hpp>
+#include <utils/time.hpp>
 #include <string>
 
 #include "./fuzzon_corpus.h"
-#include "./utils/timeout.hpp"
 
 namespace fuzzon {
 

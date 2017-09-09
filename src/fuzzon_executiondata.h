@@ -17,6 +17,7 @@
 #include <utility>
 
 #include "./fuzzon_coverage.h"
+#include "./utils/time.hpp"
 
 namespace fuzzon {
 
@@ -25,17 +26,17 @@ struct ExecutionData {
                 std::error_code erc,
                 int exc,
                 bool gracefully_finished,
-                std::chrono::microseconds execution_time,
-                std::unique_ptr<boost::process::ipstream> std_out_ips,
-                std::unique_ptr<boost::process::ipstream> std_err_ips,
+                std::chrono::milliseconds execution_time,
+                std::unique_ptr<std::stringstream> std_out,
+                std::unique_ptr<std::stringstream> std_err,
                 const Coverage* cov)
       : input(tc),
         error_code(erc),
         exit_code(exc),
         gracefull_close(gracefully_finished),
         execution_time(execution_time),
-        std_out_ips(std::move(std_out_ips)),
-        std_err_ips(std::move(std_err_ips)),
+        std_out(std::move(std_out)),
+        std_err(std::move(std_err)),
         path(*cov),
         mutatation_exhausted(false),
         similar_path_coutner_(0),
@@ -50,9 +51,9 @@ struct ExecutionData {
     os << "\"error_code\" : \"" << print_me.error_code << "\"," << std::endl;
     os << "\"exit_code\" : " << print_me.exit_code << "," << std::endl;
     os << "\"gracefull_close\" : " << print_me.gracefull_close << "," << std::endl;
-    os << "\"execution_time\" : " << print_me.execution_time.count() << "," << std::endl;
-    os << "\"std_out\" : \"" << print_me.std_out_ips << "\"," << std::endl;
-    os << "\"std_err\" : \"" << print_me.std_err_ips << "\"," << std::endl;
+    os << "\"execution_time\" : \"" << time_format(print_me.execution_time) << "\"," << std::endl;
+    os << "\"std_out\" : \"" << print_me.std_out->str() << "\"," << std::endl;
+    os << "\"std_err\" : \"" << print_me.std_err->str() << "\"," << std::endl;
     os << "\"path\" : " << print_me.path << std::endl;
     os << "}";
     return os;
@@ -62,10 +63,10 @@ struct ExecutionData {
   std::error_code error_code;
   int exit_code;
   bool gracefull_close;
-  std::chrono::microseconds execution_time;
+  std::chrono::milliseconds execution_time;
 
-  std::shared_ptr<boost::process::ipstream> std_out_ips;
-  std::shared_ptr<boost::process::ipstream> std_err_ips;
+  std::shared_ptr<std::stringstream> std_out;
+  std::shared_ptr<std::stringstream> std_err;
   Coverage path;
 
   // TODO: shouln't be part of this class
