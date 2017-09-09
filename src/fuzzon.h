@@ -11,12 +11,13 @@
 #include <string>
 
 #include "./fuzzon_corpus.h"
+#include "./utils/timeout.hpp"
 
 namespace fuzzon {
 
 class Fuzzon {
  public:
-  Fuzzon(std::string output_dir, std::string sut_path, int sut_runtime_timeout);
+  Fuzzon(std::string output_dir, std::string sut_path, int sut_runtime_timeout, int test_timeout);
 
   void TestInput(std::string test_me);
   void Generation(std::string input_format, int test_cases_to_generate);
@@ -27,7 +28,9 @@ class Fuzzon {
   void Dump();
 
  private:
-  std::string output_dir_;
+  const std::string output_dir_;
+  Timeout test_timeout_;
+
   Corpus corpus_;
   Executor execution_monitor_;
 };

@@ -13,10 +13,10 @@
 #include <limits>
 #include <algorithm>
 #include <numeric>
-#include <chrono>
 #include <memory>
 
 #include "./utils/logger.h"
+#include "./utils/timeout.hpp"
 
 namespace fs = boost::filesystem;
 namespace stdch = std::chrono;
@@ -30,13 +30,10 @@ Corpus::Corpus(std::string output_path)
 }
 
 bool Corpus::IsInteresting(const ExecutionData& am_i) {
-  static auto last_print = stdch::system_clock::now();
-  auto now = stdch::system_clock::now();
-
-  const auto statistics_print_interval = stdch::milliseconds(1000);
-  if ((now - last_print) > statistics_print_interval) {
+  static Timeout log_timer(stdch::milliseconds(1000));
+  if (log_timer()) {
     Logger::Get()->info(GetShortStats().str());
-    last_print = now;
+    log_timer.arm(stdch::system_clock::now());
   }
 
   for (auto& current : data_) {

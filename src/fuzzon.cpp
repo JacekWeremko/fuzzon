@@ -6,6 +6,7 @@
 
 #include <string>
 #include <vector>
+#include <chrono>
 
 #include "./fuzzon_generator.h"
 #include "./fuzzon_mutator.h"
@@ -19,8 +20,11 @@ namespace fuzzon {
 #define DIR_NAME_PATHS "paths"
 #define DIR_NAME_TMP "tmp"
 
-Fuzzon::Fuzzon(std::string output_dir, std::string sut_path, int sut_runtime_timeout)
-    : output_dir_(output_dir), corpus_(output_dir), execution_monitor_(sut_path, sut_runtime_timeout) {
+Fuzzon::Fuzzon(std::string output_dir, std::string sut_path, int sut_runtime_timeout, int test_timeout)
+    : output_dir_(output_dir),
+      test_timeout_(std::chrono::milliseconds(test_timeout)),
+      corpus_(output_dir),
+      execution_monitor_(sut_path, sut_runtime_timeout) {
   Logger::Get()->info("Base directory is " + output_dir_);
 }
 
@@ -35,7 +39,7 @@ void Fuzzon::Generation(std::string input_format, int test_cases_to_generate) {
   Logger::Get()->debug("input_format : " + input_format);
   Logger::Get()->info(corpus_.GetShortStats().str() + " <- generation start");
   Generator test_cases_generator(input_format);
-  while (test_cases_to_generate--) {
+  while (!test_timeout_() && test_cases_to_generate--) {
     auto new_test_case = test_cases_generator.generateNext();
     auto execution_data = execution_monitor_.ExecuteBlocking(new_test_case);
     corpus_.AddIfInteresting(execution_data);
@@ -48,7 +52,7 @@ void Fuzzon::MutationDeterministic(int level, bool white_chars_preservation) {
   Logger::Get()->info(corpus_.GetShortStats().str() + " <- mutation deterministic start");
   bool all_posibilities_checked = false;
   Mutator test_cases_mutator(white_chars_preservation);
-  while (!all_posibilities_checked) {
+  while (!test_timeout_() && !all_posibilities_checked) {
     auto favorite = corpus_.SelectNotYetExhaustMutated();
     if (favorite == nullptr) {
       all_posibilities_checked = true;
@@ -118,7 +122,7 @@ void Fuzzon::MutationNonDeterministic(int test_cases_to_mutate, bool white_chars
   Mutator test_cases_mutator(white_chars_preservation);
   bool stop_testing = false;
 
-  while (!stop_testing) {
+  while (!test_timeout_() && !stop_testing) {
     auto favorite = corpus_.SelectFavorite();
     auto mutated = test_cases_mutator.Mutate(*favorite);
     auto execution_data = execution_monitor_.ExecuteBlocking(mutated);
