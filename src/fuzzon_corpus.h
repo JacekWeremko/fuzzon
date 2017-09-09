@@ -37,6 +37,7 @@ class Corpus {
  private:
   const std::string DIR_NAME_CORPUS = "corpus";
   const std::string DIR_NAME_RESULTS = "results";
+  const std::string DIR_NAME_CRASH = "crash";
   const std::chrono::system_clock::time_point start_;
 
   boost::filesystem::path output_path_;

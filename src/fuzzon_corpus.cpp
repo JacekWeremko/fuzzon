@@ -28,6 +28,7 @@ Corpus::Corpus(std::string output_path)
   boost::filesystem::create_directories(output_path_);
   boost::filesystem::create_directories(output_path_ / DIR_NAME_RESULTS);
   boost::filesystem::create_directories(output_path_ / DIR_NAME_CORPUS);
+  boost::filesystem::create_directories(output_path_ / DIR_NAME_CRASH);
 }
 
 bool Corpus::IsInteresting(const ExecutionData& am_i) {
@@ -233,9 +234,15 @@ void Corpus::Dump() {
   {
     auto index = 1;
     for (auto& elem : data_) {
-      fs::ofstream(output_path_ / DIR_NAME_RESULTS / fs::path(std::to_string(index) + ".json")) << elem;
       fs::ofstream(output_path_ / DIR_NAME_CORPUS / fs::path(std::to_string(index) + ".txt")) << elem.input;
 
+      const auto result_path = output_path_ / DIR_NAME_RESULTS / fs::path(std::to_string(index) + ".json");
+      { fs::ofstream(result_path) << elem; }
+
+      if (elem.std_err->tellp()) {
+        const auto crash_link = output_path_ / DIR_NAME_CRASH / fs::path(std::to_string(index));
+        fs::create_directory_symlink(result_path, crash_link);
+      }
       index++;
     }
   }
