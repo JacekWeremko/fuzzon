@@ -14,6 +14,7 @@
 #include <algorithm>
 #include <numeric>
 #include <memory>
+#include <utility>
 
 #include "./utils/logger.h"
 #include "./utils/timeout.hpp"
@@ -32,7 +33,7 @@ Corpus::Corpus(std::string output_path)
 bool Corpus::IsInteresting(const ExecutionData& am_i) {
   static Timeout log_timer(stdch::milliseconds(1000));
   if (log_timer()) {
-    Logger::Get()->info(GetShortStats().str());
+    LOG_INFO(GetShortStats().str());
     log_timer.arm(stdch::system_clock::now());
   }
 
@@ -47,7 +48,7 @@ bool Corpus::IsInteresting(const ExecutionData& am_i) {
 
 // TODO: move semantic
 void Corpus::AddExecutionData(ExecutionData& add_me_to_corpus) {
-  Logger::Get()->debug("Adding new test case to corpus: " + add_me_to_corpus.input.string());
+  LOG_DEBUG("Adding new test case to corpus: " + add_me_to_corpus.input.string());
   // TODO: optimize memory footprint
 
   total_.Merge(add_me_to_corpus.path);

@@ -6,3 +6,5 @@
 /Fuzzon_Debug/
 /test/external/
 *.bc
+/FuzzonCov_Release/
+/Fuzzon_Release/

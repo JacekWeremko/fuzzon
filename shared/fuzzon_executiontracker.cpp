@@ -5,7 +5,7 @@ namespace fuzzon {
 
 ExecutionTracker::ExecutionTracker(WorkingMode mode) : mode_(mode), cov_(NULL) {
   Logger::Get("9");
-  Logger::Get()->trace("ExecutionTracker::ExecutionTracker");
+  LOG_TRACE("ExecutionTracker::ExecutionTracker");
   if (mode_ == WorkingMode::Monitor) {
     shared_memory_ = boost::interprocess::shared_memory_object(
         boost::interprocess::open_or_create, shared_memory_buffer_name.c_str(), boost::interprocess::read_write);
@@ -16,13 +16,12 @@ ExecutionTracker::ExecutionTracker(WorkingMode mode) : mode_(mode), cov_(NULL) {
 
     cov_ = new (region_.get_address()) Coverage(Coverage::Flow);
   } else if (mode_ == WorkingMode::SUT) {
-    Logger::Get()->trace("WorkingMode::SUT");
+    LOG_TRACE("WorkingMode::SUT");
     shared_memory_ = boost::interprocess::shared_memory_object(
         boost::interprocess::open_only, shared_memory_buffer_name.c_str(), boost::interprocess::read_write);
     region_ = boost::interprocess::mapped_region(shared_memory_, boost::interprocess::read_write);
 
     cov_ = reinterpret_cast<Coverage*>(region_.get_address());
-    //		cov_ = new(region_.get_address()) Coverage(Coverage::Flow);
   } else {
     // ..
   }
@@ -32,10 +31,6 @@ ExecutionTracker::ExecutionTracker(WorkingMode mode) : mode_(mode), cov_(NULL) {
 
 void ExecutionTracker::Reset() {
   cov_ = new (region_.get_address()) Coverage(Coverage::Flow);
-}
-
-ExecutionTracker::~ExecutionTracker() {
-  // TODO Auto-generated destructor stub
 }
 
 } /* namespace fuzzon */

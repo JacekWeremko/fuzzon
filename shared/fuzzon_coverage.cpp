@@ -96,7 +96,7 @@ void Coverage::TracePC(uint32_t idx, uintptr_t PC) {
 void Coverage::PrintTrace() const {
   std::stringstream output;
   output << this;
-  Logger::Get()->info("pc_flow : " + output.str());
+  LOG_INFO("pc_flow : " + output.str());
   return;
 }
 

@@ -151,7 +151,7 @@ int Mutator::ChangeByte(uint8_t* data, size_t data_size) {
     }
   }
   if (mutation_idx == mutation_guard) {
-    Logger::Get()->debug("mutation_idx ==mutation_guard");
+    LOG_DEBUG("mutation_idx ==mutation_guard");
   }
 
   for (size_t mutation_idx = 0; mutation_idx < mutation_guard; mutation_idx++) {

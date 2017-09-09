@@ -25,7 +25,7 @@ Fuzzon::Fuzzon(std::string output_dir, std::string sut_path, int sut_runtime_tim
       test_timeout_(std::chrono::milliseconds(test_timeout)),
       corpus_(output_dir),
       execution_monitor_(sut_path, sut_runtime_timeout) {
-  Logger::Get()->info("Base directory is " + output_dir_);
+  LOG_INFO("Base directory is " + output_dir_);
 }
 
 void Fuzzon::TestInput(std::string test_me) {
@@ -36,20 +36,20 @@ void Fuzzon::TestInput(std::string test_me) {
 }
 
 void Fuzzon::Generation(std::string input_format, int test_cases_to_generate) {
-  Logger::Get()->debug("input_format : " + input_format);
-  Logger::Get()->info(corpus_.GetShortStats().str() + " <- generation start");
+  LOG_DEBUG("input_format : " + input_format);
+  LOG_INFO(corpus_.GetShortStats().str() + " <- generation start");
   Generator test_cases_generator(input_format);
   while (!test_timeout_() && test_cases_to_generate--) {
     auto new_test_case = test_cases_generator.generateNext();
     auto execution_data = execution_monitor_.ExecuteBlocking(new_test_case);
     corpus_.AddIfInteresting(execution_data);
   }
-  Logger::Get()->info(corpus_.GetShortStats().str() + " <- generation finish");
+  LOG_INFO(corpus_.GetShortStats().str() + " <- generation finish");
   return;
 }
 
 void Fuzzon::MutationDeterministic(int level, bool white_chars_preservation) {
-  Logger::Get()->info(corpus_.GetShortStats().str() + " <- mutation deterministic start");
+  LOG_INFO(corpus_.GetShortStats().str() + " <- mutation deterministic start");
   bool all_posibilities_checked = false;
   Mutator test_cases_mutator(white_chars_preservation);
   while (!test_timeout_() && !all_posibilities_checked) {
@@ -113,12 +113,12 @@ void Fuzzon::MutationDeterministic(int level, bool white_chars_preservation) {
 
     // something more?
   }
-  Logger::Get()->info(corpus_.GetShortStats().str() + " <- mutation deterministic finish");
+  LOG_INFO(corpus_.GetShortStats().str() + " <- mutation deterministic finish");
   return;
 }
 
 void Fuzzon::MutationNonDeterministic(int test_cases_to_mutate, bool white_chars_preservation) {
-  Logger::Get()->info(corpus_.GetShortStats().str() + " <- mutation non-deterministic start");
+  LOG_INFO(corpus_.GetShortStats().str() + " <- mutation non-deterministic start");
   Mutator test_cases_mutator(white_chars_preservation);
   bool stop_testing = false;
 
@@ -134,12 +134,12 @@ void Fuzzon::MutationNonDeterministic(int test_cases_to_mutate, bool white_chars
       stop_testing = true;
     }
   }
-  Logger::Get()->info(corpus_.GetShortStats().str() + " <- mutation non-deterministic finish");
+  LOG_INFO(corpus_.GetShortStats().str() + " <- mutation non-deterministic finish");
   return;
 }
 
 void Fuzzon::PrintStats() {
-  Logger::Get()->info(corpus_.GetFullStats().str());
+  LOG_INFO(corpus_.GetFullStats().str());
   return;
 }
 

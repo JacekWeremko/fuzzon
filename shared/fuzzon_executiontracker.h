@@ -13,8 +13,6 @@ class ExecutionTracker {
   ExecutionTracker(ExecutionTracker const&) = delete;
   void operator=(ExecutionTracker const&) = delete;
 
-  virtual ~ExecutionTracker();
-
   enum WorkingMode { SUT, Monitor };
 
   static ExecutionTracker* Get(WorkingMode mode = WorkingMode::SUT) {

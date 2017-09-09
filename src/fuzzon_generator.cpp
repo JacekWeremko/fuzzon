@@ -50,7 +50,7 @@ TestCase Generator::generateNext() {
   int result = StripJson(intput_data, input_stripped);
   BOOST_ASSERT(result == 0);
 
-  Logger::Get()->debug("Stripped input data :" + input_stripped.str());
+  LOG_DEBUG("Stripped input data :" + input_stripped.str());
   return TestCase(input_stripped.str());
 }
 
@@ -58,7 +58,7 @@ int Generator::ParseJson(rapidjson::Value& current,
                          rapidjson::Document& new_document,
                          rapidjson::Value& new_document_current) {
   if (!current.IsObject()) {
-    Logger::Get()->critical(std::string(current.GetString()) + " is not an object!");
+    LOG_CRITICAL(std::string(current.GetString()) + " is not an object!");
     return -1;
   }
 
@@ -67,7 +67,7 @@ int Generator::ParseJson(rapidjson::Value& current,
       static const char* kTypeNames[] = {"Null", "False", "True", "Object", "Array", "String", "Number"};
       std::string name = cuttent_it->name.GetString();
       std::string type = std::string(kTypeNames[cuttent_it->value.GetType()]);
-      //      Logger::Get()->trace("Parse: " +
+      //      LOG_TRACE("Parse: " +
       // std::string(name) + " is " + std::string((type)));
 
       static const std::vector<std::string> reserved = {"id", "type", "uniqueItems", "length"};
@@ -79,7 +79,7 @@ int Generator::ParseJson(rapidjson::Value& current,
     if (!cuttent_it->value.IsObject() || !cuttent_it->value.HasMember("type")) {
       //        throw std::string(type) + " handling is
       // not implemented yet";
-      Logger::Get()->critical(std::string(cuttent_it->value.GetString()) +
+      LOG_CRITICAL(std::string(cuttent_it->value.GetString()) +
                               " is not an object or has not 'type' member.");
       return -1;
     }
@@ -175,12 +175,12 @@ int Generator::ParseJson(rapidjson::Value& current,
                            length_value);
         }
       } else {
-        Logger::Get()->critical(std::string(type_of_array_elements->value.GetString()) +
+        LOG_CRITICAL(std::string(type_of_array_elements->value.GetString()) +
                                 " handling of array element type not implemented yet!");
       }
 
     } else {
-      Logger::Get()->trace(element_type + " handling is not implemented yet");
+      LOG_TRACE(element_type + " handling is not implemented yet");
     }
   }
   return 0;
@@ -201,7 +201,7 @@ int Generator::StripJson(rapidjson::Value& current, std::stringstream& output) {
       StripJson(it->value, output);
     }
   } else {
-    Logger::Get()->critical("Stripping not supported for given type.");
+    LOG_CRITICAL("Stripping not supported for given type.");
   }
   return 0;
 }
@@ -265,7 +265,7 @@ bool Generator::JsonInsert(rapidjson::Document& document,
                       document.GetAllocator());
     PrintJson("AddMember", document);
   } else {
-    Logger::Get()->critical(std::string(current.GetString()) + " insertion failed.");
+    LOG_CRITICAL(std::string(current.GetString()) + " insertion failed.");
     return false;
   }
   return true;
@@ -276,7 +276,7 @@ void Generator::PrintJson(std::string document_title, const rapidjson::Document&
   rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
   print_me.Accept(writer);
 
-  Logger::Get()->trace(document_title + " : \r\n" + std::string(buffer.GetString()));
+  LOG_TRACE(document_title + " : \r\n" + std::string(buffer.GetString()));
   return;
 }
 
@@ -285,7 +285,7 @@ void Generator::PrintJson(std::string value_title, rapidjson::Value& print_me) {
   rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
   print_me.Accept(writer);
 
-  Logger::Get()->trace(value_title + " : \r\n" + std::string(buffer.GetString()));
+  LOG_TRACE(value_title + " : \r\n" + std::string(buffer.GetString()));
   return;
 }
 
@@ -294,7 +294,7 @@ void Generator::PrintJson(std::string title, rapidjson::Value::ConstMemberIterat
   rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
   print_me->value.Accept(writer);
 
-  Logger::Get()->trace(title + std::string(print_me->name.GetString()) + ": \r\n" + std::string(buffer.GetString()));
+  LOG_TRACE(title + std::string(print_me->name.GetString()) + ": \r\n" + std::string(buffer.GetString()));
   return;
 }
 
@@ -303,7 +303,7 @@ void Generator::PrintJson(std::string title, rapidjson::Value::ConstMemberIterat
   rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
   print_me->value.Accept(writer);
 
-  Logger::Get()->trace(title + std::string(print_me->name.GetString()) + ": \r\n" + std::string(buffer.GetString()));
+  LOG_TRACE(title + std::string(print_me->name.GetString()) + ": \r\n" + std::string(buffer.GetString()));
   return;
 }
 

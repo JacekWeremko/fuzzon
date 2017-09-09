@@ -74,7 +74,7 @@ char Random::GenerateChar(char same_type_as_me) {
     const auto& alphabet = alphabets_[alphabet_type];
     return GenerateChar(alphabet);
   }
-  Logger::Get()->critical("Alphabet not found! Generating random");
+  LOG_CRITICAL("Alphabet not found! Generating random");
   return GenerateChar();
 }
 

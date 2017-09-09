@@ -7,11 +7,14 @@
 
 #include "./fuzzon_testcase.h"
 
+#include <boost/process.hpp>
 #include <sstream>
 #include <string>
 #include <algorithm>
 #include <system_error>
 #include <chrono>
+#include <memory>
+#include <utility>
 
 #include "./fuzzon_coverage.h"
 
@@ -23,16 +26,16 @@ struct ExecutionData {
                 int exc,
                 bool gracefully_finished,
                 std::chrono::microseconds execution_time,
-                std::stringstream& std_out,
-                std::stringstream& std_err,
+                std::unique_ptr<boost::process::ipstream> std_out_ips,
+                std::unique_ptr<boost::process::ipstream> std_err_ips,
                 const Coverage* cov)
       : input(tc),
         error_code(erc),
         exit_code(exc),
         gracefull_close(gracefully_finished),
         execution_time(execution_time),
-        std_out(std_out.str()),
-        std_err(std_err.str()), /* TODO: performance */
+        std_out_ips(std::move(std_out_ips)),
+        std_err_ips(std::move(std_err_ips)),
         path(*cov),
         mutatation_exhausted(false),
         similar_path_coutner_(0),
@@ -48,8 +51,8 @@ struct ExecutionData {
     os << "\"exit_code\" : " << print_me.exit_code << "," << std::endl;
     os << "\"gracefull_close\" : " << print_me.gracefull_close << "," << std::endl;
     os << "\"execution_time\" : " << print_me.execution_time.count() << "," << std::endl;
-    os << "\"std_out\" : \"" << print_me.std_out << "\"," << std::endl;
-    os << "\"std_err\" : \"" << print_me.std_err << "\"," << std::endl;
+    os << "\"std_out\" : \"" << print_me.std_out_ips << "\"," << std::endl;
+    os << "\"std_err\" : \"" << print_me.std_err_ips << "\"," << std::endl;
     os << "\"path\" : " << print_me.path << std::endl;
     os << "}";
     return os;
@@ -61,8 +64,8 @@ struct ExecutionData {
   bool gracefull_close;
   std::chrono::microseconds execution_time;
 
-  std::string std_out;
-  std::string std_err;
+  std::shared_ptr<boost::process::ipstream> std_out_ips;
+  std::shared_ptr<boost::process::ipstream> std_err_ips;
   Coverage path;
 
   // TODO: shouln't be part of this class

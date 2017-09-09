@@ -20,8 +20,6 @@ namespace po = boost::program_options;
 namespace fs = boost::filesystem;
 
 int main(int argc, char** argv) {
-  // TODO: configure w.r.t **argv
-
   auto time_now = boost::posix_time::second_clock::local_time();
   auto time_now_str = boost::posix_time::to_simple_string(time_now);
 
@@ -82,17 +80,17 @@ int main(int argc, char** argv) {
   //  for (auto& sample : samples) {
   //    crazy_fuzzer.TestInput(sample);
   //  }
-  std::vector<std::string> samples = {"0",
-                                      "1 0",
-                                      "1 1 1",
-                                      "1 5 1 1 1 1 1",
-                                      "1 21 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1",
-                                      "2 3 1 2 3 21 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1",
-                                      "2 21 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 21 1 1 1 1 1 1 1 1 1 1 1 "
-                                      "1 1 1 1 1 1 1 1 1 1"};
-  for (auto& sample : samples) {
-    crazy_fuzzer.TestInput(sample);
-  }
+  //  std::vector<std::string> samples = {"0",
+  //                                      "1 0",
+  //                                      "1 1 1",
+  //                                      "1 5 1 1 1 1 1",
+  //                                      "1 21 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1",
+  //                                      "2 3 1 2 3 21 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1",
+  //                                      "2 21 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 21 1 1 1 1 1 1 1 1 1 1 1 "
+  //                                      "1 1 1 1 1 1 1 1 1 1"};
+  //  for (auto& sample : samples) {
+  //    crazy_fuzzer.TestInput(sample);
+  //  }
 
   crazy_fuzzer.Generation(input_format.string(), generate);
   crazy_fuzzer.MutationDeterministic(mutate_d, white_chars_preservation);
