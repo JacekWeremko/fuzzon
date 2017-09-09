@@ -9,6 +9,7 @@
 #include <cstring>
 #include <string>
 #include <iostream>
+#include <algorithm>
 
 #include <stdint.h>
 #include <stddef.h>
@@ -38,25 +39,19 @@ void crash_me() {
   return;
 }
 
-int main(int argc, char** argv) {
-  int guard = 0;
-  if (argc < 2) {
+int test(const char* data, size_t size) {
+  if (data == NULL) {
     return 0;
   }
-  //	std::string test_stdin1, test_stdin2, test_stdin3;
 
-  //	std::cout << "cout test1";
-  //	std::cerr << "cerr test1";
-  //	std::cout << "cout test2";
-  //	std::cerr << "cerr test2";
-  //	std::cerr << "cerr test1";
-  //	std::cout << "cout test3";
-  //	std::cin >> test_stdin1;
+  //  std::cout << "size :" << size << std::endl;
+  int guard = 0;
+  if (size < 8) {
+    return 0;
+  }
 
-  std::string argv1 = std::string(argv[1]);
-  char data[8] = {0};
-  std::memcpy(&data[0], argv1.c_str(), argv1.size());
-
+  //  std::cout << "start branchness" << std::endl;
+  std::cout << std::string(data) << std::endl;
   if (func_a(data[0])) {
     guard++;
     if (func_b(data[1])) {
@@ -65,13 +60,14 @@ int main(int argc, char** argv) {
         guard++;
         if (func_d(data[3])) {
           guard++;
-          //					crash_me();
+          crash_me();
         }
       }
     }
   }
+  std::cout << "guard :" << guard << std::endl;
 
-  //	crash_me();
+  // crash_me();
 
   if (func_a(data[4])) {
     guard++;
@@ -81,10 +77,24 @@ int main(int argc, char** argv) {
         guard++;
         if (func_d(data[7])) {
           guard++;
-          crash_me();
+          //          crash_me();
         }
       }
     }
   }
+  std::cout << "guard :" << guard << std::endl;
   return 0;
+}
+
+int main(int argc, char** argv) {
+  //  std::cout << "argc :" << argc << std::endl;
+  if (argc < 2) {
+    return 0;
+  }
+  std::string argv1 = std::string(argv[1]);
+  char data[9] = {0};
+  size_t size = std::min(static_cast<int>(argv1.size()), 8);
+  std::memcpy(&data[0], argv1.c_str(), size);
+  data[8] = '\0';
+  return test(&data[0], size);
 }
