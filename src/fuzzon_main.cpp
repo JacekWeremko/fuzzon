@@ -9,6 +9,7 @@
 #include <boost/date_time.hpp>
 #include <vector>
 #include <string>
+#include <utility>
 
 #include "./fuzzon_random.h"
 #include "./utils/logger.h"
@@ -29,6 +30,7 @@ int main(int argc, char** argv) {
   desc.add_options()("help", "produce help message");
   desc.add_options()("verbose,v", po::value<>(&verbosity_values)->implicit_value(""), "Logging level");
   desc.add_options()("sut,s", po::value<fs::path>(), "Software under test path");
+  desc.add_options()("env_flag,e", po::value<std::vector<std::string>>(), "Environmental flag set for SUT.");
   desc.add_options()("input_format,i", po::value<fs::path>(), "JSON Input format file path");
   desc.add_options()("out,o", po::value<fs::path>(), "Output directory path");
   desc.add_options()("corpus_seeds,c", po::value<fs::path>(),
@@ -62,6 +64,7 @@ int main(int argc, char** argv) {
   auto output = vm.count("out") ? vm["out"].as<fs::path>() : sut.parent_path();
   output /= (fs::path("fuzzon_").concat(sut.filename().c_str())) / time_now_str;
 
+  auto env_flags = vm.count("env_flag") ? vm["env_flag"].as<std::vector<std::string>>() : std::vector<std::string>();
   auto corpus_base = vm.count("corpus_seeds") ? vm["corpus_seeds"].as<fs::path>() : "";
   auto sut_timeout = vm.count("single_test_timeout") ? vm["single_test_timeout"].as<int>() : 1000;
   auto test_timeout = vm.count("total_timeout") ? vm["total_timeout"].as<int>() : 1000 * 60 * 5;
@@ -76,7 +79,7 @@ int main(int argc, char** argv) {
 
   std::string input_alphabet("abcd");
   fuzzon::Random::Get()->SetAlphabet(input_alphabet);
-  fuzzon::Fuzzon crazy_fuzzer(output.string(), sut.string(), sut_timeout, test_timeout);
+  fuzzon::Fuzzon crazy_fuzzer(output.string(), sut.string(), std::move(env_flags), sut_timeout, test_timeout);
 
   //  std::vector<std::string> samples = {"a",     "ab",     "abc",    "abcd",
   //                                      "abcda", "abcdab", "abcdabc"};
@@ -96,7 +99,7 @@ int main(int argc, char** argv) {
   //  }
 
   crazy_fuzzer.ScanCorpus(corpus_base.string());
-  crazy_fuzzer.Generation(input_format.string(), generate);
+  crazy_fuzzer.Generation(input_ / format.string(), generate);
   crazy_fuzzer.MutationDeterministic(mutate_d, white_chars_preservation);
   crazy_fuzzer.MutationNonDeterministic(mutate_nd, white_chars_preservation);
   crazy_fuzzer.PrintStats();

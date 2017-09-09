@@ -9,6 +9,7 @@
 
 #include <string>
 #include <memory>
+#include <vector>
 
 #include "./fuzzon_executiondata.h"
 
@@ -16,12 +17,13 @@ namespace fuzzon {
 
 class Executor {
  public:
-  explicit Executor(std::string sut_path, int execution_timeout_ms);
+  explicit Executor(std::string sut_path, const std::vector<std::string>& env_flags, int execution_timeout_ms);
 
   ExecutionData ExecuteBlocking(TestCase& input);
 
  private:
   std::string sut_path_;
+  boost::process::environment sut_env_;
   const std::chrono::milliseconds execution_timeout_;
 };
 

@@ -11,7 +11,7 @@ class Timeout {
  public:
   explicit Timeout(std::chrono::milliseconds timeout) : start_(std::chrono::system_clock::now()), timeout_(timeout) {}
   void arm(std::chrono::system_clock::time_point start) { start_ = start; }
-  bool operator()() {
+  bool operator()() const {
     auto now = std::chrono::system_clock::now();
     return ((now - start_) > timeout_);
   }

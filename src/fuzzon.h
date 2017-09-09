@@ -10,6 +10,7 @@
 #include <boost/filesystem.hpp>
 #include <utils/time.hpp>
 #include <string>
+#include <vector>
 
 #include "./fuzzon_corpus.h"
 
@@ -17,7 +18,11 @@ namespace fuzzon {
 
 class Fuzzon {
  public:
-  Fuzzon(std::string output_dir, std::string sut_path, int sut_runtime_timeout, int test_timeout);
+  Fuzzon(std::string output_dir,
+         std::string sut_path,
+         const std::vector<std::string>& env_flags,
+         int sut_runtime_timeout,
+         int test_timeout);
 
   void ScanCorpus(std::string corpus_base);
   void TestInput(std::string test_me);
@@ -30,7 +35,7 @@ class Fuzzon {
 
  private:
   const std::string output_dir_;
-  Timeout test_timeout_;
+  const Timeout test_timeout_;
 
   Corpus corpus_;
   Executor execution_monitor_;
