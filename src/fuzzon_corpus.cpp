@@ -32,21 +32,13 @@ Corpus::Corpus(std::string output_path)
 }
 
 bool Corpus::IsInteresting(const ExecutionData& am_i) {
-  auto result = true;
   for (auto& current : data_) {
     if (current.path == am_i.path) {
       current.path_execution_coutner_++;
-      result = false;
+      return false;
     }
   }
-
-  static Timeout log_timer(stdch::milliseconds(1000));
-  if (log_timer()) {
-    LOG_INFO(GetShortStats().str());
-    log_timer.arm(stdch::system_clock::now());
-  }
-
-  return result;
+  return true;
 }
 
 // TODO: move semantic
@@ -59,11 +51,19 @@ void Corpus::AddExecutionData(ExecutionData& add_me_to_corpus) {
 }
 
 bool Corpus::AddIfInteresting(ExecutionData& add_me_to_corpus) {
+  bool result = false;
   if (IsInteresting(add_me_to_corpus)) {
     AddExecutionData(add_me_to_corpus);
-    return true;
+    result = true;
   }
-  return false;
+
+  static Timeout log_timer(stdch::milliseconds(1000));
+  if (log_timer()) {
+    LOG_INFO(GetShortStats().str());
+    log_timer.arm(stdch::system_clock::now());
+  }
+
+  return result;
 }
 
 const TestCase* Corpus::SelectFavorite() {
