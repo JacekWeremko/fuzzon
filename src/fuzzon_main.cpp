@@ -31,6 +31,8 @@ int main(int argc, char** argv) {
   desc.add_options()("sut,s", po::value<fs::path>(), "Software under test path");
   desc.add_options()("input_format,i", po::value<fs::path>(), "JSON Input format file path");
   desc.add_options()("out,o", po::value<fs::path>(), "Output directory path");
+  desc.add_options()("corpus_seeds,c", po::value<fs::path>(),
+                     "Path to directory with sample input files aka corpus seed.");
   desc.add_options()("single_test_timeout,e", po::value<int>(), "Max allowed time to execute SUT");
   desc.add_options()("total_timeout,t", po::value<int>(), "Total tests timeout.");
   desc.add_options()("generate,g", po::value<int>(), "Generation phase: number of test cases to generate.");
@@ -60,6 +62,7 @@ int main(int argc, char** argv) {
   auto output = vm.count("out") ? vm["out"].as<fs::path>() : sut.parent_path();
   output /= (fs::path("fuzzon_").concat(sut.filename().c_str())) / time_now_str;
 
+  auto corpus_base = vm.count("corpus_seeds") ? vm["corpus_seeds"].as<fs::path>() : "";
   auto sut_timeout = vm.count("single_test_timeout") ? vm["single_test_timeout"].as<int>() : 1000;
   auto test_timeout = vm.count("total_timeout") ? vm["total_timeout"].as<int>() : 1000 * 60 * 5;
   auto generate = vm.count("generate") ? vm["generate"].as<int>() : 500;
@@ -92,6 +95,7 @@ int main(int argc, char** argv) {
   //    crazy_fuzzer.TestInput(sample);
   //  }
 
+  crazy_fuzzer.ScanCorpus(corpus_base.string());
   crazy_fuzzer.Generation(input_format.string(), generate);
   crazy_fuzzer.MutationDeterministic(mutate_d, white_chars_preservation);
   crazy_fuzzer.MutationNonDeterministic(mutate_nd, white_chars_preservation);

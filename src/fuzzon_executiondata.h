@@ -39,7 +39,7 @@ struct ExecutionData {
         std_err(std::move(std_err)),
         path(*cov),
         mutatation_exhausted(false),
-        similar_path_coutner_(0),
+        path_execution_coutner_(1),
         mutation_counter_(0) {
     path.Compress();
     path.ComputeHash();
@@ -71,7 +71,7 @@ struct ExecutionData {
 
   // TODO: shouln't be part of this class
   bool mutatation_exhausted;
-  size_t similar_path_coutner_;
+  size_t path_execution_coutner_;
   size_t mutation_counter_;
 };
 

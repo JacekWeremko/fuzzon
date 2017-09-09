@@ -19,6 +19,7 @@ class Fuzzon {
  public:
   Fuzzon(std::string output_dir, std::string sut_path, int sut_runtime_timeout, int test_timeout);
 
+  void ScanCorpus(std::string corpus_base);
   void TestInput(std::string test_me);
   void Generation(std::string input_format, int test_cases_to_generate);
   void MutationDeterministic(int level, bool white_chars_preservation);

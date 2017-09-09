@@ -12,6 +12,7 @@
 #include <sstream>
 #include <string>
 #include <memory>
+#include <vector>
 
 #include "./fuzzon_testcase.h"
 
@@ -28,6 +29,8 @@ class Corpus {
 
   std::stringstream GetShortStats();
   std::stringstream GetFullStats();
+
+  std::vector<boost::filesystem::path> GatherCoprusFiles() const;
 
   void Dump();
 

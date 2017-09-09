@@ -4,6 +4,8 @@
 
 #include "./fuzzon.h"
 
+#include <boost/filesystem.hpp>
+
 #include <string>
 #include <vector>
 #include <chrono>
@@ -26,6 +28,31 @@ Fuzzon::Fuzzon(std::string output_dir, std::string sut_path, int sut_runtime_tim
       corpus_(output_dir),
       execution_monitor_(sut_path, sut_runtime_timeout) {
   LOG_INFO("Base directory is " + output_dir_);
+}
+
+void Fuzzon::ScanCorpus(std::string corpus_base) {
+  if (boost::filesystem::exists(corpus_base)) {
+    std::vector<boost::filesystem::path> corpus_seeds;
+    boost::filesystem::path corpus_seeds_dir(corpus_base);
+
+    for (const auto& file : boost::filesystem::directory_iterator(corpus_seeds_dir)) {
+      corpus_seeds.push_back(file.path());
+    }
+
+    for (const auto& file_path : corpus_seeds) {
+      if (test_timeout_()) {
+        break;
+      }
+      LOG_DEBUG("Seed : " + file_path.string());
+
+      boost::filesystem::ifstream file(file_path);
+      std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+      auto new_test_case = TestCase(content);
+      auto execution_data = execution_monitor_.ExecuteBlocking(new_test_case);
+      corpus_.AddIfInteresting(execution_data);
+    }
+  }
+  return;
 }
 
 void Fuzzon::TestInput(std::string test_me) {
@@ -124,6 +151,9 @@ void Fuzzon::MutationNonDeterministic(int test_cases_to_mutate, bool white_chars
 
   while (!test_timeout_() && !stop_testing) {
     auto favorite = corpus_.SelectFavorite();
+    if (favorite == nullptr) {
+      break;
+    }
     auto mutated = test_cases_mutator.Mutate(*favorite);
     auto execution_data = execution_monitor_.ExecuteBlocking(mutated);
     corpus_.AddIfInteresting(execution_data);

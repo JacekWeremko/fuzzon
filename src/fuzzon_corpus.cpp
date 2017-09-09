@@ -31,19 +31,21 @@ Corpus::Corpus(std::string output_path)
 }
 
 bool Corpus::IsInteresting(const ExecutionData& am_i) {
+  auto result = true;
+  for (auto& current : data_) {
+    if (current.path == am_i.path) {
+      current.path_execution_coutner_++;
+      result = false;
+    }
+  }
+
   static Timeout log_timer(stdch::milliseconds(1000));
   if (log_timer()) {
     LOG_INFO(GetShortStats().str());
     log_timer.arm(stdch::system_clock::now());
   }
 
-  for (auto& current : data_) {
-    if (current.path == am_i.path) {
-      current.similar_path_coutner_++;
-      return false;
-    }
-  }
-  return true;
+  return result;
 }
 
 // TODO: move semantic
@@ -92,11 +94,11 @@ const TestCase* Corpus::SelectFavorite() {
   {
     auto lowest_similar_execution_coutner = std::numeric_limits<size_t>::max();
     for (auto& current : lowest_mutation_counter) {
-      if (current->similar_path_coutner_ < lowest_similar_execution_coutner) {
+      if (current->path_execution_coutner_ < lowest_similar_execution_coutner) {
         lowest_similar_path_coutner.clear();
-        lowest_similar_execution_coutner = current->similar_path_coutner_;
+        lowest_similar_execution_coutner = current->path_execution_coutner_;
         lowest_similar_path_coutner.push_back(current);
-      } else if (current->similar_path_coutner_ == lowest_similar_execution_coutner) {
+      } else if (current->path_execution_coutner_ == lowest_similar_execution_coutner) {
         lowest_similar_path_coutner.push_back(current);
       }
     }
@@ -113,7 +115,10 @@ const TestCase* Corpus::SelectFavorite() {
       }
     }
   }
-  return &result->input;
+  if (result != nullptr) {
+    return &result->input;
+  }
+  return nullptr;
 }
 
 const TestCase* Corpus::SelectNotYetExhaustMutated() {
@@ -131,7 +136,7 @@ std::stringstream Corpus::GetShortStats() {
   stats << time_format(stdch::duration_cast<stdch::milliseconds>(stdch::system_clock::now() - start_))
         << "    Runs:" << std::accumulate(data_.begin(), data_.end(), 0,
                                           [](int execution_counter, ExecutionData& arg) {
-                                            return execution_counter + arg.similar_path_coutner_;
+                                            return execution_counter + arg.path_execution_coutner_;
                                           })
         << "    cor:" << std::to_string(data_.size()) << "    cov:" << total_.GetVisitedPCCounter() << "/"
         << total_.GetTotalPCCounter() << "  "
@@ -152,7 +157,7 @@ std::stringstream Corpus::GetFullStats() {
 
   stats << "Test cases: " << std::accumulate(data_.begin(), data_.end(), 0, [](int execution_counter,
                                                                                ExecutionData& arg) {
-    return execution_counter + arg.similar_path_coutner_;
+    return execution_counter + arg.path_execution_coutner_;
   }) << std::endl;
 
   if (data_.size() == 0) {
@@ -175,16 +180,16 @@ std::stringstream Corpus::GetFullStats() {
   stats << "Test case max similar executions count: "
         << std::max_element(data_.begin(), data_.end(),
                             [](ExecutionData& arg1, ExecutionData& arg2) {
-                              return arg1.similar_path_coutner_ < arg2.similar_path_coutner_;
+                              return arg1.path_execution_coutner_ < arg2.path_execution_coutner_;
                             })
-               ->similar_path_coutner_
+               ->path_execution_coutner_
         << std::endl;
   stats << "Test case min similar executions count: "
         << std::max_element(data_.begin(), data_.end(),
                             [](ExecutionData& arg1, ExecutionData& arg2) {
-                              return arg1.similar_path_coutner_ > arg2.similar_path_coutner_;
+                              return arg1.path_execution_coutner_ > arg2.path_execution_coutner_;
                             })
-               ->similar_path_coutner_
+               ->path_execution_coutner_
         << std::endl;
 
   stats << "Test case max execution time: "
@@ -236,6 +241,16 @@ void Corpus::Dump() {
   }
 
   return;
+}
+
+std::vector<fs::path> Corpus::GatherCoprusFiles() const {
+  std::vector<fs::path> list;
+  fs::path corpus(output_path_ / DIR_NAME_CORPUS);
+
+  for (const auto& file : fs::directory_iterator(corpus)) {
+    list.push_back(file.path());
+  }
+  return list;
 }
 
 } /* namespace fuzzon */
