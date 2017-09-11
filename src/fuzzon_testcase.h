@@ -56,6 +56,7 @@ class TestCase {
   std::string string() const { return std::string(data_.data(), data_.size()); }
 
   std::vector<char>& vec() { return data_; }
+  const std::vector<char>& vec() const { return data_; }
 
   friend std::ostream& operator<<(std::ostream& os, const TestCase& print_me) {
     for (const auto& elem : print_me.data_) {

@@ -34,8 +34,6 @@ class Mutator {
                        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                        "1234567890");
 
-  TestCase Mutate(const TestCase& mutate_me);
-
   int ChangeByte(uint8_t* data, size_t data_size);
 
   /*
@@ -84,7 +82,7 @@ class Mutator {
                       size_t block_length) const;
   bool BlockInsertion(TestCase& base,
                       size_t base_start_idx,
-                      TestCase& insertme,
+                      const TestCase& insertme,
                       size_t insertme_start_idx,
                       size_t block_length) const {
     return BlockInsertion(base.vec(), base_start_idx, insertme.vec(), insertme_start_idx, block_length);
@@ -113,13 +111,13 @@ class Mutator {
    */
   bool BlockOverriding(std::vector<char>& base,
                        size_t base_start_idx,
-                       std::vector<char>& new_values,
+                       const std::vector<char>& new_values,
                        size_t new_values_start_idx,
                        size_t block_length) const;
 
   bool BlockOverriding(TestCase& base,
                        size_t base_start_idx,
-                       TestCase& new_values,
+                       const TestCase& new_values,
                        size_t new_values_start_idx,
                        size_t block_length) const {
     return BlockOverriding(base.vec(), base_start_idx, new_values.vec(), new_values_start_idx, block_length);

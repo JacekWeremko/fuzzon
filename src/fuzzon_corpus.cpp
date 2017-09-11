@@ -17,6 +17,7 @@
 #include <memory>
 #include <utility>
 
+#include "./fuzzon_random.h"
 #include "./utils/logger.h"
 
 namespace fs = boost::filesystem;
@@ -122,6 +123,18 @@ const TestCase* Corpus::SelectFavorite() {
   return nullptr;
 }
 
+const TestCase* Corpus::SelectRandom() {
+  auto i = 0;
+  auto idx = Random::Get()->GenerateInt(0, data_.size() - 1);
+  for (auto& current : data_) {
+    if (i == idx) {
+      return &current.input;
+    }
+    i++;
+  }
+  return nullptr;
+}
+
 const TestCase* Corpus::SelectNotYetExhaustMutated() {
   for (auto& current : data_) {
     if (current.mutatation_exhausted == false) {
@@ -152,7 +165,7 @@ std::stringstream Corpus::GetFullStats() {
 
   stats << "Total coverage: "
         << (static_cast<double>(total_.GetVisitedPCCounter()) / static_cast<double>(total_.GetTotalPCCounter())) * 100
-        << std::endl;
+        << "%" << std::endl;
   stats << "Visited pc: " << total_.GetVisitedPCCounter() << std::endl;
   stats << "Total   pc: " << total_.GetTotalPCCounter() << std::endl;
 

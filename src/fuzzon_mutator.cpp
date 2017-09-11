@@ -19,17 +19,6 @@ Mutator::Mutator(bool white_chars_preservation, bool type_preservation, std::str
       type_preservation_(type_preservation),
       output_alphabet_(output_alphabet) {}
 
-TestCase Mutator::Mutate(const TestCase& mutate_me) {
-  auto new_test_case = TestCase(mutate_me);
-  // TODO: add strategy selection
-  //  auto result = ChangeByte(new_test_case.data(),
-  //  new_test_case.length_byte());
-
-  auto success = FlipBit(new_test_case, Random::Get()->GenerateInt(0, (new_test_case.size() - 1) * 8), 1);
-
-  return new_test_case;
-}
-
 bool Mutator::ChangeAllowed(const char& check_me) const {
   if (white_chars_preservation_) {
     return !std::isspace(check_me);
@@ -125,7 +114,7 @@ bool Mutator::BlockMemset(std::vector<char>& base, size_t start_idx, size_t bloc
 
 bool Mutator::BlockOverriding(std::vector<char>& base,
                               size_t base_start_idx,
-                              std::vector<char>& new_values,
+                              const std::vector<char>& new_values,
                               size_t new_values_start_idx,
                               size_t block_length) const {
   SAFE_CHECK(base.size() > base_start_idx, false);
@@ -134,7 +123,7 @@ bool Mutator::BlockOverriding(std::vector<char>& base,
   SAFE_CHECK(new_values.size() > new_values_start_idx + block_length - 1, false);
 
   std::copy(base.begin() + base_start_idx, base.begin() + base_start_idx + block_length,
-            new_values.begin() + new_values_start_idx);
+            const_cast<std::vector<char>&>(new_values).begin() + new_values_start_idx);
   return true;
 }
 
