@@ -110,7 +110,7 @@ ExecutionData Executor::ExecuteBlocking(TestCase& input) {
   auto stdout_ap = bp::async_pipe(ios);
   async_handler stdout_handler = [&](const bs::error_code& ec, size_t n) {
     std::copy(stdout_buffer.begin(), stdout_buffer.begin() + n, std::ostream_iterator<char>(*sut_std_out.get()));
-    std::cout << "sut_std_out:" << sut_std_out;
+    //    std::cout << "sut_std_out:" << sut_std_out;
     if (ec == 0) {
       boost::asio::async_read(stdout_ap, stdout_ap_buffer, stdout_handler);
     }
@@ -122,7 +122,7 @@ ExecutionData Executor::ExecuteBlocking(TestCase& input) {
   auto stderr_ap = bp::async_pipe(ios);
   async_handler stderr_handler = [&](const bs::error_code& ec, size_t n) {
     std::copy(stderr_buffer.begin(), stderr_buffer.begin() + n, std::ostream_iterator<char>(*sut_std_err.get()));
-    std::cout << "sut_std_err:" << sut_std_err;
+    //    std::cout << "sut_std_err:" << sut_std_err;
     if (ec == 0) {
       ba::async_read(stderr_ap, stderr_ap_buffer, stderr_handler);
     }
@@ -141,18 +141,21 @@ ExecutionData Executor::ExecuteBlocking(TestCase& input) {
 
   boost::system::error_code boost_ec;
   std::auto_ptr<boost::asio::io_service::work> work(new boost::asio::io_service::work(ios));
-  auto handlers_count = work->get_io_service().poll(boost_ec);
+  auto worker = boost::thread([&work, &boost_ec]() { auto handlers_count = work->get_io_service().run(boost_ec); });
 
   std::error_code ec;
   auto start = std::chrono::system_clock::now();
   auto gracefully_finished = sut.wait_for(execution_timeout_, ec);
   auto finish = std::chrono::system_clock::now();
   if (!gracefully_finished) {
+    //    work->get_io_service().run_one();
     sut.terminate(ec);
     finish = std::chrono::system_clock::now();
   }
   auto exit_code = sut.exit_code();
-  work->get_io_service().reset();
+  //  auto handlers_count2 = work->get_io_service().run();
+  work->get_io_service().stop();
+  worker.join();
 
   return ExecutionData(input, ec, exit_code, gracefully_finished,
                        std::chrono::duration_cast<std::chrono::milliseconds>(finish - start), std::move(sut_std_out),

@@ -171,6 +171,7 @@ std::stringstream Corpus::GetShortStats() {
 std::stringstream Corpus::GetFullStats() {
   std::stringstream stats;
 
+  stats << std::endl;
   stats << "Campaign Summary : " << std::endl;
   stats << "  Test cases: " << summary_.test_cases << std::endl;
   stats << "  Gracefully finish: " << summary_.gracefull_close << std::endl;
