@@ -8,6 +8,7 @@
 #include <ctime>
 #include <cstdint>
 #include <string>
+#include <limits>
 
 #include "./utils/logger.h"
 
@@ -36,7 +37,7 @@ void Random::SetAlphabet(std::string alphabet) {
 
 int Random::GenerateInt(int min, int max) {
   static const int default_min = 1;
-  static const int default_max = 3;
+  static const int default_max = std::numeric_limits<int>::max();
 
   BOOST_ASSERT(min <= max);
   min = min == -1 ? default_min : min;
@@ -47,14 +48,24 @@ int Random::GenerateInt(int min, int max) {
 }
 
 std::string Random::GenerateString(int length) {
-  static const int min_length = 1;
-  static const int max_length = 10;
-
-  length = length == -1 ? max_length : length;
-
-  const auto string_length = GenerateInt(min_length, max_length);
   std::stringstream random;
-  for (size_t i = 0; i < string_length; i++) {
+  for (auto i = 0; i < length; i++) {
+    random << GenerateChar();
+  }
+  return random.str();
+}
+
+std::string Random::GenerateString(int min, int max) {
+  static const int min_length = 1;
+  static const int max_length = 100;
+
+  BOOST_ASSERT(min <= max);
+  min = min == -1 ? min_length : min;
+  max = max == -1 ? max_length : max;
+
+  const auto string_length = GenerateInt(min, max);
+  std::stringstream random;
+  for (auto i = 0; i < string_length; i++) {
     random << GenerateChar();
   }
   return random.str();

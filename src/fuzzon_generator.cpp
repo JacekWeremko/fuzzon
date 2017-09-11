@@ -79,8 +79,7 @@ int Generator::ParseJson(rapidjson::Value& current,
     if (!cuttent_it->value.IsObject() || !cuttent_it->value.HasMember("type")) {
       //        throw std::string(type) + " handling is
       // not implemented yet";
-      LOG_CRITICAL(std::string(cuttent_it->value.GetString()) +
-                              " is not an object or has not 'type' member.");
+      LOG_CRITICAL(std::string(cuttent_it->value.GetString()) + " is not an object or has not 'type' member.");
       return -1;
     }
 
@@ -96,9 +95,14 @@ int Generator::ParseJson(rapidjson::Value& current,
                         maximum_value);
     }
     if (std::string("string").compare(element_type) == 0) {
-      auto length = cuttent_it->value.FindMember("length");
-      auto length_value = length == cuttent_it->value.MemberEnd() ? -1 : length->value.GetInt();
-      JsonInsertString(new_document, new_document_current, std::string(cuttent_it->name.GetString()), length_value);
+      auto minimum = cuttent_it->value.FindMember("minimum");
+      auto minimum_value = minimum == cuttent_it->value.MemberEnd() ? -1 : minimum->value.GetInt();
+
+      auto maximum = cuttent_it->value.FindMember("maximum");
+      auto maximum_value = maximum == cuttent_it->value.MemberEnd() ? -1 : maximum->value.GetInt();
+
+      JsonInsertString(new_document, new_document_current, std::string(cuttent_it->name.GetString()), minimum_value,
+                       maximum_value);
     } else if (std::string("object").compare(element_type) == 0) {
       new_document_current.AddMember(rapidjson::Value(cuttent_it->name, new_document.GetAllocator()),
                                      rapidjson::Value(rapidjson::kObjectType), new_document.GetAllocator());
@@ -168,15 +172,19 @@ int Generator::ParseJson(rapidjson::Value& current,
         PrintJson("AddMember string " + std::string(items->name.GetString()), new_document);
         auto new_array_item = new_document_array->value.MemberEnd() - 1;
 
-        auto length = cuttent_it->value.FindMember("length");
-        auto length_value = length == cuttent_it->value.MemberEnd() ? -1 : length->value.GetInt();
+        auto minimum = cuttent_it->value.FindMember("minimum");
+        auto minimum_value = minimum == cuttent_it->value.MemberEnd() ? -1 : minimum->value.GetInt();
+
+        auto maximum = cuttent_it->value.FindMember("maximum");
+        auto maximum_value = maximum == cuttent_it->value.MemberEnd() ? -1 : maximum->value.GetInt();
+
         for (size_t idx = 0; idx < array_length; idx++) {
           JsonInsertString(new_document, new_array_item->value, std::string(cuttent_it->name.GetString()),
-                           length_value);
+                           minimum_value, maximum_value);
         }
       } else {
         LOG_CRITICAL(std::string(type_of_array_elements->value.GetString()) +
-                                " handling of array element type not implemented yet!");
+                     " handling of array element type not implemented yet!");
       }
 
     } else {
@@ -247,9 +255,10 @@ bool Generator::JsonInsertInteger(rapidjson::Document& document,
 bool Generator::JsonInsertString(rapidjson::Document& document,
                                  rapidjson::Value& current,
                                  std::string new_value_name,
-                                 int length) {
+                                 int minimum_value,
+                                 int maximum_value) {
   rapidjson::Value new_element_value =
-      rapidjson::Value(Random::Get()->GenerateString(length).c_str(), document.GetAllocator());
+      rapidjson::Value(Random::Get()->GenerateString(minimum_value, maximum_value).c_str(), document.GetAllocator());
   return JsonInsert(document, current, new_value_name, new_element_value);
 }
 

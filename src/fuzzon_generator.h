@@ -35,7 +35,8 @@ class Generator {
   bool JsonInsertString(rapidjson::Document& document,
                         rapidjson::Value& current,
                         std::string new_value_name,
-                        int length);
+                        int minimum_value,
+                        int maximum_value);
 
   bool JsonInsert(rapidjson::Document& document,
                   rapidjson::Value& current,

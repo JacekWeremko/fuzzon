@@ -34,6 +34,7 @@ class Random {
   void SetAlphabet(std::string alphabet);
 
   std::string GenerateString(int length = -1);
+  std::string GenerateString(int min = -1, int max = -1);
   int GenerateInt(int min = -1, int max = -1);
   char GenerateChar();
   char GenerateChar(char same_type_as_me);
