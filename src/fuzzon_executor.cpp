@@ -4,9 +4,15 @@
 
 #include "./fuzzon_executor.h"
 
+#include <boost/thread.hpp>
 #include <boost/process.hpp>
 #include <boost/process/extend.hpp>
+#include <boost/iostreams/device/array.hpp>
+#include <boost/iostreams/stream_buffer.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/chrono.hpp>
+#include <boost/chrono/chrono.hpp>
+#include <boost/chrono/duration.hpp>
 #include <iostream>
 #include <string>
 #include <sstream>
@@ -21,6 +27,8 @@
 
 namespace bp = boost::process;
 namespace ex = bp::extend;
+namespace bs = boost::system;
+namespace ba = boost::asio;
 
 namespace fuzzon {
 
@@ -42,10 +50,11 @@ Executor::Executor(std::string sut_path, const std::vector<std::string>& env_fla
 
   // bug (?) in llvm : would report 1bilion of memory leaks on crash
   sut_env_["ASAN_OPTIONS"] += ":detect_leaks=false";
-  // hack : instead of linking  with asan <- this is not quite possible since some symbols not easly avaliable
+  // hack : instead of linking  with asan <- this is not quite possible since
+  // some symbols not easly avaliable
   sut_env_["LD_PRELOAD"] = "/usr/lib/llvm-4.0/lib/clang/4.0.0/lib/linux/libclang_rt.asan-x86_64.so";
 }
-/*
+
 struct process_hanlders : ex::async_handler {
   template <typename Sequence>
   std::function<void(int, const std::error_code&)> on_exit_handler(Sequence& exec) {
@@ -71,6 +80,11 @@ struct process_hanlders : ex::async_handler {
   }
 
   template <typename Sequence>
+  void on_success(bp::extend::posix_executor<Sequence>& exec) const {
+    std::cout << "on_success: " << exec.exe << std::endl;
+  }
+
+  template <typename Sequence>
   void on_fork_error(bp::extend::posix_executor<Sequence>& exec, const std::error_code& ec) {
     std::cout << "on_fork_error: " << exec.exe << " ec:" << ec << std::endl;
   }
@@ -84,25 +98,51 @@ struct process_hanlders : ex::async_handler {
   void on_exec_error(bp::extend::posix_executor<Sequence>& exec, const std::error_code& ec) const {
     std::cout << "on_exec_error: " << exec.exe << " ec:" << ec << std::endl;
   }
-
-  template <typename Sequence>
-  void on_success(bp::extend::posix_executor<Sequence>& exec) const {
-    std::cout << "on_success: " << exec.exe << std::endl;
-  }
 };
-*/
 
 ExecutionData Executor::ExecuteBlocking(TestCase& input) {
-  ExecutionTracker::Get()->Reset();
+  using async_handler = std::function<void(const bs::error_code& ec, std::size_t n)>;
+  ba::io_service ios;
 
-  boost::process::ipstream sut_std_out_ips;
-  boost::process::ipstream sut_std_err_ips;
-  boost::process::opstream sit_std_in_ips;
-  boost::process::child sut(sut_path_, input.string(), boost::process::std_out > sut_std_out_ips,
-                            boost::process::std_err > sut_std_err_ips, boost::process::std_in < sit_std_in_ips,
-                            sut_env_);
+  auto sut_std_out = std::make_shared<std::stringstream>();
+  auto stdout_buffer = std::vector<char>(1024);
+  auto stdout_ap_buffer = ba::buffer(stdout_buffer);
+  auto stdout_ap = bp::async_pipe(ios);
+  async_handler stdout_handler = [&](const bs::error_code& ec, size_t n) {
+    std::copy(stdout_buffer.begin(), stdout_buffer.begin() + n, std::ostream_iterator<char>(*sut_std_out.get()));
+    std::cout << "sut_std_out:" << sut_std_out;
+    if (ec == 0) {
+      boost::asio::async_read(stdout_ap, stdout_ap_buffer, stdout_handler);
+    }
+  };
 
-  sit_std_in_ips << input.string() << std::endl;
+  auto sut_std_err = std::make_shared<std::stringstream>();
+  auto stderr_buffer = std::vector<char>(1024);
+  auto stderr_ap_buffer = ba::buffer(stderr_buffer);
+  auto stderr_ap = bp::async_pipe(ios);
+  async_handler stderr_handler = [&](const bs::error_code& ec, size_t n) {
+    std::copy(stderr_buffer.begin(), stderr_buffer.begin() + n, std::ostream_iterator<char>(*sut_std_err.get()));
+    std::cout << "sut_std_err:" << sut_std_err;
+    if (ec == 0) {
+      ba::async_read(stderr_ap, stderr_ap_buffer, stderr_handler);
+    }
+  };
+
+  auto stdin_ap_buffer = ba::buffer(input.string());
+  auto stdin_ap = bp::async_pipe(ios);
+  async_handler stdin_handler = [&](const bs::error_code& ec, size_t n) { stdin_ap.async_close(); };
+
+  ba::async_write(stdin_ap, stdin_ap_buffer, stdin_handler);
+  ba::async_read(stdout_ap, stdout_ap_buffer, stdout_handler);
+  ba::async_read(stderr_ap, stderr_ap_buffer, stderr_handler);
+
+  boost::process::child sut(sut_path_, input.string(), boost::process::std_out > stdout_ap,
+                            boost::process::std_err > stderr_ap, boost::process::std_in < stdin_ap, sut_env_);
+
+  boost::system::error_code boost_ec;
+  std::auto_ptr<boost::asio::io_service::work> work(new boost::asio::io_service::work(ios));
+  auto handlers_count = work->get_io_service().poll(boost_ec);
+
   std::error_code ec;
   auto start = std::chrono::system_clock::now();
   auto gracefully_finished = sut.wait_for(execution_timeout_, ec);
@@ -112,17 +152,7 @@ ExecutionData Executor::ExecuteBlocking(TestCase& input) {
     finish = std::chrono::system_clock::now();
   }
   auto exit_code = sut.exit_code();
-
-  std::string line;
-  auto sut_std_out = std::make_unique<std::stringstream>();
-  while (std::getline(sut_std_out_ips, line)) {
-    *sut_std_out.get() << line << std::endl;
-  }
-
-  auto sut_std_err = std::make_unique<std::stringstream>();
-  while (std::getline(sut_std_err_ips, line)) {
-    *sut_std_err.get() << line << std::endl;
-  }
+  work->get_io_service().reset();
 
   return ExecutionData(input, ec, exit_code, gracefully_finished,
                        std::chrono::duration_cast<std::chrono::milliseconds>(finish - start), std::move(sut_std_out),

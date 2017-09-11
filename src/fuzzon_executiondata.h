@@ -27,8 +27,8 @@ struct ExecutionData {
                 int exc,
                 bool gracefully_finished,
                 std::chrono::milliseconds execution_time,
-                std::unique_ptr<std::stringstream> std_out,
-                std::unique_ptr<std::stringstream> std_err,
+                std::shared_ptr<std::stringstream> std_out,
+                std::shared_ptr<std::stringstream> std_err,
                 const Coverage* cov)
       : input(tc),
         error_code(erc),
