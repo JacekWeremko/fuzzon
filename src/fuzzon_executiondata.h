@@ -59,6 +59,8 @@ struct ExecutionData {
     return os;
   }
 
+  bool crashed() const { return std_err->tellp() != 0; }
+
   TestCase input;
   std::error_code error_code;
   int exit_code;
@@ -73,6 +75,18 @@ struct ExecutionData {
   bool mutatation_exhausted;
   size_t path_execution_coutner_;
   size_t mutation_counter_;
+};
+
+struct CampaignSummary {
+  CampaignSummary()
+      : test_cases(0), gracefull_close(0), none_zero_error_code(0), none_zero_return_code(0), timeout(0), crash(0) {}
+  int test_cases;
+  int gracefull_close;
+  int none_zero_error_code;
+  int none_zero_return_code;
+  int timeout;
+  int crash;
+  Coverage total_cov;
 };
 
 } /* namespace fuzzon */

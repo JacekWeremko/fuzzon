@@ -24,8 +24,7 @@ namespace fs = boost::filesystem;
 namespace stdch = std::chrono;
 
 namespace fuzzon {
-Corpus::Corpus(std::string output_path)
-    : start_(stdch::system_clock::now()), output_path_(fs::path(output_path)), total_(Coverage::Raw) {
+Corpus::Corpus(std::string output_path) : start_(stdch::system_clock::now()), output_path_(fs::path(output_path)) {
   boost::filesystem::create_directories(output_path_);
   boost::filesystem::create_directories(output_path_ / DIR_NAME_RESULTS);
   boost::filesystem::create_directories(output_path_ / DIR_NAME_CORPUS);
@@ -33,13 +32,22 @@ Corpus::Corpus(std::string output_path)
 }
 
 bool Corpus::IsInteresting(const ExecutionData& am_i) {
+  auto result = true;
   for (auto& current : data_) {
     if (current.path == am_i.path) {
       current.path_execution_coutner_++;
-      return false;
+      result = false;
+      break;
     }
   }
-  return true;
+
+  summary_.test_cases += 1;
+  summary_.gracefull_close += am_i.gracefull_close == true ? 1 : 0;
+  summary_.none_zero_error_code += am_i.error_code.value() != 0 ? 1 : 0;
+  summary_.none_zero_return_code += am_i.exit_code != 0 ? 1 : 0;
+  summary_.timeout += am_i.gracefull_close == false ? 1 : 0;
+  summary_.crash += am_i.crashed() == true ? 1 : 0;
+  return result;
 }
 
 // TODO: move semantic
@@ -47,7 +55,7 @@ void Corpus::AddExecutionData(ExecutionData& add_me_to_corpus) {
   LOG_DEBUG("Adding new test case to corpus: " + add_me_to_corpus.input.string());
   // TODO: optimize memory footprint
 
-  total_.Merge(add_me_to_corpus.path);
+  summary_.total_cov.Merge(add_me_to_corpus.path);
   data_.push_back(add_me_to_corpus);
 }
 
@@ -152,53 +160,60 @@ std::stringstream Corpus::GetShortStats() {
                                           [](int execution_counter, ExecutionData& arg) {
                                             return execution_counter + arg.path_execution_coutner_;
                                           })
-        << "    cor:" << std::to_string(data_.size()) << "    cov:" << total_.GetVisitedPCCounter() << "/"
-        << total_.GetTotalPCCounter() << "  "
-        << ((static_cast<double>(total_.GetVisitedPCCounter()) / static_cast<double>(total_.GetTotalPCCounter())) *
+        << "    cor:" << std::to_string(data_.size()) << "    cov:" << summary_.total_cov.GetVisitedPCCounter() << "/"
+        << summary_.total_cov.GetTotalPCCounter() << "  "
+        << ((static_cast<double>(summary_.total_cov.GetVisitedPCCounter()) /
+             static_cast<double>(summary_.total_cov.GetTotalPCCounter())) *
             100);
   return stats;
 }
 
 std::stringstream Corpus::GetFullStats() {
   std::stringstream stats;
-  stats << "Corpus size : " << std::to_string(data_.size()) << std::endl;
 
-  stats << "Total coverage: "
-        << (static_cast<double>(total_.GetVisitedPCCounter()) / static_cast<double>(total_.GetTotalPCCounter())) * 100
+  stats << "Campaign Summary : " << std::endl;
+  stats << "  Test cases: " << summary_.test_cases << std::endl;
+  stats << "  Gracefully finish: " << summary_.gracefull_close << std::endl;
+  stats << "  None zero error code: " << summary_.none_zero_error_code << std::endl;
+  stats << "  None zero return code: " << summary_.none_zero_return_code << std::endl;
+  stats << "  Timeout: " << summary_.timeout << std::endl;
+  stats << "  Crash: " << summary_.crash << std::endl;
+  stats << std::endl;
+  stats << "Corpus Summary : " << std::endl;
+  stats << "  Test cases : " << std::to_string(data_.size()) << std::endl;
+  stats << "  Total coverage: "
+        << (static_cast<double>(summary_.total_cov.GetVisitedPCCounter()) /
+            static_cast<double>(summary_.total_cov.GetTotalPCCounter())) *
+               100
         << "%" << std::endl;
-  stats << "Visited pc: " << total_.GetVisitedPCCounter() << std::endl;
-  stats << "Total   pc: " << total_.GetTotalPCCounter() << std::endl;
-
-  stats << "Test cases: " << std::accumulate(data_.begin(), data_.end(), 0, [](int execution_counter,
-                                                                               ExecutionData& arg) {
-    return execution_counter + arg.path_execution_coutner_;
-  }) << std::endl;
+  stats << "  Visited pc: " << summary_.total_cov.GetVisitedPCCounter() << std::endl;
+  stats << "  Total   pc: " << summary_.total_cov.GetTotalPCCounter() << std::endl;
 
   if (data_.size() == 0) {
     return stats;
   }
 
-  stats << "Test case max mutation count: "
+  stats << "  Test case max mutation count: "
         << std::max_element(
                data_.begin(), data_.end(),
                [](ExecutionData& arg1, ExecutionData& arg2) { return arg1.mutation_counter_ < arg2.mutation_counter_; })
                ->mutation_counter_
         << std::endl;
-  stats << "Test case min mutation count: "
+  stats << "  Test case min mutation count: "
         << std::max_element(
                data_.begin(), data_.end(),
                [](ExecutionData& arg1, ExecutionData& arg2) { return arg1.mutation_counter_ > arg2.mutation_counter_; })
                ->mutation_counter_
         << std::endl;
 
-  stats << "Test case max similar executions count: "
+  stats << "  Test case max similar executions count: "
         << std::max_element(data_.begin(), data_.end(),
                             [](ExecutionData& arg1, ExecutionData& arg2) {
                               return arg1.path_execution_coutner_ < arg2.path_execution_coutner_;
                             })
                ->path_execution_coutner_
         << std::endl;
-  stats << "Test case min similar executions count: "
+  stats << "  Test case min similar executions count: "
         << std::max_element(data_.begin(), data_.end(),
                             [](ExecutionData& arg1, ExecutionData& arg2) {
                               return arg1.path_execution_coutner_ > arg2.path_execution_coutner_;
@@ -206,14 +221,14 @@ std::stringstream Corpus::GetFullStats() {
                ->path_execution_coutner_
         << std::endl;
 
-  stats << "Test case max execution time: "
+  stats << "  Test case max execution time: "
         << time_format(std::max_element(data_.begin(), data_.end(),
                                         [](ExecutionData& arg1, ExecutionData& arg2) {
                                           return arg1.execution_time < arg2.execution_time;
                                         })
                            ->execution_time)
         << std::endl;
-  stats << "Test case min execution time: "
+  stats << "  Test case min execution time: "
         << time_format(std::max_element(data_.begin(), data_.end(),
                                         [](ExecutionData& arg1, ExecutionData& arg2) {
                                           return arg1.execution_time > arg2.execution_time;
@@ -221,28 +236,31 @@ std::stringstream Corpus::GetFullStats() {
                            ->execution_time)
         << std::endl;
 
-  stats << "Gracefully finished: " << std::count_if(data_.begin(), data_.end(), [](ExecutionData& arg) {
+  stats << "  Gracefully finished: " << std::count_if(data_.begin(), data_.end(), [](ExecutionData& arg) {
     return arg.gracefull_close == true;
   }) << std::endl;
 
-  stats << "Non zero error code: " << std::count_if(data_.begin(), data_.end(), [](ExecutionData& arg) {
+  stats << "  None zero error code: " << std::count_if(data_.begin(), data_.end(), [](ExecutionData& arg) {
     return arg.error_code.value() != 0;
   }) << std::endl;
 
-  stats << "Non zero return code: " << std::count_if(data_.begin(), data_.end(), [](ExecutionData& arg) {
+  stats << "  None zero return code: " << std::count_if(data_.begin(), data_.end(), [](ExecutionData& arg) {
     return arg.exit_code != 0;
   }) << std::endl;
 
-  stats << "Faulty test cases: " << std::count_if(data_.begin(), data_.end(), [](ExecutionData& arg) {
-    return arg.gracefull_close == false && arg.error_code.value() != 0;
+  stats << "  Timeout: " << std::count_if(data_.begin(), data_.end(), [](ExecutionData& arg) {
+    return arg.gracefull_close == false;
   }) << std::endl;
+
+  stats << "  Crash: " << std::count_if(data_.begin(), data_.end(), [](ExecutionData& arg) { return arg.crashed(); })
+        << std::endl;
 
   return stats;
 }
 
 void Corpus::Dump() {
   fs::ofstream(output_path_ / "stats.txt") << GetFullStats().str();
-  fs::ofstream(output_path_ / DIR_NAME_RESULTS / "total.json") << total_;
+  fs::ofstream(output_path_ / DIR_NAME_RESULTS / "total.json") << summary_.total_cov;
 
   {
     auto index = 1;
@@ -252,7 +270,7 @@ void Corpus::Dump() {
       const auto result_path = output_path_ / DIR_NAME_RESULTS / fs::path(std::to_string(index) + ".json");
       { fs::ofstream(result_path) << elem; }
 
-      if (elem.std_err->tellp()) {
+      if (elem.crashed()) {
         const auto crash_link = output_path_ / DIR_NAME_CRASH / fs::path(std::to_string(index));
         fs::create_directory_symlink(result_path, crash_link);
       }

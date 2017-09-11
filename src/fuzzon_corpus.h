@@ -43,7 +43,7 @@ class Corpus {
 
   boost::filesystem::path output_path_;
   std::list<ExecutionData> data_;
-  Coverage total_;
+  CampaignSummary summary_;
 
   bool IsInteresting(const ExecutionData& am_i);
   void AddExecutionData(ExecutionData& add_me_to_corpus);
