@@ -20,6 +20,7 @@ class Coverage {
   enum CompreseMode { Log2 };
 
   explicit Coverage(TrackMode mode = Raw);
+  void Reset();
 
   // Helpers
   void Compress(CompreseMode comprese_mode = CompreseMode::Log2);

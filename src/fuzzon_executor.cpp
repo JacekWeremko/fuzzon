@@ -10,6 +10,7 @@
 #include <boost/iostreams/device/array.hpp>
 #include <boost/iostreams/stream_buffer.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/lockfree/queue.hpp>
 #include <boost/chrono.hpp>
 #include <boost/chrono/chrono.hpp>
 #include <boost/chrono/duration.hpp>
@@ -33,7 +34,12 @@ namespace ba = boost::asio;
 namespace fuzzon {
 
 Executor::Executor(std::string sut_path, const std::vector<std::string>& env_flags, int execution_timeout_ms_)
-    : sut_path_(sut_path), execution_timeout_(std::chrono::milliseconds(execution_timeout_ms_)) {
+    : sut_path_(sut_path),
+      execution_timeout_(std::chrono::milliseconds(execution_timeout_ms_)),
+      is_first_run_(true),
+      done_(false),
+      process_(false),
+      work_(ios_) {
   ExecutionTracker::Get(ExecutionTracker::Monitor);
   LOG_DEBUG(std::string("SUT path: ") + sut_path_);
 
@@ -53,6 +59,10 @@ Executor::Executor(std::string sut_path, const std::vector<std::string>& env_fla
   // hack : instead of linking  with asan <- this is not quite possible since
   // some symbols not easly avaliable
   sut_env_["LD_PRELOAD"] = "/usr/lib/llvm-4.0/lib/clang/4.0.0/lib/linux/libclang_rt.asan-x86_64.so";
+}
+
+Executor::~Executor() {
+  done_ = true;
 }
 
 struct process_hanlders : ex::async_handler {
@@ -102,12 +112,12 @@ struct process_hanlders : ex::async_handler {
 
 ExecutionData Executor::ExecuteBlocking(TestCase& input) {
   using async_handler = std::function<void(const bs::error_code& ec, std::size_t n)>;
-  ba::io_service ios;
+  ExecutionTracker::Get()->Reset();
 
   auto sut_std_out = std::make_shared<std::stringstream>();
   auto stdout_buffer = std::vector<char>(1024);
   auto stdout_ap_buffer = ba::buffer(stdout_buffer);
-  auto stdout_ap = bp::async_pipe(ios);
+  auto stdout_ap = bp::async_pipe(ios_);
   async_handler stdout_handler = [&](const bs::error_code& ec, size_t n) {
     std::copy(stdout_buffer.begin(), stdout_buffer.begin() + n, std::ostream_iterator<char>(*sut_std_out.get()));
     //    std::cout << "sut_std_out:" << sut_std_out;
@@ -119,7 +129,7 @@ ExecutionData Executor::ExecuteBlocking(TestCase& input) {
   auto sut_std_err = std::make_shared<std::stringstream>();
   auto stderr_buffer = std::vector<char>(1024);
   auto stderr_ap_buffer = ba::buffer(stderr_buffer);
-  auto stderr_ap = bp::async_pipe(ios);
+  auto stderr_ap = bp::async_pipe(ios_);
   async_handler stderr_handler = [&](const bs::error_code& ec, size_t n) {
     std::copy(stderr_buffer.begin(), stderr_buffer.begin() + n, std::ostream_iterator<char>(*sut_std_err.get()));
     //    std::cout << "sut_std_err:" << sut_std_err;
@@ -127,9 +137,8 @@ ExecutionData Executor::ExecuteBlocking(TestCase& input) {
       ba::async_read(stderr_ap, stderr_ap_buffer, stderr_handler);
     }
   };
-
-  auto stdin_ap_buffer = ba::buffer(input.string());
-  auto stdin_ap = bp::async_pipe(ios);
+  auto stdin_ap_buffer = ba::buffer(input.string() + " \0");
+  auto stdin_ap = bp::async_pipe(ios_);
   async_handler stdin_handler = [&](const bs::error_code& ec, size_t n) { stdin_ap.async_close(); };
 
   ba::async_write(stdin_ap, stdin_ap_buffer, stdin_handler);
@@ -139,23 +148,45 @@ ExecutionData Executor::ExecuteBlocking(TestCase& input) {
   boost::process::child sut(sut_path_, input.string(), boost::process::std_out > stdout_ap,
                             boost::process::std_err > stderr_ap, boost::process::std_in < stdin_ap, sut_env_);
 
-  boost::system::error_code boost_ec;
-  std::auto_ptr<boost::asio::io_service::work> work(new boost::asio::io_service::work(ios));
-  auto worker = boost::thread([&work, &boost_ec]() { auto handlers_count = work->get_io_service().run(boost_ec); });
+  // this thread my exists as long as main process exists...joining is not really required
+  static auto worker = new boost::thread([&]() {
+    boost::system::error_code boost_ec;
+    //    int counter = 0;
+
+    while (done_ == false) {
+      if (process_) {
+        process_ = false;
+        work_.get_io_service().run(boost_ec);
+        //        counter++;
+        //        auto handlers_count = work_.get_io_service().run(boost_ec);
+        //        std::cout << "handlers_count : " << std::dec << handlers_count << std::endl;
+      }
+      boost::this_thread::yield();
+    }
+  });
+
+  process_ = true;
+  while (process_ == true) {
+    boost::this_thread::yield();
+  }
+
+  if (is_first_run_) {
+    // FIXME: boost shared memory region contains invalid data,
+    //   it looks like worker thread doesn't run
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(50));
+    is_first_run_ = false;
+  }
 
   std::error_code ec;
   auto start = std::chrono::system_clock::now();
   auto timeout_not_occured = sut.wait_for(execution_timeout_, ec);
   auto finish = std::chrono::system_clock::now();
   if (!timeout_not_occured) {
-    //    work->get_io_service().run_one();
     sut.terminate(ec);
     finish = std::chrono::system_clock::now();
   }
   auto exit_code = sut.exit_code();
-  //  auto handlers_count2 = work->get_io_service().run();
-  work->get_io_service().stop();
-  worker.join();
+  work_.get_io_service().stop();
 
   return ExecutionData(input, ec, exit_code, !timeout_not_occured,
                        std::chrono::duration_cast<std::chrono::milliseconds>(finish - start), std::move(sut_std_out),

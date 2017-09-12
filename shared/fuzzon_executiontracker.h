@@ -3,6 +3,7 @@
 
 #include "fuzzon_coverage.h"
 
+#include <string>
 #include <boost/interprocess/shared_memory_object.hpp>
 #include <boost/interprocess/mapped_region.hpp>
 
@@ -29,7 +30,7 @@ class ExecutionTracker {
   void TracePC(uint32_t idx, uintptr_t PC) { cov_->TracePC(idx, PC); }
 
  private:
-  ExecutionTracker(WorkingMode mode);
+  explicit ExecutionTracker(WorkingMode mode);
 
   const std::string shared_memory_buffer_name = "fuzzon_cov";
   boost::interprocess::shared_memory_object shared_memory_;

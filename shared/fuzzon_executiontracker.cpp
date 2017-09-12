@@ -14,7 +14,7 @@ ExecutionTracker::ExecutionTracker(WorkingMode mode) : mode_(mode), cov_(NULL) {
     region_ = boost::interprocess::mapped_region(shared_memory_, boost::interprocess::read_write);
     std::memset(region_.get_address(), 0, region_.get_size());
 
-    cov_ = new (region_.get_address()) Coverage(Coverage::Flow);
+    cov_ = new (region_.get_address()) Coverage(Coverage::Raw);
   } else if (mode_ == WorkingMode::SUT) {
     LOG_TRACE("WorkingMode::SUT");
     shared_memory_ = boost::interprocess::shared_memory_object(
@@ -30,7 +30,7 @@ ExecutionTracker::ExecutionTracker(WorkingMode mode) : mode_(mode), cov_(NULL) {
 }
 
 void ExecutionTracker::Reset() {
-  cov_ = new (region_.get_address()) Coverage(Coverage::Flow);
+  cov_->Reset();
 }
 
 } /* namespace fuzzon */

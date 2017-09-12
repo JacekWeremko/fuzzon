@@ -17,6 +17,12 @@ Coverage::Coverage(TrackMode mode)
   pc_flow_.fill(0);
 }
 
+void Coverage::Reset() {
+  pc_visited_ = 0;
+  last_pc_ = 0;
+  pc_flow_.fill(0);
+}
+
 void Coverage::Compress(CompreseMode comprese_mode) {
   if (comprese_mode == CompreseMode::Log2) {
     for (auto& elem : pc_flow_) {
