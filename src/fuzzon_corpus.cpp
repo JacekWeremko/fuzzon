@@ -185,8 +185,8 @@ std::stringstream Corpus::GetFullStats() {
             static_cast<double>(summary_.total_cov.GetTotalPCCounter())) *
                100
         << "%" << std::endl;
-  stats << "  Visited pc: " << summary_.total_cov.GetVisitedPCCounter() << std::endl;
-  stats << "  Total   pc: " << summary_.total_cov.GetTotalPCCounter() << std::endl;
+  stats << "  Visited trace points: " << summary_.total_cov.GetVisitedPCCounter() << std::endl;
+  stats << "  Total   trace points: " << summary_.total_cov.GetTotalPCCounter() << std::endl;
 
   if (data_.size() == 0) {
     return stats;
