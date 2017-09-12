@@ -160,7 +160,7 @@ const TestCase* Corpus::SelectNotYetExhaustMutated() {
 
 std::stringstream Corpus::GetShortStats() {
   std::stringstream stats;
-  stats << time_format(stdch::duration_cast<stdch::milliseconds>(
+  stats << time_format(stdch::duration_cast<stdch::microseconds>(
                stdch::system_clock::now() - start_))
         << "    test_cases:" << summary_.test_cases
         << "    corpus_size:" << std::to_string(data_.size())

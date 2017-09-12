@@ -188,13 +188,13 @@ ExecutionData Executor::ExecuteBlockingAsyncStremasStdinThread(
   });
 
   process_ = true;
-  //  if (is_first_run_) {
-  //    // FIXME: boost shared memory region contains invalid data,
-  //    //   it looks like worker thread doesn't run
-  //    boost::this_thread::yield();
-  boost::this_thread::sleep_for(boost::chrono::milliseconds(50));
-  //    is_first_run_ = false;
-  //  }
+  if (is_first_run_) {
+    // FIXME: boost shared memory region contains invalid data,
+    //   it looks like worker thread doesn't run
+    boost::this_thread::yield();
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(50));
+    is_first_run_ = false;
+  }
 
   while (process_ == true) {
     boost::this_thread::yield();
@@ -213,7 +213,7 @@ ExecutionData Executor::ExecuteBlockingAsyncStremasStdinThread(
 
   return ExecutionData(
       input, ec, exit_code, !timeout_not_occured,
-      std::chrono::duration_cast<std::chrono::milliseconds>(finish - start),
+      std::chrono::duration_cast<std::chrono::microseconds>(finish - start),
       std::move(sut_std_out), std::move(sut_std_err),
       ExecutionTracker::Get()->GetCoverage());
 }
@@ -287,7 +287,7 @@ ExecutionData Executor::ExecuteBlockingAsyncStremas(TestCase& input) {
 
   return ExecutionData(
       input, ec, exit_code, !timeout_not_occured,
-      std::chrono::duration_cast<std::chrono::milliseconds>(finish - start),
+      std::chrono::duration_cast<std::chrono::microseconds>(finish - start),
       std::move(sut_std_out), std::move(sut_std_err),
       ExecutionTracker::Get()->GetCoverage());
 }

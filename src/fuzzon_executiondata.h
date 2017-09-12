@@ -26,7 +26,7 @@ struct ExecutionData {
                 std::error_code erc,
                 int exc,
                 bool timeout,
-                std::chrono::milliseconds execution_time,
+                std::chrono::microseconds execution_time,
                 std::shared_ptr<std::stringstream> std_out,
                 std::shared_ptr<std::stringstream> std_err,
                 const Coverage* cov)
@@ -67,7 +67,7 @@ struct ExecutionData {
   std::error_code error_code;
   int exit_code;
   bool timeout;
-  std::chrono::milliseconds execution_time;
+  std::chrono::microseconds execution_time;
 
   std::shared_ptr<std::stringstream> std_out;
   std::shared_ptr<std::stringstream> std_err;
