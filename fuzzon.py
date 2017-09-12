@@ -8,11 +8,15 @@ def run_blocking(args, poll_stdout = False):
     
     proc = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     
+    
     if (poll_stdout is True):
-        while (proc.stdout.close() is False):
-            for line in iter(proc.stdout.readline, ''):
-                if (line != ""):
-                    print(line.decode("utf-8"))
+        import sys
+        while True:
+            line = proc.stdout.readline()
+            if line == '' and process.poll() is not None:
+                break
+            sys.stdout.write(line.decode("utf-8"))
+            sys.stdout.flush()
 
         
     stdout, stderr = proc.communicate()  
@@ -148,9 +152,9 @@ def test(level, sut_list, input_format, additional_options):
         additional_options.extend(["--mutate_d", 0])
         additional_options.extend(["--mutate_nd", 50])
     elif (level == "full"):   
-        additional_options.extend(["--generate", 2000])
+        additional_options.extend(["--generate", 1000])
         additional_options.extend(["--mutate_d", 1])
-        additional_options.extend(["--mutate_nd", 5000])
+        additional_options.extend(["--mutate_nd", 1000])
 
     for sut in sut_list:
         args = []
