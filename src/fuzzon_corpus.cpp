@@ -42,10 +42,9 @@ bool Corpus::IsInteresting(const ExecutionData& am_i) {
   }
 
   summary_.test_cases += 1;
-  summary_.gracefull_close += am_i.gracefull_close == true ? 1 : 0;
   summary_.none_zero_error_code += am_i.error_code.value() != 0 ? 1 : 0;
   summary_.none_zero_return_code += am_i.exit_code != 0 ? 1 : 0;
-  summary_.timeout += am_i.gracefull_close == false ? 1 : 0;
+  summary_.timeout += am_i.timeout == true ? 1 : 0;
   summary_.crash += am_i.crashed() == true ? 1 : 0;
   return result;
 }
@@ -174,7 +173,6 @@ std::stringstream Corpus::GetFullStats() {
   stats << std::endl;
   stats << "Campaign Summary : " << std::endl;
   stats << "  Test cases: " << summary_.test_cases << std::endl;
-  stats << "  Gracefully finish: " << summary_.gracefull_close << std::endl;
   stats << "  None zero error code: " << summary_.none_zero_error_code << std::endl;
   stats << "  None zero return code: " << summary_.none_zero_return_code << std::endl;
   stats << "  Timeout: " << summary_.timeout << std::endl;
@@ -237,10 +235,6 @@ std::stringstream Corpus::GetFullStats() {
                            ->execution_time)
         << std::endl;
 
-  stats << "  Gracefully finished: " << std::count_if(data_.begin(), data_.end(), [](ExecutionData& arg) {
-    return arg.gracefull_close == true;
-  }) << std::endl;
-
   stats << "  None zero error code: " << std::count_if(data_.begin(), data_.end(), [](ExecutionData& arg) {
     return arg.error_code.value() != 0;
   }) << std::endl;
@@ -250,7 +244,7 @@ std::stringstream Corpus::GetFullStats() {
   }) << std::endl;
 
   stats << "  Timeout: " << std::count_if(data_.begin(), data_.end(), [](ExecutionData& arg) {
-    return arg.gracefull_close == false;
+    return arg.timeout == true;
   }) << std::endl;
 
   stats << "  Crash: " << std::count_if(data_.begin(), data_.end(), [](ExecutionData& arg) { return arg.crashed(); })

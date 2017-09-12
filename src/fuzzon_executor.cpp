@@ -145,9 +145,9 @@ ExecutionData Executor::ExecuteBlocking(TestCase& input) {
 
   std::error_code ec;
   auto start = std::chrono::system_clock::now();
-  auto gracefully_finished = sut.wait_for(execution_timeout_, ec);
+  auto timeout_not_occured = sut.wait_for(execution_timeout_, ec);
   auto finish = std::chrono::system_clock::now();
-  if (!gracefully_finished) {
+  if (!timeout_not_occured) {
     //    work->get_io_service().run_one();
     sut.terminate(ec);
     finish = std::chrono::system_clock::now();
@@ -157,7 +157,7 @@ ExecutionData Executor::ExecuteBlocking(TestCase& input) {
   work->get_io_service().stop();
   worker.join();
 
-  return ExecutionData(input, ec, exit_code, gracefully_finished,
+  return ExecutionData(input, ec, exit_code, !timeout_not_occured,
                        std::chrono::duration_cast<std::chrono::milliseconds>(finish - start), std::move(sut_std_out),
                        std::move(sut_std_err), ExecutionTracker::Get()->GetCoverage());
 }

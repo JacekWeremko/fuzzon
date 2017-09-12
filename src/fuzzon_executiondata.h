@@ -25,7 +25,7 @@ struct ExecutionData {
   ExecutionData(TestCase tc,
                 std::error_code erc,
                 int exc,
-                bool gracefully_finished,
+                bool timeout,
                 std::chrono::milliseconds execution_time,
                 std::shared_ptr<std::stringstream> std_out,
                 std::shared_ptr<std::stringstream> std_err,
@@ -33,7 +33,7 @@ struct ExecutionData {
       : input(tc),
         error_code(erc),
         exit_code(exc),
-        gracefull_close(gracefully_finished),
+        timeout(timeout),
         execution_time(execution_time),
         std_out(std::move(std_out)),
         std_err(std::move(std_err)),
@@ -50,7 +50,7 @@ struct ExecutionData {
     os << "\"input\" : \"" << print_me.input << "\"," << std::endl;
     os << "\"error_code\" : \"" << print_me.error_code << "\"," << std::endl;
     os << "\"exit_code\" : " << print_me.exit_code << "," << std::endl;
-    os << "\"gracefull_close\" : " << print_me.gracefull_close << "," << std::endl;
+    os << "\"timeout\" : " << print_me.timeout << "," << std::endl;
     os << "\"execution_time\" : \"" << time_format(print_me.execution_time) << "\"," << std::endl;
     os << "\"std_out\" : \"" << print_me.std_out->str() << "\"," << std::endl;
     os << "\"std_err\" : \"" << print_me.std_err->str() << "\"," << std::endl;
@@ -64,7 +64,7 @@ struct ExecutionData {
   TestCase input;
   std::error_code error_code;
   int exit_code;
-  bool gracefull_close;
+  bool timeout;
   std::chrono::milliseconds execution_time;
 
   std::shared_ptr<std::stringstream> std_out;
@@ -78,10 +78,8 @@ struct ExecutionData {
 };
 
 struct CampaignSummary {
-  CampaignSummary()
-      : test_cases(0), gracefull_close(0), none_zero_error_code(0), none_zero_return_code(0), timeout(0), crash(0) {}
+  CampaignSummary() : test_cases(0), none_zero_error_code(0), none_zero_return_code(0), timeout(0), crash(0) {}
   int test_cases;
-  int gracefull_close;
   int none_zero_error_code;
   int none_zero_return_code;
   int timeout;
