@@ -15,6 +15,14 @@ environment/buildEnvironmentInclude/cdt.managedbuild.config.llvm.clang.linux.exe
 environment/buildEnvironmentInclude/cdt.managedbuild.config.llvm.clang.linux.exe.debug.118402673/C_INCLUDE_PATH/operation=remove
 environment/buildEnvironmentInclude/cdt.managedbuild.config.llvm.clang.linux.exe.debug.118402673/append=true
 environment/buildEnvironmentInclude/cdt.managedbuild.config.llvm.clang.linux.exe.debug.118402673/appendContributed=true
+environment/buildEnvironmentInclude/cdt.managedbuild.config.llvm.clang.linux.exe.debug.573544837.876941362/CPATH/delimiter=\:
+environment/buildEnvironmentInclude/cdt.managedbuild.config.llvm.clang.linux.exe.debug.573544837.876941362/CPATH/operation=remove
+environment/buildEnvironmentInclude/cdt.managedbuild.config.llvm.clang.linux.exe.debug.573544837.876941362/CPLUS_INCLUDE_PATH/delimiter=\:
+environment/buildEnvironmentInclude/cdt.managedbuild.config.llvm.clang.linux.exe.debug.573544837.876941362/CPLUS_INCLUDE_PATH/operation=remove
+environment/buildEnvironmentInclude/cdt.managedbuild.config.llvm.clang.linux.exe.debug.573544837.876941362/C_INCLUDE_PATH/delimiter=\:
+environment/buildEnvironmentInclude/cdt.managedbuild.config.llvm.clang.linux.exe.debug.573544837.876941362/C_INCLUDE_PATH/operation=remove
+environment/buildEnvironmentInclude/cdt.managedbuild.config.llvm.clang.linux.exe.debug.573544837.876941362/append=true
+environment/buildEnvironmentInclude/cdt.managedbuild.config.llvm.clang.linux.exe.debug.573544837.876941362/appendContributed=true
 environment/buildEnvironmentInclude/cdt.managedbuild.config.llvm.clang.linux.exe.debug.573544837.900166189/CPATH/delimiter=\:
 environment/buildEnvironmentInclude/cdt.managedbuild.config.llvm.clang.linux.exe.debug.573544837.900166189/CPATH/operation=remove
 environment/buildEnvironmentInclude/cdt.managedbuild.config.llvm.clang.linux.exe.debug.573544837.900166189/CPLUS_INCLUDE_PATH/delimiter=\:

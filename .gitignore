@@ -8,3 +8,4 @@
 *.bc
 /FuzzonCov_Release/
 /Fuzzon_Release/
+/FuzzonFull_Debug/
