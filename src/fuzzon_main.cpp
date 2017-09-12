@@ -20,7 +20,11 @@ namespace stdch = std::chrono;
 namespace po = boost::program_options;
 namespace fs = boost::filesystem;
 
+#ifdef ALTERNATIVE_MAIN
+int fuzzon_main(int argc, char** argv) {
+#else
 int main(int argc, char** argv) {
+#endif
   auto time_now = boost::posix_time::second_clock::local_time();
   auto time_now_str = boost::posix_time::to_simple_string(time_now);
 
@@ -66,11 +70,11 @@ int main(int argc, char** argv) {
 
   auto env_flags = vm.count("env_flag") ? vm["env_flag"].as<std::vector<std::string>>() : std::vector<std::string>();
   auto corpus_base = vm.count("corpus_seeds") ? vm["corpus_seeds"].as<fs::path>() : "";
-  auto sut_timeout = vm.count("single_test_timeout") ? vm["single_test_timeout"].as<int>() : 1000;
+  auto sut_timeout = vm.count("single_test_timeout") ? vm["single_test_timeout"].as<int>() : 20;
   auto test_timeout = vm.count("total_timeout") ? vm["total_timeout"].as<int>() : 1000 * 60 * 5;
-  auto generate = vm.count("generate") ? vm["generate"].as<int>() : 500;
+  auto generate = vm.count("generate") ? vm["generate"].as<int>() : 1000;
   auto mutate_d = vm.count("mutate_d") ? vm["mutate_d"].as<int>() : 1;
-  auto mutate_nd = vm.count("mutate_nd") ? vm["mutate_nd"].as<int>() : 5000;
+  auto mutate_nd = vm.count("mutate_nd") ? vm["mutate_nd"].as<int>() : 1000;
   auto white_chars_preservation =
       vm.count("white_chars_preservation") ? vm["white_chars_preservation"].as<bool>() : true;
 
@@ -86,20 +90,41 @@ int main(int argc, char** argv) {
   //  for (auto& sample : samples) {
   //    crazy_fuzzer.TestInput(sample);
   //  }
-  //  std::vector<std::string> samples = {"0",
-  //                                      "1 0",
-  //                                      "1 1 1",
-  //                                      "1 5 1 1 1 1 1",
-  //                                      "1 21 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1",
-  //                                      "2 3 1 2 3 21 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1",
-  //                                      "2 21 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 21 1 1 1 1 1 1 1 1 1 1 1 "
-  //                                      "1 1 1 1 1 1 1 1 1 1"};
+  //    std::vector<std::string> samples = {"0",
+  //                                        "1 0",
+  //                                        "1 1 1",
+  //                                        "1 5 1 1 1 1 1",
+  //                                        "1 21 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1",
+  //                                        "2 3 1 2 3 21 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1",
+  //                                        "2 21 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 21 1 1 1 1 1 1 1 1 1 1 1 "
+  //                                        "1 1 1 1 1 1 1 1 1 1"};
+  //  std::vector<std::string> samples = {"0", "1 0", "1 1 1", "1 5 1 1 1 1 1", "1 4 1 1 1 1"};
+  //
   //  for (auto& sample : samples) {
   //    crazy_fuzzer.TestInput(sample);
   //  }
 
+  //  const std::string alphabet("abcd");
+  //  std::string test = "";
+  //  crazy_fuzzer.TestInput(test);
+  //  for (int i = 0; i < alphabet.size(); ++i) {
+  //    for (int j = 0; j < alphabet.size(); ++j) {
+  //      for (int k = 0; k < alphabet.size(); ++k) {
+  //        for (int l = 0; l < alphabet.size(); ++l) {
+  //          test = "";
+  //          test += alphabet[i];
+  //          test += alphabet[j];
+  //          test += alphabet[k];
+  //          test += alphabet[l];
+  //          crazy_fuzzer.TestInput(test);
+  //        }
+  //      }
+  //    }
+  //  }
+
+  //  crazy_fuzzer.TestInput("aaaa");
   crazy_fuzzer.ScanCorpus(corpus_base.string());
-  crazy_fuzzer.Generation(input_ / format.string(), generate);
+  crazy_fuzzer.Generation(input_format.string(), generate);
   crazy_fuzzer.MutationDeterministic(mutate_d, white_chars_preservation);
   crazy_fuzzer.MutationNonDeterministic(mutate_nd, white_chars_preservation);
   crazy_fuzzer.PrintStats();
