@@ -22,7 +22,18 @@ class Executor {
   explicit Executor(std::string sut_path, const std::vector<std::string>& env_flags, int execution_timeout_ms);
   ~Executor();
 
-  ExecutionData ExecuteBlocking(TestCase& input);
+  ExecutionData ExecuteBlocking(TestCase& input) { return ExecuteBlockingAsyncStremasStdinThread(input); }
+
+  /*
+   * Allocating a bunch of boost:thread object on stack cause
+   *   exception (resource smth after ~10000 execution)
+   */
+  ExecutionData ExecuteBlockingAsyncStremas(TestCase& input);
+
+  /*
+   * Same as ExecuteBlockingAsyncStremas but uses single static thread to handle stdin
+   */
+  ExecutionData ExecuteBlockingAsyncStremasStdinThread(TestCase& input);
 
  private:
   std::string sut_path_;
