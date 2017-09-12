@@ -110,9 +110,11 @@ struct process_hanlders : ex::async_handler {
   }
 };
 
-ExecutionData Executor::ExecuteBlocking(TestCase& input) {
+ExecutionData Executor::ExecuteBlockingAsyncStremasStdinThread(TestCase& input) {
   using async_handler = std::function<void(const bs::error_code& ec, std::size_t n)>;
+
   ExecutionTracker::Get()->Reset();
+  ios_.reset();
 
   auto sut_std_out = std::make_shared<std::stringstream>();
   auto stdout_buffer = std::vector<char>(1024);
@@ -166,15 +168,16 @@ ExecutionData Executor::ExecuteBlocking(TestCase& input) {
   });
 
   process_ = true;
+  //  if (is_first_run_) {
+  //    // FIXME: boost shared memory region contains invalid data,
+  //    //   it looks like worker thread doesn't run
+  //    boost::this_thread::yield();
+  boost::this_thread::sleep_for(boost::chrono::milliseconds(50));
+  //    is_first_run_ = false;
+  //  }
+
   while (process_ == true) {
     boost::this_thread::yield();
-  }
-
-  if (is_first_run_) {
-    // FIXME: boost shared memory region contains invalid data,
-    //   it looks like worker thread doesn't run
-    boost::this_thread::sleep_for(boost::chrono::milliseconds(50));
-    is_first_run_ = false;
   }
 
   std::error_code ec;
@@ -187,6 +190,68 @@ ExecutionData Executor::ExecuteBlocking(TestCase& input) {
   }
   auto exit_code = sut.exit_code();
   work_.get_io_service().stop();
+
+  return ExecutionData(input, ec, exit_code, !timeout_not_occured,
+                       std::chrono::duration_cast<std::chrono::milliseconds>(finish - start), std::move(sut_std_out),
+                       std::move(sut_std_err), ExecutionTracker::Get()->GetCoverage());
+}
+
+ExecutionData Executor::ExecuteBlockingAsyncStremas(TestCase& input) {
+  using async_handler = std::function<void(const bs::error_code& ec, std::size_t n)>;
+  ba::io_service ios;
+
+  auto sut_std_out = std::make_shared<std::stringstream>();
+  auto stdout_buffer = std::vector<char>(1024);
+  auto stdout_ap_buffer = ba::buffer(stdout_buffer);
+  auto stdout_ap = bp::async_pipe(ios);
+  async_handler stdout_handler = [&](const bs::error_code& ec, size_t n) {
+    std::copy(stdout_buffer.begin(), stdout_buffer.begin() + n, std::ostream_iterator<char>(*sut_std_out.get()));
+    //    std::cout << "sut_std_out:" << sut_std_out;
+    if (ec == 0) {
+      boost::asio::async_read(stdout_ap, stdout_ap_buffer, stdout_handler);
+    }
+  };
+
+  auto sut_std_err = std::make_shared<std::stringstream>();
+  auto stderr_buffer = std::vector<char>(1024);
+  auto stderr_ap_buffer = ba::buffer(stderr_buffer);
+  auto stderr_ap = bp::async_pipe(ios);
+  async_handler stderr_handler = [&](const bs::error_code& ec, size_t n) {
+    std::copy(stderr_buffer.begin(), stderr_buffer.begin() + n, std::ostream_iterator<char>(*sut_std_err.get()));
+    //    std::cout << "sut_std_err:" << sut_std_err;
+    if (ec == 0) {
+      ba::async_read(stderr_ap, stderr_ap_buffer, stderr_handler);
+    }
+  };
+
+  auto stdin_ap_buffer = ba::buffer(input.string() + " " + input.string());
+  auto stdin_ap = bp::async_pipe(ios);
+  async_handler stdin_handler = [&](const bs::error_code& ec, size_t n) { stdin_ap.async_close(); };
+
+  ba::async_write(stdin_ap, stdin_ap_buffer, stdin_handler);
+  ba::async_read(stdout_ap, stdout_ap_buffer, stdout_handler);
+  ba::async_read(stderr_ap, stderr_ap_buffer, stderr_handler);
+
+  boost::process::child sut(sut_path_, input.string(), boost::process::std_out > stdout_ap,
+                            boost::process::std_err > stderr_ap, boost::process::std_in < stdin_ap, sut_env_);
+
+  boost::system::error_code boost_ec;
+  std::auto_ptr<boost::asio::io_service::work> work(new boost::asio::io_service::work(ios));
+  auto worker = boost::thread([&work, &boost_ec]() { auto handlers_count = work->get_io_service().run(boost_ec); });
+
+  std::error_code ec;
+  auto start = std::chrono::system_clock::now();
+  auto timeout_not_occured = sut.wait_for(execution_timeout_, ec);
+  auto finish = std::chrono::system_clock::now();
+  if (!timeout_not_occured) {
+    //    work->get_io_service().run_one();
+    sut.terminate(ec);
+    finish = std::chrono::system_clock::now();
+  }
+  auto exit_code = sut.exit_code();
+  //  auto handlers_count2 = work->get_io_service().run();
+  work->get_io_service().stop();
+  worker.join();
 
   return ExecutionData(input, ec, exit_code, !timeout_not_occured,
                        std::chrono::duration_cast<std::chrono::milliseconds>(finish - start), std::move(sut_std_out),
