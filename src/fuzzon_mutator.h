@@ -39,7 +39,9 @@ class Mutator {
   /*
    * FlipBit mutations
    */
-  bool FlipBit(std::vector<char>& base, size_t bit_start_idx, size_t bits_count) const;
+  bool FlipBit(std::vector<char>& base,
+               size_t bit_start_idx,
+               size_t bits_count) const;
 
   bool FlipBit(TestCase& base, size_t bit_start_idx, size_t bits_count) const {
     return FlipBit(base.vec(), bit_start_idx, bits_count);
@@ -48,16 +50,22 @@ class Mutator {
   /*
    * FlipByte mutations
    */
-  bool FlipByte(std::vector<char>& base, size_t byte_start_idx, size_t bytes_count) const;
+  bool FlipByte(std::vector<char>& base,
+                size_t byte_start_idx,
+                size_t bytes_count) const;
 
-  bool FlipByte(TestCase& base, size_t byte_start_idx, size_t bytes_count) const {
+  bool FlipByte(TestCase& base,
+                size_t byte_start_idx,
+                size_t bytes_count) const {
     return FlipByte(base.vec(), byte_start_idx, bytes_count);
   }
 
   /*
    * SimpleArithmetics mutations
    */
-  bool SimpleArithmetics(std::vector<char>& base, size_t byte_idx, char value) const;
+  bool SimpleArithmetics(std::vector<char>& base,
+                         size_t byte_idx,
+                         char value) const;
 
   bool SimpleArithmetics(TestCase& base, size_t byte_idx, char value) const {
     return SimpleArithmetics(base.vec(), byte_idx, value);
@@ -66,7 +74,9 @@ class Mutator {
   /*
    * KnownIntegers mutations
    */
-  bool KnownIntegers(std::vector<char>& base, size_t byte_idx, char value) const;
+  bool KnownIntegers(std::vector<char>& base,
+                     size_t byte_idx,
+                     char value) const;
 
   bool KnownIntegers(TestCase& base, size_t byte_idx, char value) const {
     return KnownIntegers(base.vec(), byte_idx, value);
@@ -85,24 +95,35 @@ class Mutator {
                       const TestCase& insertme,
                       size_t insertme_start_idx,
                       size_t block_length) const {
-    return BlockInsertion(base.vec(), base_start_idx, insertme.vec(), insertme_start_idx, block_length);
+    return BlockInsertion(base.vec(), base_start_idx, insertme.vec(),
+                          insertme_start_idx, block_length);
   }
 
   /*
    * BlockDeletion mutations
    */
-  bool BlockDeletion(std::vector<char>& base, size_t start_idx, size_t block_length) const;
+  bool BlockDeletion(std::vector<char>& base,
+                     size_t start_idx,
+                     size_t block_length) const;
 
-  bool BlockDeletion(TestCase& base, size_t start_idx, size_t block_length) const {
+  bool BlockDeletion(TestCase& base,
+                     size_t start_idx,
+                     size_t block_length) const {
     return BlockDeletion(base.vec(), start_idx, block_length);
   }
 
   /*
    * BlockMemset mutations
    */
-  bool BlockMemset(std::vector<char>& base, size_t start_idx, size_t block_length, char new_value) const;
+  bool BlockMemset(std::vector<char>& base,
+                   size_t start_idx,
+                   size_t block_length,
+                   char new_value) const;
 
-  bool BlockMemset(TestCase& base, size_t start_idx, size_t block_length, char new_value) const {
+  bool BlockMemset(TestCase& base,
+                   size_t start_idx,
+                   size_t block_length,
+                   char new_value) const {
     return BlockMemset(base.vec(), start_idx, block_length, new_value);
   }
 
@@ -120,7 +141,8 @@ class Mutator {
                        const TestCase& new_values,
                        size_t new_values_start_idx,
                        size_t block_length) const {
-    return BlockOverriding(base.vec(), base_start_idx, new_values.vec(), new_values_start_idx, block_length);
+    return BlockOverriding(base.vec(), base_start_idx, new_values.vec(),
+                           new_values_start_idx, block_length);
   }
 
  private:

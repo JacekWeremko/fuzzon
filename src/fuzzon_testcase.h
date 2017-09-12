@@ -21,7 +21,9 @@ class TestCase {
   TestCase() = delete;
 
   // move semantic
-  explicit TestCase(uint8_t* data, size_t length) { data_.assign(data, data + length); }
+  explicit TestCase(uint8_t* data, size_t length) {
+    data_.assign(data, data + length);
+  }
   explicit TestCase(std::vector<char>&& move_me) noexcept : data_(move_me) {}
   TestCase(TestCase&& move_me) noexcept : data_(std::move(move_me.data_)) {}
 

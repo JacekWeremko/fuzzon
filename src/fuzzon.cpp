@@ -37,11 +37,14 @@ Fuzzon::Fuzzon(std::string output_dir,
 }
 
 void Fuzzon::ScanCorpus(std::string corpus_base) {
+  LOG_INFO("corpus_base : " + corpus_base);
+  LOG_INFO(corpus_.GetShortStats().str() + " <- corpus seeds testing start");
   if (boost::filesystem::exists(corpus_base)) {
     std::vector<boost::filesystem::path> corpus_seeds;
     boost::filesystem::path corpus_seeds_dir(corpus_base);
 
-    for (const auto& file : boost::filesystem::directory_iterator(corpus_seeds_dir)) {
+    for (const auto& file :
+         boost::filesystem::directory_iterator(corpus_seeds_dir)) {
       corpus_seeds.push_back(file.path());
     }
 
@@ -52,12 +55,16 @@ void Fuzzon::ScanCorpus(std::string corpus_base) {
       LOG_DEBUG("Seed : " + file_path.string());
 
       boost::filesystem::ifstream file(file_path);
-      std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+      std::string content((std::istreambuf_iterator<char>(file)),
+                          std::istreambuf_iterator<char>());
       auto new_test_case = TestCase(content);
       auto execution_data = execution_monitor_.ExecuteBlocking(new_test_case);
       corpus_.AddIfInteresting(execution_data);
     }
+  } else {
+    LOG_WARNING("Provided corpus path does not exist.");
   }
+  LOG_INFO(corpus_.GetShortStats().str() + " <- corpus seeds testing finish");
   return;
 }
 
@@ -69,7 +76,7 @@ void Fuzzon::TestInput(std::string test_me) {
 }
 
 void Fuzzon::Generation(std::string input_format, int test_cases_to_generate) {
-  LOG_DEBUG("input_format : " + input_format);
+  LOG_INFO("input_format : " + input_format);
   LOG_INFO(corpus_.GetShortStats().str() + " <- generation start");
   Generator generation_engine(input_format);
   while (!test_timeout_() && test_cases_to_generate--) {
@@ -150,8 +157,10 @@ void Fuzzon::MutationDeterministic(int level, bool white_chars_preservation) {
   return;
 }
 
-void Fuzzon::MutationNonDeterministic(int test_cases_to_mutate, bool white_chars_preservation) {
-  LOG_INFO(corpus_.GetShortStats().str() + " <- mutation non-deterministic start");
+void Fuzzon::MutationNonDeterministic(int test_cases_to_mutate,
+                                      bool white_chars_preservation) {
+  LOG_INFO(corpus_.GetShortStats().str() +
+           " <- mutation non-deterministic start");
   Mutator mutation_engine(white_chars_preservation);
   bool stop_testing = false;
 
@@ -167,27 +176,33 @@ void Fuzzon::MutationNonDeterministic(int test_cases_to_mutate, bool white_chars
       auto mutation_idx = Random::Get()->GenerateInt(0, 7);
       switch (mutation_idx) {
         case 0: {
-          auto bit_start_idx = Random::Get()->GenerateInt(1, new_test_case.size() * 8);
+          auto bit_start_idx =
+              Random::Get()->GenerateInt(1, new_test_case.size() * 8);
           auto bits_count = Random::Get()->GenerateInt(1, 4);
-          auto success = mutation_engine.FlipBit(new_test_case, bit_start_idx, bits_count);
+          auto success =
+              mutation_engine.FlipBit(new_test_case, bit_start_idx, bits_count);
           break;
         }
         case 1: {
-          auto byte_start_idx = Random::Get()->GenerateInt(1, new_test_case.size());
+          auto byte_start_idx =
+              Random::Get()->GenerateInt(1, new_test_case.size());
           auto bytes_count = Random::Get()->GenerateInt(1, 4);
-          auto success = mutation_engine.FlipByte(new_test_case, byte_start_idx, bytes_count);
+          auto success = mutation_engine.FlipByte(new_test_case, byte_start_idx,
+                                                  bytes_count);
           break;
         }
         case 2: {
           auto byte_idx = Random::Get()->GenerateInt(1, new_test_case.size());
           auto value = Random::Get()->GenerateChar();
-          auto success = mutation_engine.SimpleArithmetics(new_test_case, byte_idx, value);
+          auto success =
+              mutation_engine.SimpleArithmetics(new_test_case, byte_idx, value);
           break;
         }
         case 3: {
           auto byte_idx = Random::Get()->GenerateInt(1, new_test_case.size());
           auto value = Random::Get()->GenerateChar();
-          auto success = mutation_engine.KnownIntegers(new_test_case, byte_idx, value);
+          auto success =
+              mutation_engine.KnownIntegers(new_test_case, byte_idx, value);
           break;
         }
         case 4: {
@@ -197,21 +212,27 @@ void Fuzzon::MutationNonDeterministic(int test_cases_to_mutate, bool white_chars
             break;
           }
           auto insertme_idx = Random::Get()->GenerateInt(1, insertme->size());
-          auto block_length = Random::Get()->GenerateInt(0, static_cast<int>(insertme->size() - insertme_idx));
-          auto success = mutation_engine.BlockInsertion(new_test_case, base_idx, *insertme, insertme_idx, block_length);
+          auto block_length = Random::Get()->GenerateInt(
+              0, static_cast<int>(insertme->size() - insertme_idx));
+          auto success = mutation_engine.BlockInsertion(
+              new_test_case, base_idx, *insertme, insertme_idx, block_length);
           break;
         }
         case 5: {
           auto start_idx = Random::Get()->GenerateInt(1, new_test_case.size());
-          auto block_length = Random::Get()->GenerateInt(0, static_cast<int>(new_test_case.size() - start_idx));
-          auto success = mutation_engine.BlockDeletion(new_test_case, start_idx, block_length);
+          auto block_length = Random::Get()->GenerateInt(
+              0, static_cast<int>(new_test_case.size() - start_idx));
+          auto success = mutation_engine.BlockDeletion(new_test_case, start_idx,
+                                                       block_length);
           break;
         }
         case 6: {
           auto start_idx = Random::Get()->GenerateInt(1, new_test_case.size());
-          auto block_length = Random::Get()->GenerateInt(0, static_cast<int>(new_test_case.size() - start_idx));
+          auto block_length = Random::Get()->GenerateInt(
+              0, static_cast<int>(new_test_case.size() - start_idx));
           auto new_value = 0;
-          auto success = mutation_engine.BlockMemset(new_test_case, start_idx, block_length, new_value);
+          auto success = mutation_engine.BlockMemset(new_test_case, start_idx,
+                                                     block_length, new_value);
           break;
         }
         case 7: {
@@ -221,9 +242,10 @@ void Fuzzon::MutationNonDeterministic(int test_cases_to_mutate, bool white_chars
             break;
           }
           auto insertme_idx = Random::Get()->GenerateInt(1, insertme->size());
-          auto block_length = Random::Get()->GenerateInt(1, static_cast<int>(insertme->size()));
-          auto success =
-              mutation_engine.BlockOverriding(new_test_case, base_idx, *insertme, insertme_idx, block_length);
+          auto block_length =
+              Random::Get()->GenerateInt(1, static_cast<int>(insertme->size()));
+          auto success = mutation_engine.BlockOverriding(
+              new_test_case, base_idx, *insertme, insertme_idx, block_length);
           break;
         }
         default:
@@ -240,7 +262,8 @@ void Fuzzon::MutationNonDeterministic(int test_cases_to_mutate, bool white_chars
       stop_testing = true;
     }
   }
-  LOG_INFO(corpus_.GetShortStats().str() + " <- mutation non-deterministic finish");
+  LOG_INFO(corpus_.GetShortStats().str() +
+           " <- mutation non-deterministic finish");
   return;
 }
 

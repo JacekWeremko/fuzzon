@@ -45,13 +45,15 @@ struct ExecutionData {
     path.ComputeHash();
   }
 
-  friend std::ostream& operator<<(std::ostream& os, const ExecutionData& print_me) {
+  friend std::ostream& operator<<(std::ostream& os,
+                                  const ExecutionData& print_me) {
     os << "{" << std::endl;
     os << "\"input\" : \"" << print_me.input << "\"," << std::endl;
     os << "\"error_code\" : \"" << print_me.error_code << "\"," << std::endl;
     os << "\"exit_code\" : " << print_me.exit_code << "," << std::endl;
     os << "\"timeout\" : " << print_me.timeout << "," << std::endl;
-    os << "\"execution_time\" : \"" << time_format(print_me.execution_time) << "\"," << std::endl;
+    os << "\"execution_time\" : \"" << time_format(print_me.execution_time)
+       << "\"," << std::endl;
     os << "\"std_out\" : \"" << print_me.std_out->str() << "\"," << std::endl;
     os << "\"std_err\" : \"" << print_me.std_err->str() << "\"," << std::endl;
     os << "\"path\" : " << print_me.path << std::endl;
@@ -78,7 +80,12 @@ struct ExecutionData {
 };
 
 struct CampaignSummary {
-  CampaignSummary() : test_cases(0), none_zero_error_code(0), none_zero_return_code(0), timeout(0), crash(0) {}
+  CampaignSummary()
+      : test_cases(0),
+        none_zero_error_code(0),
+        none_zero_return_code(0),
+        timeout(0),
+        crash(0) {}
   int test_cases;
   int none_zero_error_code;
   int none_zero_return_code;

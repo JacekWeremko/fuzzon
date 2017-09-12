@@ -15,7 +15,9 @@
 
 extern "C" {
 
-void __sanitizer_cov_module_init(uint32_t* guards, uintptr_t npcs, const char* module_name) {
+void __sanitizer_cov_module_init(uint32_t* guards,
+                                 uintptr_t npcs,
+                                 const char* module_name) {
   uintptr_t PC = reinterpret_cast<uintptr_t>(__builtin_return_address(0));
   LOG_TRACE("__sanitizer_cov_module_init");
   LOG_TRACE("  module_name: " + std::string(module_name));
@@ -67,32 +69,37 @@ void __sanitizer_cov_trace_pc_guard_init(uint32_t* start, uint32_t* stop) {
 void __sanitizer_cov_trace_pc_indir(uintptr_t Callee) {
   uintptr_t PC = reinterpret_cast<uintptr_t>(__builtin_return_address(0));
   LOG_TRACE("__sanitizer_cov_trace_pc_indir");
-  LOG_TRACE("  PC: " + std::to_string(PC) + "    Callee: " + std::to_string(Callee));
+  LOG_TRACE("  PC: " + std::to_string(PC) +
+            "    Callee: " + std::to_string(Callee));
 }
 
 ATTRIBUTE_TARGET_POPCNT
 void __sanitizer_cov_trace_cmp8(uint64_t Arg1, uint64_t Arg2) {
   uintptr_t PC = reinterpret_cast<uintptr_t>(__builtin_return_address(0));
   LOG_TRACE("__sanitizer_cov_trace_cmp8");
-  LOG_TRACE("  Arg1: " + std::to_string(Arg1) + "    Arg2: " + std::to_string(Arg2));
+  LOG_TRACE("  Arg1: " + std::to_string(Arg1) +
+            "    Arg2: " + std::to_string(Arg2));
 }
 
 ATTRIBUTE_TARGET_POPCNT
 void __sanitizer_cov_trace_cmp4(uint32_t Arg1, uint32_t Arg2) {
   LOG_TRACE("__sanitizer_cov_trace_cmp4");
-  LOG_TRACE("  Arg1: " + std::to_string(Arg1) + "    Arg2: " + std::to_string(Arg2));
+  LOG_TRACE("  Arg1: " + std::to_string(Arg1) +
+            "    Arg2: " + std::to_string(Arg2));
 }
 
 ATTRIBUTE_TARGET_POPCNT
 void __sanitizer_cov_trace_cmp2(uint16_t Arg1, uint16_t Arg2) {
   LOG_TRACE("__sanitizer_cov_trace_cmp2");
-  LOG_TRACE("  Arg1: " + std::to_string(Arg1) + "    Arg2: " + std::to_string(Arg2));
+  LOG_TRACE("  Arg1: " + std::to_string(Arg1) +
+            "    Arg2: " + std::to_string(Arg2));
 }
 
 ATTRIBUTE_TARGET_POPCNT
 void __sanitizer_cov_trace_cmp1(uint8_t Arg1, uint8_t Arg2) {
   LOG_TRACE("__sanitizer_cov_trace_cmp1");
-  LOG_TRACE("  Arg1: " + std::to_string(Arg1) + "    Arg2: " + std::to_string(Arg2));
+  LOG_TRACE("  Arg1: " + std::to_string(Arg1) +
+            "    Arg2: " + std::to_string(Arg2));
 }
 
 ATTRIBUTE_TARGET_POPCNT

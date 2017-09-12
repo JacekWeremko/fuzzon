@@ -14,7 +14,9 @@
 
 namespace fuzzon {
 
-Mutator::Mutator(bool white_chars_preservation, bool type_preservation, std::string output_alphabet)
+Mutator::Mutator(bool white_chars_preservation,
+                 bool type_preservation,
+                 std::string output_alphabet)
     : white_chars_preservation_(white_chars_preservation),
       type_preservation_(type_preservation),
       output_alphabet_(output_alphabet) {}
@@ -26,7 +28,9 @@ bool Mutator::ChangeAllowed(const char& check_me) const {
   return true;
 }
 
-bool Mutator::FlipBit(std::vector<char>& base, size_t bit_start_idx, size_t bits_count) const {
+bool Mutator::FlipBit(std::vector<char>& base,
+                      size_t bit_start_idx,
+                      size_t bits_count) const {
   SAFE_CHECK(base.size() > (bit_start_idx) / 8, false);
   SAFE_CHECK(base.size() > (bit_start_idx + bits_count - 1) / 8, false);
 
@@ -41,7 +45,9 @@ bool Mutator::FlipBit(std::vector<char>& base, size_t bit_start_idx, size_t bits
   return true;
 }
 
-bool Mutator::FlipByte(std::vector<char>& base, size_t byte_start_idx, size_t bytes_count) const {
+bool Mutator::FlipByte(std::vector<char>& base,
+                       size_t byte_start_idx,
+                       size_t bytes_count) const {
   SAFE_CHECK(base.size() > byte_start_idx, false);
   SAFE_CHECK(base.size() > byte_start_idx + bytes_count - 1, false);
 
@@ -56,7 +62,9 @@ bool Mutator::FlipByte(std::vector<char>& base, size_t byte_start_idx, size_t by
   return true;
 }
 
-bool Mutator::SimpleArithmetics(std::vector<char>& base, size_t byte_idx, char value) const {
+bool Mutator::SimpleArithmetics(std::vector<char>& base,
+                                size_t byte_idx,
+                                char value) const {
   SAFE_CHECK(base.size() > byte_idx, false);
 
   auto& selected_byte = base[byte_idx];
@@ -67,7 +75,9 @@ bool Mutator::SimpleArithmetics(std::vector<char>& base, size_t byte_idx, char v
   return true;
 }
 
-bool Mutator::KnownIntegers(std::vector<char>& base, size_t byte_idx, char value) const {
+bool Mutator::KnownIntegers(std::vector<char>& base,
+                            size_t byte_idx,
+                            char value) const {
   SAFE_CHECK(base.size() > byte_idx, false);
 
   auto& selected_byte = base[byte_idx];
@@ -87,12 +97,15 @@ bool Mutator::BlockInsertion(std::vector<char>& base,
   SAFE_CHECK(insertme.size() > insertme_start_idx, false);
   SAFE_CHECK(insertme.size() > insertme_start_idx + block_length - 1, false);
 
-  base.insert(base.begin() + base_start_idx, insertme.begin() + insertme_start_idx,
+  base.insert(base.begin() + base_start_idx,
+              insertme.begin() + insertme_start_idx,
               insertme.begin() + insertme_start_idx + block_length);
   return true;
 }
 
-bool Mutator::BlockDeletion(std::vector<char>& base, size_t start_idx, size_t block_length) const {
+bool Mutator::BlockDeletion(std::vector<char>& base,
+                            size_t start_idx,
+                            size_t block_length) const {
   SAFE_CHECK(base.size() > start_idx, false);
   SAFE_CHECK(base.size() > start_idx + block_length, false);
 
@@ -100,15 +113,20 @@ bool Mutator::BlockDeletion(std::vector<char>& base, size_t start_idx, size_t bl
   return true;
 }
 
-bool Mutator::BlockMemset(std::vector<char>& base, size_t start_idx, size_t block_length, char new_value) const {
+bool Mutator::BlockMemset(std::vector<char>& base,
+                          size_t start_idx,
+                          size_t block_length,
+                          char new_value) const {
   SAFE_CHECK(base.size() > start_idx, false);
   SAFE_CHECK(base.size() > start_idx + block_length - 1, false);
 
-  std::for_each(base.begin() + start_idx, base.begin() + start_idx + block_length, [this, new_value](char& current) {
-    if (ChangeAllowed(current)) {
-      current = new_value;
-    }
-  });
+  std::for_each(base.begin() + start_idx,
+                base.begin() + start_idx + block_length,
+                [this, new_value](char& current) {
+                  if (ChangeAllowed(current)) {
+                    current = new_value;
+                  }
+                });
   return true;
 }
 
@@ -120,10 +138,13 @@ bool Mutator::BlockOverriding(std::vector<char>& base,
   SAFE_CHECK(base.size() > base_start_idx, false);
   SAFE_CHECK(base.size() > base_start_idx + block_length - 1, false);
   SAFE_CHECK(new_values.size() > new_values_start_idx, false);
-  SAFE_CHECK(new_values.size() > new_values_start_idx + block_length - 1, false);
+  SAFE_CHECK(new_values.size() > new_values_start_idx + block_length - 1,
+             false);
 
-  std::copy(base.begin() + base_start_idx, base.begin() + base_start_idx + block_length,
-            const_cast<std::vector<char>&>(new_values).begin() + new_values_start_idx);
+  std::copy(base.begin() + base_start_idx,
+            base.begin() + base_start_idx + block_length,
+            const_cast<std::vector<char>&>(new_values).begin() +
+                new_values_start_idx);
   return true;
 }
 
@@ -144,8 +165,9 @@ int Mutator::ChangeByte(uint8_t* data, size_t data_size) {
   }
 
   for (size_t mutation_idx = 0; mutation_idx < mutation_guard; mutation_idx++) {
-    const auto new_char =
-        type_preservation_ == true ? Random::Get()->GenerateChar(selected_byte) : Random::Get()->GenerateChar();
+    const auto new_char = type_preservation_ == true
+                              ? Random::Get()->GenerateChar(selected_byte)
+                              : Random::Get()->GenerateChar();
     if (new_char == data[byte_to_flip]) {
       continue;
     }

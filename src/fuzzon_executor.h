@@ -19,10 +19,14 @@ namespace fuzzon {
 
 class Executor {
  public:
-  explicit Executor(std::string sut_path, const std::vector<std::string>& env_flags, int execution_timeout_ms);
+  explicit Executor(std::string sut_path,
+                    const std::vector<std::string>& env_flags,
+                    int execution_timeout_ms);
   ~Executor();
 
-  ExecutionData ExecuteBlocking(TestCase& input) { return ExecuteBlockingAsyncStremasStdinThread(input); }
+  ExecutionData ExecuteBlocking(TestCase& input) {
+    return ExecuteBlockingAsyncStremasStdinThread(input);
+  }
 
   /*
    * Allocating a bunch of boost:thread object on stack cause
@@ -31,7 +35,8 @@ class Executor {
   ExecutionData ExecuteBlockingAsyncStremas(TestCase& input);
 
   /*
-   * Same as ExecuteBlockingAsyncStremas but uses single static thread to handle stdin
+   * Same as ExecuteBlockingAsyncStremas but uses single static thread to handle
+   * stdin
    */
   ExecutionData ExecuteBlockingAsyncStremasStdinThread(TestCase& input);
 

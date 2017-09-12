@@ -21,14 +21,18 @@
 // namespace keywords = boost::log::keywords;
 
 Logger::Logger(std::string output_direcotry, int logging_level) {
-  static const std::string log_format("[%TimeStamp%][%Severity%][%LineID%]: %Message%");
+  static const std::string log_format(
+      "[%TimeStamp%][%Severity%][%LineID%]: %Message%");
 
-  boost::log::add_console_log(std::cout, boost::log::keywords::format = log_format,
+  boost::log::add_console_log(std::cout,
+                              boost::log::keywords::format = log_format,
                               boost::log::keywords::auto_flush = true);
 
   boost::log::add_common_attributes();
 
-  boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::fatal - logging_level);
+  boost::log::core::get()->set_filter(boost::log::trivial::severity >=
+                                      boost::log::trivial::fatal -
+                                          logging_level);
 }
 
 void Logger::trace(std::string message) {
