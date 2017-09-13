@@ -238,14 +238,14 @@ std::stringstream Corpus::GetFullStats() {
         << time_format(std::max_element(
                            data_.begin(), data_.end(),
                            [](ExecutionData& arg1, ExecutionData& arg2) {
-                             return arg1.execution_time < arg2.execution_time;
+                             return arg1.execution_time > arg2.execution_time;
                            })
                            ->execution_time)
         << "/"
         << time_format(std::max_element(
                            data_.begin(), data_.end(),
                            [](ExecutionData& arg1, ExecutionData& arg2) {
-                             return arg1.execution_time > arg2.execution_time;
+                             return arg1.execution_time < arg2.execution_time;
                            })
                            ->execution_time)
         << std::endl;
