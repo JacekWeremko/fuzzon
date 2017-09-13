@@ -191,7 +191,7 @@ class Builder(object):
         return retcode, output_file
     
 
-def test(level, sut_list, input_format, additional_options, fuzzon_path):
+def test(level, sut_list, input_format, additional_options, fuzzon_path, iterations):
     import os
     FUZZON_NAME = "fuzzon"
     
@@ -225,9 +225,11 @@ def test(level, sut_list, input_format, additional_options, fuzzon_path):
         additional_options = [str(elem) for elem in additional_options]
         args.extend(additional_options)
         
-        print("Fuzzon campaign :" + str(args))  
-        retcode = run_blocking(args, True)
-        print("Finished! retcode :" + str(retcode))
+        print("Fuzzon campaign start: " + str(args))
+        for i in range(0, iterations):
+            retcode = run_blocking(args, True)
+            print("Finished! retcode :" + str(retcode))
+        print("Fuzzon campaign end.")   
     return 
 
 
@@ -253,6 +255,7 @@ def main():
     
     group_test = parser.add_argument_group("test", description="Start testing")
     group_test.add_argument("--test",           dest='test',action='store_true',  required=False, help="Path to software under test.")
+    group_test.add_argument("--iterations",     type=int,   action='store',       required=False, help="Number of testing campaigns.")
     group_test.add_argument("--fuzzon_path",    type=str,   action='store',       required=False, help="Path to fuzzon executable.")
     group_test.add_argument("--sut",            type=str,   action='store',       required=False, help="Path to software under test.")
     group_test.add_argument("--input_format",   type=str,   action='store',       required=False, help="Path to SUT input format file.")
