@@ -1,6 +1,5 @@
 import argparse
 from bs4 import builder
-# from test.pyston/e import nargs
 
 
 def run_blocking(args, poll_stdout = False):
@@ -124,7 +123,7 @@ class Builder(object):
             lflags = []
             lflags.append("-L/usr/lib/gcc/x86_64-linux-gnu/6/")
             lflags.append("-L/usr/lib/x86_64-linux-gnu/")
-            lflags.append("-L" + fuzzonlib[0])
+            lflags.append("-L" + fuzzonlib)
             
 #             lflags += ["-lasan"]
             lflags += ["-lstdc++", "-lm", "-lcrypto"]
@@ -191,12 +190,12 @@ class Builder(object):
         return retcode, output_file
     
 
-def test(level, sut_list, input_format, additional_options, fuzzon_path, iterations):
+def test(level, sut_list, input_format, additional_options, fuzzonexe, iterations):
     import os
     FUZZON_NAME = "fuzzon"
     
-    if (fuzzon_path is None):
-        fuzzon_path = "./"
+    if (fuzzonexe is None):
+        fuzzonexe = FUZZON_NAME
     
     if (level is None):
         level = "default"
@@ -210,15 +209,15 @@ def test(level, sut_list, input_format, additional_options, fuzzon_path, iterati
         additional_options.extend(["--mutate_d", 0])
         additional_options.extend(["--mutate_nd", 50])
     elif (level == "full"):   
-        additional_options.extend(["--generate", 10000])
+        additional_options.extend(["--generate", 5000])
         additional_options.extend(["--mutate_d", 1])
-        additional_options.extend(["--mutate_nd", -1])
+        additional_options.extend(["--mutate_nd", 50000])
 
     additional_options.extend(["--single_test_timeout", 20])
     additional_options.extend(["--total_timeout", 1000 * 60 * 5])
     for sut in sut_list:
         args = []
-        args.append(os.path.join(fuzzon_path, FUZZON_NAME))
+        args.append(fuzzonexe)
         args.extend(["--sut", sut])
         args.extend(["--input_format", input_format])
         
@@ -253,16 +252,15 @@ def main():
     group_build.add_argument('--source_dir',    type=str, action='store',  required=False, help="Path to directory with source files. For each cpp file is threaded as separate project.")
     
     
-    group_test = parser.add_argument_group("test", description="Start testing")
+    group_test = parser.add_argument_group("campaign", description="Start campaign")
     group_test.add_argument("--test",           dest='test',action='store_true',  required=False, help="Path to software under test.")
     group_test.add_argument("--iterations",     type=int,   action='store',       required=False, help="Number of testing campaigns.")
-    group_test.add_argument("--fuzzon_path",    type=str,   action='store',       required=False, help="Path to fuzzon executable.")
+    group_test.add_argument("--fuzzonexe",      type=str,   action='store',       required=False, help="Path to fuzzon executable.")
     group_test.add_argument("--sut",            type=str,   action='store',       required=False, help="Path to software under test.")
     group_test.add_argument("--input_format",   type=str,   action='store',       required=False, help="Path to SUT input format file.")
     group_test.add_argument("--level",          type=str,   action='store',       required=False, help="Select testing level - touch, default, full")
     
-    #parser.add_argument("test", help='Select testing level', nargs='?', choices=("touch", "default", "full"))      
-    
+
 
     args = parser.parse_args()
     print(args)
@@ -279,15 +277,13 @@ def main():
     additional_options = None
 
     if (args.test):
-        test(args.level, outputs, args.input_format, additional_options, args.fuzzon_path)
+        test(args.level, outputs, args.input_format, additional_options, args.fuzzonexe, args.iterations)
     elif (args.sut) :        
         outputs = [args.sut]
-        test(args.level, outputs, args.input_format, additional_options, args.fuzzon_path)
+        test(args.level, outputs, args.input_format, additional_options, args.fuzzonexe, args.iterations)
         
     print("Finish.")
     return
-    
-
     
 
 if __name__ == "__main__":
