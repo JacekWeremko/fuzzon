@@ -36,29 +36,31 @@ int main(int argc, char** argv) {
   desc.add_options()("verbose,v",
                      po::value<>(&verbosity_values)->implicit_value(""),
                      "Logging level");
-  desc.add_options()("sut,s", po::value<fs::path>(),
-                     "Software under test path");
-  desc.add_options()("env_flag,e", po::value<std::vector<std::string>>(),
+  desc.add_options()("sut", po::value<fs::path>(), "Software under test path");
+  desc.add_options()("env_flag", po::value<std::vector<std::string>>(),
                      "Environmental flag set for SUT.");
-  desc.add_options()("input_format,i", po::value<fs::path>(),
+  desc.add_options()("input_format", po::value<fs::path>(),
                      "JSON Input format file path");
-  desc.add_options()("out,o", po::value<fs::path>(), "Output directory path");
+  desc.add_options()("output_dir", po::value<fs::path>(),
+                     "Output directory path");
   desc.add_options()(
-      "corpus_seeds,c", po::value<fs::path>(),
+      "corpus_seeds", po::value<fs::path>()->default_value(fs::path("")),
       "Path to directory with sample input files aka corpus seed.");
-  desc.add_options()("single_test_timeout,e", po::value<int>(),
+  desc.add_options()("single_test_timeout", po::value<int>()->default_value(50),
                      "Max allowed time to execute SUT");
-  desc.add_options()("total_timeout,t", po::value<int>(),
-                     "Total tests timeout.");
-  desc.add_options()("generate,g", po::value<int>(),
+  desc.add_options()("total_timeout",
+                     po::value<int>()->default_value(1000 * 60 * 5),
+                     "Total campaign timeout.");
+  desc.add_options()("generate", po::value<int>()->default_value(1000),
                      "Generation phase: number of test cases to generate.");
   desc.add_options()(
-      "mutate_d,md", po::value<int>(),
+      "mutate_d,md", po::value<int>()->default_value(1),
       "Deterministic mutation phase: level of mutations: 0-None, 1-Max");
   desc.add_options()(
-      "mutate_nd,mnd", po::value<int>(),
+      "mutate_nd,mnd", po::value<int>()->default_value(1000),
       "Non-deterministic mutation phase: number of test cases to mutate.");
-  desc.add_options()("white_chars_preservation,w", po::value<int>(),
+  desc.add_options()("white_chars_preservation,w",
+                     po::value<bool>()->default_value(true),
                      "Preserve white characters during mutations.");
   desc.add_options()("executor_mode", po::value<int>()->default_value(1),
                      "Execution mode : "
@@ -84,30 +86,22 @@ int main(int argc, char** argv) {
   auto sut = vm["sut"].as<fs::path>();
   auto input_format = vm["input_format"].as<fs::path>();
 
-  auto output = vm.count("out") ? vm["out"].as<fs::path>() : sut.parent_path();
-  output /= (fs::path("fuzzon_").concat(sut.filename().c_str())) / time_now_str;
+  auto output = vm.count("out")
+                    ? vm["out"].as<fs::path>()
+                    : (sut.parent_path() /
+                       (fs::path("fuzzon_").concat(sut.filename().c_str())) /
+                       time_now_str);
 
   auto env_flags = vm.count("env_flag")
                        ? vm["env_flag"].as<std::vector<std::string>>()
                        : std::vector<std::string>();
-  auto corpus_base =
-      vm.count("corpus_seeds") ? vm["corpus_seeds"].as<fs::path>() : "";
-  auto sut_timeout = vm.count("single_test_timeout")
-                         ? vm["single_test_timeout"].as<int>()
-                         : 20;
-  auto test_timeout =
-      vm.count("total_timeout") ? vm["total_timeout"].as<int>() : 1000 * 60 * 5;
-  auto generate = vm.count("generate") ? vm["generate"].as<int>() : 1000;
-  auto mutate_d = vm.count("mutate_d") ? vm["mutate_d"].as<int>() : 1;
-  auto mutate_nd = vm.count("mutate_nd") ? vm["mutate_nd"].as<int>() : 1000;
-  auto white_chars_preservation =
-      vm.count("white_chars_preservation")
-          ? vm["white_chars_preservation"].as<bool>()
-          : true;
-  //  auto executor_mode = vm.count("executor_mode")
-  //                           ?
-  //                           vm["executor_mode"].as<fuzzon::Executor::Mode>()
-  //                           : true;
+  auto corpus_base = vm["corpus_seeds"].as<fs::path>();
+  auto sut_timeout = vm["single_test_timeout"].as<int>();
+  auto test_timeout = vm["total_timeout"].as<int>();
+  auto generate = vm["generate"].as<int>();
+  auto mutate_d = vm["mutate_d"].as<int>();
+  auto mutate_nd = vm["mutate_nd"].as<int>();
+  auto white_chars_preservation = vm["white_chars_preservation"].as<bool>();
   auto executor_mode = fuzzon::Executor::Mode(vm["executor_mode"].as<int>());
 
   auto verbose_level = verbosity_values.length();
