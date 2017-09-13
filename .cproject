@@ -406,7 +406,6 @@
 								</option>
 								<option id="llvm.c_cpp.compiler.option.preprocessor.def.337216231" name="Defined symbols (-D)" superClass="llvm.c_cpp.compiler.option.preprocessor.def" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="LOGGING_ENABLED"/>
-									<listOptionValue builtIn="false" value="ALTERNATIVE_MAIN"/>
 									<listOptionValue builtIn="false" value="EXTERN_FUZZZON_ENTRY_POINT"/>
 								</option>
 								<option id="llvm.c_cpp.compiler.option.misc.other.907697818" name="Other flags" superClass="llvm.c_cpp.compiler.option.misc.other" useByScannerDiscovery="false" value="-c -fmessage-length=0" valueType="string"/>
