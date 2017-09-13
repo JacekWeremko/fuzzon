@@ -49,16 +49,19 @@ int main(int argc, char** argv) {
   desc.add_options()("single_test_timeout", po::value<int>()->default_value(50),
                      "Max allowed time to execute SUT");
   desc.add_options()("total_timeout",
-                     po::value<int>()->default_value(1000 * 60 * 5),
+                     po::value<int>()->default_value(1000 * 60 * 30),
                      "Total campaign timeout.");
   desc.add_options()("generate", po::value<int>()->default_value(1000),
                      "Generation phase: number of test cases to generate.");
   desc.add_options()(
-      "mutate_d,md", po::value<int>()->default_value(1),
+      "mutate_d", po::value<int>()->default_value(1),
       "Deterministic mutation phase: level of mutations: 0-None, 1-Max");
   desc.add_options()(
-      "mutate_nd,mnd", po::value<int>()->default_value(1000),
+      "mutate_nd", po::value<int>()->default_value(1000),
       "Non-deterministic mutation phase: number of test cases to mutate.");
+  desc.add_options()("total_testcases", po::value<int>()->default_value(15000),
+                     "Max total test cases number to execute");
+
   desc.add_options()("white_chars_preservation,w",
                      po::value<bool>()->default_value(true),
                      "Preserve white characters during mutations.");
@@ -101,6 +104,7 @@ int main(int argc, char** argv) {
   auto generate = vm["generate"].as<int>();
   auto mutate_d = vm["mutate_d"].as<int>();
   auto mutate_nd = vm["mutate_nd"].as<int>();
+  auto total_testcases = vm["total_testcases"].as<int>();
   auto white_chars_preservation = vm["white_chars_preservation"].as<bool>();
   auto executor_mode = fuzzon::Executor::Mode(vm["executor_mode"].as<int>());
 
@@ -111,7 +115,7 @@ int main(int argc, char** argv) {
   fuzzon::Random::Get()->SetAlphabet(input_alphabet);
   fuzzon::Fuzzon crazy_fuzzer(output.string(), sut.string(),
                               std::move(env_flags), sut_timeout, executor_mode,
-                              test_timeout);
+                              test_timeout, total_testcases);
 
   //  std::vector<std::string> samples = {"a",     "ab",     "abc",    "abcd",
   //                                      "abcda", "abcdab", "abcdabc"};
@@ -161,6 +165,7 @@ int main(int argc, char** argv) {
 
   crazy_fuzzer.ScanCorpus(corpus_base.string());
   crazy_fuzzer.Generation(input_format.string(), generate);
+  std::cout << "duapdua";
   crazy_fuzzer.MutationDeterministic(mutate_d, white_chars_preservation);
   crazy_fuzzer.MutationNonDeterministic(mutate_nd, white_chars_preservation);
   crazy_fuzzer.PrintStats();

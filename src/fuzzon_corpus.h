@@ -35,6 +35,8 @@ class Corpus {
 
   void Dump();
 
+  int total_testcases() { return summary_.test_cases; }
+
  private:
   const std::string DIR_NAME_CORPUS = "corpus";
   const std::string DIR_NAME_RESULTS = "results";

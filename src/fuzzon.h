@@ -23,7 +23,8 @@ class Fuzzon {
          const std::vector<std::string>& env_flags,
          int sut_runtime_timeout,
          Executor::Mode mode,
-         int test_timeout);
+         int test_timeout,
+         int max_testcases);
 
   void ScanCorpus(std::string corpus_base);
   void TestInput(std::string test_me);
@@ -36,8 +37,13 @@ class Fuzzon {
   void Dump();
 
  private:
+  bool shall_finish() {
+    return test_timeout_() || (corpus_.total_testcases() > max_testcases_);
+  }
+
   const std::string output_dir_;
   const Timeout test_timeout_;
+  const int max_testcases_;
 
   Corpus corpus_;
   Executor execution_monitor_;

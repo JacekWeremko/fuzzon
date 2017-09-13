@@ -29,9 +29,11 @@ Fuzzon::Fuzzon(std::string output_dir,
                const std::vector<std::string>& env_flags,
                int sut_runtime_timeout,
                Executor::Mode mode,
-               int test_timeout)
+               int test_timeout,
+               int max_testcases)
     : output_dir_(output_dir),
       test_timeout_(std::chrono::milliseconds(test_timeout)),
+      max_testcases_(max_testcases),
       corpus_(output_dir),
       execution_monitor_(sut_path, env_flags, sut_runtime_timeout, mode) {
   LOG_INFO("Base directory is " + output_dir_);
@@ -50,7 +52,7 @@ void Fuzzon::ScanCorpus(std::string corpus_base) {
     }
 
     for (const auto& file_path : corpus_seeds) {
-      if (test_timeout_()) {
+      if (shall_finish()) {
         break;
       }
       LOG_DEBUG("Seed : " + file_path.string());
@@ -80,11 +82,15 @@ void Fuzzon::Generation(std::string input_format, int test_cases_to_generate) {
   LOG_INFO("input_format : " + input_format);
   LOG_INFO(corpus_.GetShortStats().str() + " <- generation start");
   Generator generation_engine(input_format);
-  while (!test_timeout_() && test_cases_to_generate--) {
+  while (test_cases_to_generate--) {
+    //    if (shall_finish()) {
+    //      break;
+    //    }
     auto new_test_case = generation_engine.generateNext();
     auto execution_data = execution_monitor_.ExecuteBlocking(new_test_case);
     corpus_.AddIfInteresting(execution_data);
   }
+  std::cout << corpus_.total_testcases() << std::endl;
   LOG_INFO(corpus_.GetShortStats().str() + " <- generation finish");
   return;
 }
@@ -93,7 +99,7 @@ void Fuzzon::MutationDeterministic(int level, bool white_chars_preservation) {
   LOG_INFO(corpus_.GetShortStats().str() + " <- mutation deterministic start");
   bool all_posibilities_checked = false;
   Mutator test_cases_mutator(white_chars_preservation);
-  while (!test_timeout_() && !all_posibilities_checked) {
+  while (!shall_finish() && !all_posibilities_checked) {
     auto favorite = corpus_.SelectNotYetExhaustMutated();
     if (favorite == nullptr) {
       all_posibilities_checked = true;
@@ -165,7 +171,7 @@ void Fuzzon::MutationNonDeterministic(int test_cases_to_mutate,
   Mutator mutation_engine(white_chars_preservation);
   bool stop_testing = false;
 
-  while (!test_timeout_() && !stop_testing) {
+  while (!shall_finish() && !stop_testing) {
     auto favorite = corpus_.SelectFavorite();
     if (favorite == nullptr) {
       break;
