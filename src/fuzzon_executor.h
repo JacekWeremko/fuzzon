@@ -12,6 +12,7 @@
 #include <string>
 #include <memory>
 #include <vector>
+#include <algorithm>
 
 #include "./fuzzon_executiondata.h"
 
@@ -19,37 +20,42 @@ namespace fuzzon {
 
 class Executor {
  public:
+  enum Mode {
+    PROCESS_ONLY_STDIN_FILE,
+    PROCESS_ONLY_STDIN_ASYCN_STREAM,
+    // ONLY_STDIN_ASYCN_SIGLE_STREAM,  // bugged
+    PROCESS_ALL_STD_ASYNC_STREAMS,
+    // ALL_STD_ASYNC_STREAMS_IOWT,
+    THREAD
+  };
+
   explicit Executor(std::string sut_path,
                     const std::vector<std::string>& env_flags,
-                    int execution_timeout_ms);
+                    int execution_timeout_ms,
+                    Executor::Mode mode);
   ~Executor();
 
   ExecutionData ExecuteBlocking(TestCase& input) {
-    return ExecuteBlockingAsyncStremasStdinThread(input);
+    return ExecuteProcessAsyncStdInStrems(input);
   }
 
-  /*
-   * Allocating a bunch of boost:thread object on stack cause
-   *   exception (resource smth after ~10000 execution)
-   */
-  ExecutionData ExecuteBlockingAsyncStremas(TestCase& input);
+  ExecutionData Test(TestCase& input);
+  ExecutionData ExecuteProcessStdInFile(TestCase& input);
+  ExecutionData ExecuteProcessAsyncStdInStrems(TestCase& input);
+  ExecutionData ExecuteProcessAsyncStdInStrems(TestCase& input, bool one_ios);
+  ExecutionData ExecuteProcessAsyncStdAllStrems(TestCase& input);
+  ExecutionData ExecuteProcessAsyncStremasIOWorkerThread(TestCase& input);
 
-  /*
-   * Same as ExecuteBlockingAsyncStremas but uses single static thread to handle
-   * stdin
-   */
-  ExecutionData ExecuteBlockingAsyncStremasStdinThread(TestCase& input);
+#ifdef EXTERN_FUZZZON_ENTRY_POINT
+  ExecutionData ExecuteBlockingThread(TestCase& input);
+  ExecutionData ExecuteBlockingThreadFork(TestCase& input);
+#endif
 
  private:
-  std::string sut_path_;
+  const std::string sut_path_;
   boost::process::environment sut_env_;
   const std::chrono::milliseconds execution_timeout_;
-
-  bool is_first_run_;
-  boost::asio::io_service ios_;
-  boost::atomic<bool> done_;
-  boost::atomic<bool> process_;
-  boost::asio::io_service::work work_;
+  const Executor::Mode mode_;
 };
 
 } /* namespace fuzzon */
