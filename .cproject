@@ -391,8 +391,10 @@
 								<option id="cdt.managedbuild.tool.llvm.c.compiler.option.dialect.std.762703243" name="Language standard" superClass="cdt.managedbuild.tool.llvm.c.compiler.option.dialect.std" useByScannerDiscovery="true" value="gnu.c.compiler.dialect.c11" valueType="enumerated"/>
 								<option id="llvm.c_cpp.compiler.option.preprocessor.def.1068490665" name="Defined symbols (-D)" superClass="llvm.c_cpp.compiler.option.preprocessor.def" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="LOGGING_ENABLED"/>
+									<listOptionValue builtIn="false" value="ALTERNATIVE_MAIN"/>
 								</option>
-								<option id="llvm.c_cpp.compiler.option.misc.other.410701753" name="Other flags" superClass="llvm.c_cpp.compiler.option.misc.other" useByScannerDiscovery="false" value="-S -fmessage-length=0" valueType="string"/>
+								<option id="llvm.c_cpp.compiler.option.misc.other.410701753" name="Other flags" superClass="llvm.c_cpp.compiler.option.misc.other" useByScannerDiscovery="false" value="-c -fmessage-length=0" valueType="string"/>
+								<option id="llvm.c_cpp.compiler.option.optimization.flags.959694078" name="Other optimization flags" superClass="llvm.c_cpp.compiler.option.optimization.flags" useByScannerDiscovery="false" value="" valueType="string"/>
 								<inputType id="cdt.managedbuild.tool.llvm.c.compiler.input.560243371" superClass="cdt.managedbuild.tool.llvm.c.compiler.input"/>
 							</tool>
 							<tool command="clang++-4.0" id="cdt.managedbuild.tool.llvm.clang.linux.cpp.compiler.exe.debug.27306426" name="LLVM Clang++" superClass="cdt.managedbuild.tool.llvm.clang.linux.cpp.compiler.exe.debug">
@@ -405,8 +407,10 @@
 								<option id="llvm.c_cpp.compiler.option.preprocessor.def.337216231" name="Defined symbols (-D)" superClass="llvm.c_cpp.compiler.option.preprocessor.def" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="LOGGING_ENABLED"/>
 									<listOptionValue builtIn="false" value="ALTERNATIVE_MAIN"/>
+									<listOptionValue builtIn="false" value="EXTERN_FUZZZON_ENTRY_POINT"/>
 								</option>
-								<option id="llvm.c_cpp.compiler.option.misc.other.907697818" name="Other flags" superClass="llvm.c_cpp.compiler.option.misc.other" useByScannerDiscovery="false" value="-S -fmessage-length=0" valueType="string"/>
+								<option id="llvm.c_cpp.compiler.option.misc.other.907697818" name="Other flags" superClass="llvm.c_cpp.compiler.option.misc.other" useByScannerDiscovery="false" value="-c -fmessage-length=0" valueType="string"/>
+								<option id="llvm.c_cpp.compiler.option.optimization.flags.2119643292" name="Other optimization flags" superClass="llvm.c_cpp.compiler.option.optimization.flags" useByScannerDiscovery="false" value="" valueType="string"/>
 								<inputType id="cdt.managedbuild.tool.llvm.cpp.compiler.input.1115847552" superClass="cdt.managedbuild.tool.llvm.cpp.compiler.input"/>
 							</tool>
 							<tool id="cdt.managedbuild.tool.llvm.clang.linux.c.linker.exe.debug.506309544" name="LLVM Clang C linker" superClass="cdt.managedbuild.tool.llvm.clang.linux.c.linker.exe.debug">
