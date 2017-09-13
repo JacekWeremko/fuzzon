@@ -22,6 +22,7 @@ class Fuzzon {
          std::string sut_path,
          const std::vector<std::string>& env_flags,
          int sut_runtime_timeout,
+         Executor::Mode mode,
          int test_timeout);
 
   void ScanCorpus(std::string corpus_base);
