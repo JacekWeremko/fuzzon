@@ -59,7 +59,7 @@ int main(int argc, char** argv) {
   desc.add_options()(
       "mutate_nd", po::value<int>()->default_value(1000),
       "Non-deterministic mutation phase: number of test cases to mutate.");
-  desc.add_options()("total_testcases", po::value<int>()->default_value(15000),
+  desc.add_options()("total_testcases", po::value<int>()->default_value(50000),
                      "Max total test cases number to execute");
 
   desc.add_options()("white_chars_preservation,w",
@@ -89,11 +89,12 @@ int main(int argc, char** argv) {
   auto sut = vm["sut"].as<fs::path>();
   auto input_format = vm["input_format"].as<fs::path>();
 
-  auto output = vm.count("out")
-                    ? vm["out"].as<fs::path>()
-                    : (sut.parent_path() /
-                       (fs::path("fuzzon_").concat(sut.filename().c_str())) /
-                       time_now_str);
+  auto output_dir =
+      vm.count("output_dir")
+          ? vm["output_dir"].as<fs::path>()
+          : (sut.parent_path() /
+             (fs::path("fuzzon_").concat(sut.filename().c_str())) /
+             time_now_str);
 
   auto env_flags = vm.count("env_flag")
                        ? vm["env_flag"].as<std::vector<std::string>>()
@@ -109,11 +110,11 @@ int main(int argc, char** argv) {
   auto executor_mode = fuzzon::Executor::Mode(vm["executor_mode"].as<int>());
 
   auto verbose_level = verbosity_values.length();
-  Logger::Get(output.string(), verbose_level);
+  Logger::Get(output_dir.string(), verbose_level);
 
-  std::string input_alphabet("abcd");
-  fuzzon::Random::Get()->SetAlphabet(input_alphabet);
-  fuzzon::Fuzzon crazy_fuzzer(output.string(), sut.string(),
+  //  std::string input_alphabet("abcd");
+  //  fuzzon::Random::Get()->SetAlphabet(input_alphabet);
+  fuzzon::Fuzzon crazy_fuzzer(output_dir.string(), sut.string(),
                               std::move(env_flags), sut_timeout, executor_mode,
                               test_timeout, total_testcases);
 

@@ -366,7 +366,8 @@ struct std_write_handler : std_handler {
   }
 };
 
-ExecutionData Executor::ExecuteProcessAsyncStdInStrems(TestCase& input, bool) {
+ExecutionDataSP Executor::ExecuteProcessAsyncStdInStrems(TestCase& input,
+                                                         bool) {
   ExecutionTracker::Get()->Reset();
   static ba::io_service ios;
   static std_write_handler std_in_handler(ios, 10 * 4096);
@@ -403,7 +404,7 @@ ExecutionData Executor::ExecuteProcessAsyncStdInStrems(TestCase& input, bool) {
   ios.stop();
   std_in_handler.pipe_->close();
 
-  return ExecutionData(
+  return std::make_shared<ExecutionData>(
       input, ec, exit_code, !timeout_not_occured,
       std::chrono::duration_cast<std::chrono::microseconds>(finish - start),
       std::make_shared<std::stringstream>(),
@@ -411,7 +412,7 @@ ExecutionData Executor::ExecuteProcessAsyncStdInStrems(TestCase& input, bool) {
       ExecutionTracker::Get()->GetCoverage());
 }
 
-ExecutionData Executor::ExecuteProcessAsyncStdInStrems(TestCase& input, int) {
+ExecutionDataSP Executor::ExecuteProcessAsyncStdInStrems(TestCase& input, int) {
   ExecutionTracker::Get()->Reset();
   ba::io_service ios;
   std_write_handler std_in_handler(ios, 10 * 4096);
@@ -452,7 +453,7 @@ ExecutionData Executor::ExecuteProcessAsyncStdInStrems(TestCase& input, int) {
   //  ios.stop();
   //  ios.reset();
 
-  return ExecutionData(
+  return std::make_shared<ExecutionData>(
       input, ec, exit_code, !timeout_not_occured,
       std::chrono::duration_cast<std::chrono::microseconds>(finish - start),
       std::make_shared<std::stringstream>(),
@@ -460,7 +461,7 @@ ExecutionData Executor::ExecuteProcessAsyncStdInStrems(TestCase& input, int) {
       ExecutionTracker::Get()->GetCoverage());
 }
 
-ExecutionData Executor::ExecuteProcessAsyncStdInStrems(TestCase& input) {
+ExecutionDataSP Executor::ExecuteProcessAsyncStdInStrems(TestCase& input) {
   ExecutionTracker::Get()->Reset();
   ba::io_service ios;
   std_write_handler std_in_handler(ios, 10 * 4096);
@@ -501,7 +502,7 @@ ExecutionData Executor::ExecuteProcessAsyncStdInStrems(TestCase& input) {
   //  ios.stop();
   //  ios.reset();
 
-  return ExecutionData(
+  return std::make_shared<ExecutionData>(
       input, ec, exit_code, !timeout_not_occured,
       std::chrono::duration_cast<std::chrono::microseconds>(finish - start),
       std::make_shared<std::stringstream>(),
@@ -509,7 +510,7 @@ ExecutionData Executor::ExecuteProcessAsyncStdInStrems(TestCase& input) {
       ExecutionTracker::Get()->GetCoverage());
 }
 
-ExecutionData Executor::ExecuteProcessAsyncStdAllStrems(TestCase& input) {
+ExecutionDataSP Executor::ExecuteProcessAsyncStdAllStrems(TestCase& input) {
   ExecutionTracker::Get()->Reset();
   ba::io_service ios;
 
@@ -566,14 +567,14 @@ ExecutionData Executor::ExecuteProcessAsyncStdAllStrems(TestCase& input) {
   std_out_handler.pipe().close();
   std_err_handler.pipe().close();
 
-  return ExecutionData(
+  return std::make_shared<ExecutionData>(
       input, ec, exit_code, !timeout_not_occured,
       std::chrono::duration_cast<std::chrono::microseconds>(finish - start),
       std_out_handler.our_streamer, std_out_handler.our_streamer,
       ExecutionTracker::Get()->GetCoverage());
 }
 
-ExecutionData Executor::ExecuteProcessStdInFile(TestCase& input) {
+ExecutionDataSP Executor::ExecuteProcessStdInFile(TestCase& input) {
   ExecutionTracker::Get()->Reset();
 
   auto input_file_path = boost::filesystem::path("input.txt");
@@ -599,7 +600,7 @@ ExecutionData Executor::ExecuteProcessStdInFile(TestCase& input) {
   //      std::chrono::duration_cast<std::chrono::microseconds>(finish - start);
   bool timeout_not_occured = duration > execution_timeout_ ? false : true;
 
-  return ExecutionData(
+  return std::make_shared<ExecutionData>(
       input, ec, exit_code, !timeout_not_occured,
       std::chrono::duration_cast<std::chrono::microseconds>(finish - start),
       std::make_shared<std::stringstream>(),
@@ -607,11 +608,9 @@ ExecutionData Executor::ExecuteProcessStdInFile(TestCase& input) {
       ExecutionTracker::Get()->GetCoverage());
 }
 
-ExecutionData Executor::ExecuteProcessAsyncStdAllStremsPoll(TestCase& input) {
+ExecutionDataSP Executor::ExecuteProcessAsyncStdAllStremsPoll(TestCase& input) {
   using async_handler = std::function<void(const bs::error_code& ec, size_t n)>;
-  static ba::io_service ios(0);
-
-  ios.reset();
+  ba::io_service ios;
 
   auto sut_std_out = std::make_shared<std::stringstream>();
   auto stdout_buffer = std::vector<char>(10 * 4096);
@@ -633,7 +632,7 @@ ExecutionData Executor::ExecuteProcessAsyncStdAllStremsPoll(TestCase& input) {
   async_handler stderr_handler = [&](const bs::error_code& ec, size_t n) {
     std::copy(stderr_buffer.begin(), stderr_buffer.begin() + n,
               std::ostream_iterator<char>(*sut_std_err.get()));
-    //    std::cout << "sut_std_err:" << sut_std_err;
+    //    std::cout << "sut_std_err:" << sut_std_err.get();
     if (ec == 0) {
       ba::async_read(stderr_ap, stderr_ap_buffer, stderr_handler);
     }
@@ -649,6 +648,7 @@ ExecutionData Executor::ExecuteProcessAsyncStdAllStremsPoll(TestCase& input) {
   boost::process::child sut(
       sut_path_, input.string(), sut_env_, boost::process::std_out > stdout_ap,
       boost::process::std_err > stderr_ap, boost::process::std_in < stdin_ap);
+
   ba::async_write(stdin_ap, stdin_ap_buffer, stdin_handler);
   ba::async_read(stdout_ap, stdout_ap_buffer, stdout_handler);
   ba::async_read(stderr_ap, stderr_ap_buffer, stderr_handler);
@@ -679,7 +679,7 @@ ExecutionData Executor::ExecuteProcessAsyncStdAllStremsPoll(TestCase& input) {
   auto timeout_occured = ((finish - start) > execution_timeout_);
   auto exit_code = sut.exit_code();
 
-  return ExecutionData(
+  return std::make_shared<ExecutionData>(
       input, ec, exit_code, timeout_occured,
       std::chrono::duration_cast<std::chrono::microseconds>(finish - start),
       std::move(sut_std_out), std::move(sut_std_err),

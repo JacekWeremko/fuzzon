@@ -15,6 +15,7 @@
 #include <chrono>
 #include <memory>
 #include <utility>
+#include <map>
 
 #include "./fuzzon_coverage.h"
 #include "./utils/time.hpp"
@@ -38,9 +39,9 @@ struct ExecutionData {
         std_out(std::move(std_out)),
         std_err(std::move(std_err)),
         path(*cov),
-        mutatation_exhausted(false),
-        path_execution_coutner_(1),
-        mutation_counter_(0) {
+        //        mutatation_exhausted(false),
+        path_execution_coutner_(1) {
+    //        mutation_counter_(0) {
     path.Compress();
     path.ComputeHash();
   }
@@ -61,6 +62,12 @@ struct ExecutionData {
     return os;
   }
 
+  std::string string() const {
+    std::stringstream ss;
+    ss << this;
+    return ss.str();
+  }
+
   bool crashed() const { return std_err->tellp() != 0; }
 
   TestCase input;
@@ -74,10 +81,9 @@ struct ExecutionData {
   Coverage path;
 
   // TODO: shouln't be part of this class
-  bool mutatation_exhausted;
   size_t path_execution_coutner_;
-  size_t mutation_counter_;
 };
+using ExecutionDataSP = std::shared_ptr<ExecutionData>;
 
 struct CampaignSummary {
   CampaignSummary()
@@ -91,6 +97,8 @@ struct CampaignSummary {
   int none_zero_return_code;
   int timeout;
   int crash;
+
+  std::map<TestCase::Genesis, int> test_cases_genesis;
   Coverage total_cov;
 };
 

@@ -92,7 +92,7 @@ class Mutator {
                       size_t block_length) const;
   bool BlockInsertion(TestCase& base,
                       size_t base_start_idx,
-                      const TestCase& insertme,
+                      TestCase& insertme,
                       size_t insertme_start_idx,
                       size_t block_length) const {
     return BlockInsertion(base.vec(), base_start_idx, insertme.vec(),
@@ -138,7 +138,7 @@ class Mutator {
 
   bool BlockOverriding(TestCase& base,
                        size_t base_start_idx,
-                       const TestCase& new_values,
+                       TestCase& new_values,
                        size_t new_values_start_idx,
                        size_t block_length) const {
     return BlockOverriding(base.vec(), base_start_idx, new_values.vec(),

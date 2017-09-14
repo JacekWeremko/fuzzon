@@ -56,7 +56,7 @@ TestCase Generator::generateNext() {
   BOOST_ASSERT(result == 0);
 
   LOG_DEBUG("Stripped input data :" + input_stripped.str());
-  return TestCase(input_stripped.str());
+  return TestCase(input_stripped.str(), TestCase::Generation);
 }
 
 int Generator::ParseJson(rapidjson::Value& current,

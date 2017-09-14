@@ -34,18 +34,18 @@ class Executor {
                     int execution_timeout_ms,
                     Executor::Mode mode);
 
-  ExecutionData ExecuteBlocking(TestCase& input) {
+  ExecutionDataSP ExecuteBlocking(TestCase& input) {
     return ExecuteProcessAsyncStdAllStremsPoll(input);
   }
 
-  ExecutionData Test(TestCase& input);
-  ExecutionData ExecuteProcessLinuxNativ(TestCase& input);
-  ExecutionData ExecuteProcessStdInFile(TestCase& input);
-  ExecutionData ExecuteProcessAsyncStdInStrems(TestCase& input);
-  ExecutionData ExecuteProcessAsyncStdInStrems(TestCase& input, bool one_ios);
-  ExecutionData ExecuteProcessAsyncStdInStrems(TestCase& input, int fallback);
-  ExecutionData ExecuteProcessAsyncStdAllStrems(TestCase& input);
-  ExecutionData ExecuteProcessAsyncStdAllStremsPoll(TestCase& input);
+  ExecutionDataSP Test(TestCase& input);
+  ExecutionDataSP ExecuteProcessLinuxNativ(TestCase& input);
+  ExecutionDataSP ExecuteProcessStdInFile(TestCase& input);
+  ExecutionDataSP ExecuteProcessAsyncStdInStrems(TestCase& input);
+  ExecutionDataSP ExecuteProcessAsyncStdInStrems(TestCase& input, bool one_ios);
+  ExecutionDataSP ExecuteProcessAsyncStdInStrems(TestCase& input, int fallback);
+  ExecutionDataSP ExecuteProcessAsyncStdAllStrems(TestCase& input);
+  ExecutionDataSP ExecuteProcessAsyncStdAllStremsPoll(TestCase& input);
 
 #ifdef EXTERN_FUZZZON_ENTRY_POINT
   ExecutionData ExecuteBlockingThread(TestCase& input);

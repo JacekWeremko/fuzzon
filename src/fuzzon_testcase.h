@@ -18,18 +18,33 @@ namespace fuzzon {
 // class TestCaseGeneric {
 class TestCase {
  public:
+  enum Genesis {
+    Predefined,
+    CorpusSeed,
+    Generation,
+    MutationDeterministic,
+    MutationNonDeterministic
+  };
+
   TestCase() = delete;
 
   // move semantic
-  explicit TestCase(uint8_t* data, size_t length) {
+  explicit TestCase(uint8_t* data, size_t length, Genesis my_genesis)
+      : genesis_(my_genesis) {
     data_.assign(data, data + length);
   }
-  explicit TestCase(std::vector<char>&& move_me) noexcept : data_(move_me) {}
-  TestCase(TestCase&& move_me) noexcept : data_(std::move(move_me.data_)) {}
+  explicit TestCase(std::vector<char>&& move_me, Genesis my_genesis) noexcept
+      : genesis_(my_genesis), data_(std::move(move_me)) {}
+  TestCase(TestCase&& move_me, Genesis my_genesis) noexcept
+      : genesis_(my_genesis),
+        mutation_counter_(0),
+        data_(std::move(move_me.data_)) {}
 
   // copy semantic
-  TestCase(const TestCase& copy_me) : data_(copy_me.data_) {}
-  explicit TestCase(const std::string& serialized) {
+  TestCase(const TestCase& copy_me, Genesis my_genesis)
+      : genesis_(my_genesis), data_(copy_me.data_) {}
+  explicit TestCase(const std::string& serialized, Genesis my_genesis)
+      : genesis_(my_genesis) {
     std::copy(serialized.begin(), serialized.end(), std::back_inserter(data_));
   }
 
@@ -56,6 +71,11 @@ class TestCase {
   size_t length_dword() const { return length_byte() / 4; }
 
   std::string string() const { return std::string(data_.data(), data_.size()); }
+  Genesis my_genesis() const { return genesis_; }
+
+  int mutation_counter() { return mutation_counter_; }
+  bool not_yet_mutated() { return mutation_counter_ == 0; }
+  int increased_mutation_counter() { return ++mutation_counter_; }
 
   std::vector<char>& vec() { return data_; }
   const std::vector<char>& vec() const { return data_; }
@@ -68,6 +88,8 @@ class TestCase {
   }
 
  private:
+  Genesis genesis_;
+  size_t mutation_counter_ = 0;
   std::vector<char> data_;
 };
 
