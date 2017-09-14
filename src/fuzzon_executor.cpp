@@ -614,8 +614,8 @@ ExecutionData Executor::ExecuteProcessAsyncStdAllStremsPoll(TestCase& input) {
   ios.reset();
 
   auto sut_std_out = std::make_shared<std::stringstream>();
-  static auto stdout_buffer = std::vector<char>(5 * 4096);
-  static auto stdout_ap_buffer = ba::buffer(stdout_buffer);
+  auto stdout_buffer = std::vector<char>(10 * 4096);
+  auto stdout_ap_buffer = ba::buffer(stdout_buffer);
   auto stdout_ap = bp::async_pipe(ios);
   async_handler stdout_handler = [&](const bs::error_code& ec, size_t n) {
     std::copy(stdout_buffer.begin(), stdout_buffer.begin() + n,
@@ -627,7 +627,7 @@ ExecutionData Executor::ExecuteProcessAsyncStdAllStremsPoll(TestCase& input) {
   };
 
   auto sut_std_err = std::make_shared<std::stringstream>();
-  static auto stderr_buffer = std::vector<char>(5 * 4096);
+  auto stderr_buffer = std::vector<char>(10 * 4096);
   auto stderr_ap_buffer = ba::buffer(stderr_buffer);
   auto stderr_ap = bp::async_pipe(ios);
   async_handler stderr_handler = [&](const bs::error_code& ec, size_t n) {
@@ -639,7 +639,7 @@ ExecutionData Executor::ExecuteProcessAsyncStdAllStremsPoll(TestCase& input) {
     }
   };
 
-  static auto stdin_ap_buffer = ba::buffer(input.string());
+  auto stdin_ap_buffer = ba::buffer(input.string());
   auto stdin_ap = bp::async_pipe(ios);
   async_handler stdin_handler = [&](const bs::error_code& ec, size_t n) {
     stdin_ap.async_close();
@@ -676,7 +676,7 @@ ExecutionData Executor::ExecuteProcessAsyncStdAllStremsPoll(TestCase& input) {
   }
 
   auto finish = std::chrono::system_clock::now();
-  bool timeout_occured = ((finish - start) > execution_timeout_);
+  auto timeout_occured = ((finish - start) > execution_timeout_);
   auto exit_code = sut.exit_code();
 
   return ExecutionData(

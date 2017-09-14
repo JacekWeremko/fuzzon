@@ -165,7 +165,6 @@ int main(int argc, char** argv) {
 
   crazy_fuzzer.ScanCorpus(corpus_base.string());
   crazy_fuzzer.Generation(input_format.string(), generate);
-  std::cout << "duapdua";
   crazy_fuzzer.MutationDeterministic(mutate_d, white_chars_preservation);
   crazy_fuzzer.MutationNonDeterministic(mutate_nd, white_chars_preservation);
   crazy_fuzzer.PrintStats();
