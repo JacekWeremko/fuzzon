@@ -33,18 +33,19 @@ class Executor {
                     const std::vector<std::string>& env_flags,
                     int execution_timeout_ms,
                     Executor::Mode mode);
-  ~Executor();
 
   ExecutionData ExecuteBlocking(TestCase& input) {
-    return ExecuteProcessAsyncStdInStrems(input);
+    return ExecuteProcessAsyncStdAllStremsPoll(input);
   }
 
   ExecutionData Test(TestCase& input);
+  ExecutionData ExecuteProcessLinuxNativ(TestCase& input);
   ExecutionData ExecuteProcessStdInFile(TestCase& input);
   ExecutionData ExecuteProcessAsyncStdInStrems(TestCase& input);
   ExecutionData ExecuteProcessAsyncStdInStrems(TestCase& input, bool one_ios);
+  ExecutionData ExecuteProcessAsyncStdInStrems(TestCase& input, int fallback);
   ExecutionData ExecuteProcessAsyncStdAllStrems(TestCase& input);
-  ExecutionData ExecuteProcessAsyncStremasIOWorkerThread(TestCase& input);
+  ExecutionData ExecuteProcessAsyncStdAllStremsPoll(TestCase& input);
 
 #ifdef EXTERN_FUZZZON_ENTRY_POINT
   ExecutionData ExecuteBlockingThread(TestCase& input);
