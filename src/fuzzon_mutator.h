@@ -65,10 +65,14 @@ class Mutator {
    */
   bool SimpleArithmetics(std::vector<char>& base,
                          size_t byte_idx,
-                         char value) const;
+                         int value,
+                         int value_size = 1) const;
 
-  bool SimpleArithmetics(TestCase& base, size_t byte_idx, char value) const {
-    return SimpleArithmetics(base.vec(), byte_idx, value);
+  bool SimpleArithmetics(TestCase& base,
+                         size_t byte_idx,
+                         int value,
+                         int value_size) const {
+    return SimpleArithmetics(base.vec(), byte_idx, value, value_size);
   }
 
   /*
@@ -76,10 +80,14 @@ class Mutator {
    */
   bool KnownIntegers(std::vector<char>& base,
                      size_t byte_idx,
-                     char value) const;
+                     char value,
+                     int value_size = 1) const;
 
-  bool KnownIntegers(TestCase& base, size_t byte_idx, char value) const {
-    return KnownIntegers(base.vec(), byte_idx, value);
+  bool KnownIntegers(TestCase& base,
+                     size_t byte_idx,
+                     char value,
+                     int value_size) const {
+    return KnownIntegers(base.vec(), byte_idx, value, value_size);
   }
 
   /*

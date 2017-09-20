@@ -64,28 +64,87 @@ bool Mutator::FlipByte(std::vector<char>& base,
 
 bool Mutator::SimpleArithmetics(std::vector<char>& base,
                                 size_t byte_idx,
-                                char value) const {
-  SAFE_CHECK(base.size() > byte_idx, false);
+                                int value,
+                                int value_size) const {
+  SAFE_CHECK(base.size() > (byte_idx + value_size), false);
 
-  auto& selected_byte = base[byte_idx];
-  if (!ChangeAllowed(selected_byte)) {
-    return false;
+  switch (value_size) {
+    case 1: {
+      auto& selected_byte = base[byte_idx];
+      if (!ChangeAllowed(selected_byte)) {
+        return false;
+      }
+      selected_byte += static_cast<char>(value);
+      break;
+    }
+    case 2: {
+      auto& selected_byte = reinterpret_cast<int16_t&>(base[byte_idx]);
+      if (!ChangeAllowed(selected_byte)) {
+        return false;
+      }
+      selected_byte += static_cast<int16_t>(value);
+      break;
+    }
+    case 4: {
+      auto& selected_byte = reinterpret_cast<int32_t&>(base[byte_idx]);
+      if (!ChangeAllowed(selected_byte)) {
+        return false;
+      }
+      selected_byte += static_cast<int32_t>(value);
+      break;
+    }
+    default:
+      return false;
   }
-  selected_byte += value;
+
   return true;
 }
 
 bool Mutator::KnownIntegers(std::vector<char>& base,
                             size_t byte_idx,
-                            char value) const {
-  SAFE_CHECK(base.size() > byte_idx, false);
+                            char value,
+                            int value_size) const {
+  SAFE_CHECK(base.size() > (byte_idx + value_size), false);
 
-  auto& selected_byte = base[byte_idx];
-  if (!ChangeAllowed(selected_byte)) {
-    return false;
+  switch (value_size) {
+    case 1: {
+      auto& selected_byte = base[byte_idx];
+      if (!ChangeAllowed(selected_byte)) {
+        return false;
+      }
+      selected_byte = static_cast<char>(value);
+      break;
+    }
+    case 2: {
+      auto& selected_byte = reinterpret_cast<int16_t&>(base[byte_idx]);
+      if (!ChangeAllowed(selected_byte)) {
+        return false;
+      }
+      selected_byte = static_cast<int16_t>(value);
+      break;
+    }
+    case 4: {
+      auto& selected_byte = reinterpret_cast<int32_t&>(base[byte_idx]);
+      if (!ChangeAllowed(selected_byte)) {
+        return false;
+      }
+      selected_byte = static_cast<int32_t>(value);
+      break;
+    }
+    default:
+      return false;
   }
-  selected_byte = value;
+
   return true;
+
+  //  SAFE_CHECK(base.size() > byte_idx, false);
+  //
+  //  auto& selected_byte = base[byte_idx];
+  //  if (!ChangeAllowed(selected_byte)) {
+  //    return false;
+  //  }
+  //  selected_byte = value;
+  //  return true;
 }
 
 bool Mutator::BlockInsertion(std::vector<char>& base,
