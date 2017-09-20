@@ -19,7 +19,7 @@ class Coverage {
   enum TrackMode { Raw, Flow };
   enum CompreseMode { Log2 };
 
-  explicit Coverage(TrackMode mode = Raw);
+  explicit Coverage(TrackMode mode);
   void Reset();
 
   // Helpers
@@ -46,9 +46,8 @@ class Coverage {
 
   template <typename valueT>
   void TraceData(uintptr_t pc, valueT value) {
-    //    TracePC(pc);
-    //    flow_data_[value % flow_pcs_.size()]++;
-    //    flow_data_[pc % flow_data_.size()] += value;
+    TracePC(pc);
+    flow_data_[value % flow_pcs_.size()]++;
   }
 
   template <typename valueT>

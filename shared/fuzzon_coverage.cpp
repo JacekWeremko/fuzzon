@@ -39,13 +39,6 @@ void Coverage::Compress(CompreseMode comprese_mode) {
       elem = std::log2(elem) + 1;
       pc_visited_++;
     }
-    //
-    //    //    for (auto& elem : flow_data_) {
-    //    //      if (elem == 0) {
-    //    //        continue;
-    //    //      }
-    //    //      elem = std::log2(elem) + 1;
-    //    //    }
   }
 }
 

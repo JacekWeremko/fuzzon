@@ -136,15 +136,6 @@ bool Mutator::KnownIntegers(std::vector<char>& base,
   }
 
   return true;
-
-  //  SAFE_CHECK(base.size() > byte_idx, false);
-  //
-  //  auto& selected_byte = base[byte_idx];
-  //  if (!ChangeAllowed(selected_byte)) {
-  //    return false;
-  //  }
-  //  selected_byte = value;
-  //  return true;
 }
 
 bool Mutator::BlockInsertion(std::vector<char>& base,

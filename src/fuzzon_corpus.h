@@ -47,7 +47,6 @@ class Corpus {
   const std::chrono::system_clock::time_point start_;
 
   boost::filesystem::path output_path_;
-  //  std::list<ExecutionData> data_;
   std::vector<ExecutionDataSP> data_;
   CampaignSummary summary_;
 

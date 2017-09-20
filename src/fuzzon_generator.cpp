@@ -59,19 +59,7 @@ TestCase Generator::generateNext() {
   std::string in = std::string(input_stripped.str() + '\0');
 
   return TestCase(in, TestCase::Generation);
-
-  //  std::vector<char> input_stripped;
-  //  int result = StripJson(intput_data, input_stripped);
-  //  BOOST_ASSERT(result == 0);
-  //
-  //  std::string str(input_stripped.begin(), input_stripped.end());
-  //  LOG_DEBUG("Stripped input data :" + str);
-  //  std::string in = std::string(str + '\0');
-  //
-  //  return TestCase(std::move(input_stripped), TestCase::Generation);
 }
-
-// std::string GetElementType()
 
 std::string FindType(const rapidjson::Value& current) {
   auto name = std::string("");
@@ -155,11 +143,6 @@ int Generator::ParseJson(rapidjson::Value& current,
       }
     }
 
-    //    if (!it->value.IsObject() || !it->value.HasMember("type")) {
-    //      LOG_CRITICAL(std::string(it->value.GetString()) +
-    //                   " is not an object or has not 'type' member.");
-    //      return -1;
-    //    }
     if (!it->value.IsObject()) {
       LOG_CRITICAL(std::string(it->value.GetString()) + " is not an object!");
       return -1;
@@ -258,14 +241,9 @@ int Generator::ParseJson(rapidjson::Value& current,
 
 int Generator::StripJson(rapidjson::Value& current, std::vector<char>& output) {
   if (current.IsInt()) {
-    // output.push_back(current.GetInt());
-    // output.push_back(' ');
     auto push_me = current.GetInt();
-    //    output.push_back(push_me);
 
-    //    std::vector<unsigned char> push_me_bytes(4);
     for (int i = 0; i < 4; ++i) {
-      //      push_me_bytes[3 - i] = (push_me >> (i * 8));
       output.push_back(push_me >> (i * 8));
     }
 

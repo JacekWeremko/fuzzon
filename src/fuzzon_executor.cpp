@@ -17,7 +17,6 @@
 #include <boost/signals2.hpp>
 #include <boost/asio.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
-//#include <boost/iostreams/filtering_streambuf.hpp>
 #include <iostream>
 #include <string>
 #include <sstream>
@@ -41,11 +40,12 @@ namespace fuzzon {
 Executor::Executor(std::string sut_path,
                    const std::vector<std::string>& env_flags,
                    int execution_timeout_ms,
-                   Executor::Mode mode)
+                   Executor::Mode mode,
+                   Coverage::TrackMode track_mode)
     : sut_path_(sut_path),
       execution_timeout_(std::chrono::milliseconds(execution_timeout_ms)),
       mode_(mode) {
-  ExecutionTracker::Get(ExecutionTracker::Monitor);
+  ExecutionTracker::Get(ExecutionTracker::Monitor, track_mode);
   LOG_DEBUG(std::string("SUT path: ") + sut_path_);
 
   for (auto env_flag : env_flags) {
@@ -62,8 +62,9 @@ Executor::Executor(std::string sut_path,
 
   // bug (?) in llvm : would report 1bilion of memory leaks on crash
   sut_env_["ASAN_OPTIONS"] += ":detect_leaks=false";
-  // hack : instead of linking  with asan <- this is not quite possible since
-  // some symbols not easly avaliable
+  // just load libclang_rt.asan lib
+  // linking with asan lib is not quite possible since some reqired symbols
+  // missing
   sut_env_["LD_PRELOAD"] =
       "/usr/lib/llvm-4.0/lib/clang/4.0.0/lib/linux/libclang_rt.asan-x86_64.so";
 }
@@ -229,352 +230,6 @@ ExecutionData Executor::ExecuteBlockingThreadFork(TestCase& input) {
 
 #endif
 
-struct process_hanlders : ex::async_handler {
-  template <typename Sequence>
-  std::function<void(int, const std::error_code&)> on_exit_handler(
-      Sequence& exec) {
-    auto handler = exec.handler;
-    return [handler](int exit_code, const std::error_code& ec) {
-      std::cout << "on_exit_handler: " << exit_code << " ec:" << ec
-                << std::endl;
-    };
-  }
-
-  template <typename Sequence>
-  void on_setup(bp::extend::posix_executor<Sequence>& exec) {
-    std::cout << "on_setup: " << exec.exe << std::endl;
-  }
-
-  template <typename Sequence>
-  void on_error(bp::extend::posix_executor<Sequence>& exec,
-                const std::error_code& ec) {
-    std::cout << "on_error: " << exec.exe << " ec:" << ec << std::endl;
-  }
-
-  template <typename Sequence>
-  void on_success(bp::extend::posix_executor<Sequence>& exec) {
-    std::cout << "on_success: " << exec.exe << std::endl;
-  }
-
-  template <typename Sequence>
-  void on_success(bp::extend::posix_executor<Sequence>& exec) const {
-    std::cout << "on_success: " << exec.exe << std::endl;
-  }
-
-  template <typename Sequence>
-  void on_fork_error(bp::extend::posix_executor<Sequence>& exec,
-                     const std::error_code& ec) {
-    std::cout << "on_fork_error: " << exec.exe << " ec:" << ec << std::endl;
-  }
-
-  template <typename Sequence>
-  void on_exec_error(bp::extend::posix_executor<Sequence>& exec,
-                     const std::error_code& ec) {
-    std::cout << "on_exec_error: " << exec.exe << " ec:" << ec << std::endl;
-  }
-
-  template <typename Sequence>
-  void on_exec_error(bp::extend::posix_executor<Sequence>& exec,
-                     const std::error_code& ec) const {
-    std::cout << "on_exec_error: " << exec.exe << " ec:" << ec << std::endl;
-  }
-};
-
-struct std_handler {
-  using async_handler =
-      std::function<void(const boost::system::error_code& ec, size_t n)>;
-
-  std_handler(boost::asio::io_service& ios,
-              size_t N = 4096,
-              async_handler stdout_handler = nullptr)
-      : buffer_(N), async_buffer_(boost::asio::buffer(buffer_)) {
-    our_streamer = std::make_shared<std::stringstream>();
-
-    boost::filesystem::remove(boost::filesystem::path(pipe_name));
-    pipe_ = new boost::process::async_pipe(ios, pipe_name);
-  }
-
-  ~std_handler() {
-    //    boost::filesystem::path my_pipe(pipe_name);
-    //    ::fclose(my_pipe);
-    //    boost::filesystem::remove(boost::filesystem::path(pipe_name));
-    volatile int res = -1;
-
-    res = ::close(pipe_->native_source());
-    while (res == 0) {
-      res = ::close(pipe_->native_source());
-    }
-
-    res = ::close(pipe_->native_sink());
-    while (res == 0) {
-      res = ::close(pipe_->native_sink());
-    }
-
-    delete pipe_;
-    res = ::unlink(pipe_name.c_str());
-    while (res == 0) {
-      res = ::unlink(pipe_name.c_str());
-    }
-  }
-
-  boost::process::async_pipe& pipe() { return *pipe_; }
-
-  const std::string pipe_name = "fuzzon_pipe";
-  std::vector<char> buffer_;
-  boost::asio::mutable_buffers_1 async_buffer_;
-  boost::process::async_pipe* pipe_;
-  async_handler handler_;
-
-  std::shared_ptr<std::stringstream> our_streamer;
-};
-
-struct std_read_handler : std_handler {
-  std_read_handler(boost::asio::io_service& ios, size_t N)
-      : std_handler(ios, N) {
-    handler_ = [&](const boost::system::error_code& ec, size_t n) {
-      std::copy(buffer_.begin(), buffer_.begin() + n,
-                std::ostream_iterator<char>(*our_streamer.get()));
-      //    std::cout << "sut_std_out:" << sut_std_out;
-      if (ec == 0) {
-        boost::asio::async_read(pipe(), async_buffer_, handler_);
-      } else {
-        pipe().async_close();
-      }
-    };
-    boost::asio::async_read(pipe(), async_buffer_, handler_);
-  }
-};
-
-struct std_write_handler : std_handler {
-  std_write_handler(boost::asio::io_service& ios, size_t N)
-      : std_handler(ios, N) {
-    handler_ = [&](const boost::system::error_code& ec, size_t n) {
-      // report N-n -> how many bytes shoud be generated?
-      pipe().async_close();
-    };
-    call_async_write();
-  }
-
-  void call_async_write() {
-    boost::asio::async_write(pipe(), async_buffer_, handler_);
-  }
-
-  void Init(TestCase& input) {
-    if (buffer_.size() < input.size()) {
-      buffer_.resize(2 * input.size());
-    }
-    std::copy(input.begin(), input.end(), buffer_.begin());
-  }
-};
-
-ExecutionDataSP Executor::ExecuteProcessAsyncStdInStrems(TestCase& input,
-                                                         bool) {
-  ExecutionTracker::Get()->Reset();
-  static ba::io_service ios;
-  static std_write_handler std_in_handler(ios, 10 * 4096);
-  std_in_handler.Init(input);
-
-  //  ios.reset();
-  if (!std_in_handler.pipe_->is_open()) {
-    delete std_in_handler.pipe_;
-    std_in_handler.pipe_ = new boost::process::async_pipe(ios);
-  }
-  ios.reset();
-
-  //  boost::system::error_code boost_ec;
-  //  if (ios.stopped()) {
-  //    std_in_handler.pipe_.close(boost_ec);
-  //
-  //    auto new_pipe = boost::process::async_pipe(ios);
-  //  }
-
-  std::error_code ec;
-  auto start = std::chrono::system_clock::now();
-  boost::process::child sut(sut_path_, input.string(), sut_env_, ios,
-                            boost::process::std_in = std_in_handler.pipe(),
-                            boost::process::std_out = boost::process::null,
-                            boost::process::std_err = boost::process::null);
-
-  auto timeout_not_occured = sut.wait_for(execution_timeout_, ec);
-  auto finish = std::chrono::system_clock::now();
-  if (!timeout_not_occured) {
-    sut.terminate(ec);
-    finish = std::chrono::system_clock::now();
-  }
-  auto exit_code = sut.exit_code();
-  ios.stop();
-  std_in_handler.pipe_->close();
-
-  return std::make_shared<ExecutionData>(
-      input, ec, exit_code, !timeout_not_occured,
-      std::chrono::duration_cast<std::chrono::microseconds>(finish - start),
-      std::make_shared<std::stringstream>(),
-      std::make_shared<std::stringstream>(),
-      ExecutionTracker::Get()->GetCoverage());
-}
-
-ExecutionDataSP Executor::ExecuteProcessAsyncStdInStrems(TestCase& input, int) {
-  ExecutionTracker::Get()->Reset();
-  ba::io_service ios;
-  std_write_handler std_in_handler(ios, 10 * 4096);
-  std_in_handler.Init(input);
-
-  //  for (int i = 0; i < 20 * 1000; ++i) {
-  //    volatile std_write_handler std_in_handler(ios, 10 * 4096);
-  //    volatile int a = 0;
-  //    for (int i = 0; i < 1000; ++i) {
-  //      a += i;
-  //    }
-  //  }
-
-  std::error_code ec;
-  boost::process::child sut;
-  boost::system::error_code boot_ec;
-  auto start = std::chrono::system_clock::now();
-
-  sut = boost::process::child(
-      sut_path_, input.string(), boost::process::std_out = boost::process::null,
-      boost::process::std_err = boost::process::null,
-      boost::process::std_in = std_in_handler.pipe(), sut_env_, ios, ec);
-
-  // does not work ;(
-  if (ec.value() != 0) {
-    std::cout << "ExecuteProcessStdInFile fallback " << ec.value();
-    return ExecuteProcessStdInFile(input);
-  }
-
-  // execution finished...execution_timeout_doest work here
-  auto timeout_not_occured = sut.wait_for(execution_timeout_, ec);
-  auto finish = std::chrono::system_clock::now();
-  if (!timeout_not_occured) {
-    sut.terminate(ec);
-    finish = std::chrono::system_clock::now();
-  }
-  auto exit_code = sut.exit_code();
-  //  ios.stop();
-  //  ios.reset();
-
-  return std::make_shared<ExecutionData>(
-      input, ec, exit_code, !timeout_not_occured,
-      std::chrono::duration_cast<std::chrono::microseconds>(finish - start),
-      std::make_shared<std::stringstream>(),
-      std::make_shared<std::stringstream>(),
-      ExecutionTracker::Get()->GetCoverage());
-}
-
-ExecutionDataSP Executor::ExecuteProcessAsyncStdInStrems(TestCase& input) {
-  ExecutionTracker::Get()->Reset();
-  ba::io_service ios;
-  std_write_handler std_in_handler(ios, 10 * 4096);
-  std_in_handler.Init(input);
-
-  //  for (int i = 0; i < 20 * 1000; ++i) {
-  //    volatile std_write_handler std_in_handler(ios, 10 * 4096);
-  //    volatile int a = 0;
-  //    for (int i = 0; i < 1000; ++i) {
-  //      a += i;
-  //    }
-  //  }
-
-  std::error_code ec;
-  boost::process::child sut;
-  boost::system::error_code boot_ec;
-  auto start = std::chrono::system_clock::now();
-
-  sut = boost::process::child(
-      sut_path_, input.string(), boost::process::std_out > boost::process::null,
-      boost::process::std_err > boost::process::null,
-      boost::process::std_in = std_in_handler.pipe(), sut_env_, ios);
-  //  ios_.run(boot_ec);
-  //
-  //  if (ec.value() != 0) {
-  //    volatile int debug = 5;
-  //    debug = 6;
-  //  }
-
-  // execution finished...execution_timeout_doest work here
-  auto timeout_not_occured = sut.wait_for(execution_timeout_, ec);
-  auto finish = std::chrono::system_clock::now();
-  if (!timeout_not_occured) {
-    sut.terminate(ec);
-    finish = std::chrono::system_clock::now();
-  }
-  auto exit_code = sut.exit_code();
-  //  ios.stop();
-  //  ios.reset();
-
-  return std::make_shared<ExecutionData>(
-      input, ec, exit_code, !timeout_not_occured,
-      std::chrono::duration_cast<std::chrono::microseconds>(finish - start),
-      std::make_shared<std::stringstream>(),
-      std::make_shared<std::stringstream>(),
-      ExecutionTracker::Get()->GetCoverage());
-}
-
-ExecutionDataSP Executor::ExecuteProcessAsyncStdAllStrems(TestCase& input) {
-  ExecutionTracker::Get()->Reset();
-  ba::io_service ios;
-
-  std_write_handler std_in_handler(ios, 10 * 4096);
-  std_read_handler std_out_handler(ios, 2 * 4096);
-  std_read_handler std_err_handler(ios, 2 * 4096);
-
-  std_in_handler.Init(input);
-  std::error_code ec;
-  boost::process::child sut;
-  boost::system::error_code boot_ec;
-
-  auto start = std::chrono::system_clock::now();
-  sut = boost::process::child(sut_path_, input.string(),
-                              boost::process::std_out > std_out_handler.pipe(),
-                              boost::process::std_err > std_err_handler.pipe(),
-                              boost::process::std_in < std_in_handler.pipe(),
-                              sut_env_, ios);
-
-  //  ios.run(boot_ec);
-  while (1) {
-    auto handlers = ios.poll_one(boot_ec);
-    if (boot_ec.value() != 0) {
-      volatile int dbeug = 1;
-      break;
-    }
-
-    auto now = std::chrono::system_clock::now();
-    if ((now - start) > execution_timeout_) {
-      volatile int dbeug = 1;
-      break;
-    }
-    //    handlers = ios.run_one(boot_ec);
-    //    if (boot_ec.value() != 0) {
-    //      volatile int dbeug = 1;
-    //      break;
-    //    }
-  }
-
-  //  ios.run_one(boot_ec);
-  auto timeout_not_occured = sut.wait_for(execution_timeout_, ec);
-  auto finish = std::chrono::system_clock::now();
-  if (!timeout_not_occured) {
-    sut.terminate(ec);
-    finish = std::chrono::system_clock::now();
-  }
-  auto exit_code = sut.exit_code();
-
-  std_in_handler.pipe().cancel();
-  std_out_handler.pipe().cancel();
-  std_err_handler.pipe().cancel();
-
-  std_in_handler.pipe().close();
-  std_out_handler.pipe().close();
-  std_err_handler.pipe().close();
-
-  return std::make_shared<ExecutionData>(
-      input, ec, exit_code, !timeout_not_occured,
-      std::chrono::duration_cast<std::chrono::microseconds>(finish - start),
-      std_out_handler.our_streamer, std_out_handler.our_streamer,
-      ExecutionTracker::Get()->GetCoverage());
-}
-
 ExecutionDataSP Executor::ExecuteProcessStdInFile(TestCase& input) {
   ExecutionTracker::Get()->Reset();
 
@@ -645,7 +300,6 @@ ExecutionDataSP Executor::ExecuteProcessAsyncStdAllStremsPoll(TestCase& input) {
   auto stdin_ap = bp::async_pipe(ios);
   async_handler stdin_handler = [&](const bs::error_code& ec, size_t n) {
     stdin_ap.async_close();
-
   };
   //  char nulls_arr[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
   //  ba::const_buffer cb(&nulls_arr[0], 0);

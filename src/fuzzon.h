@@ -23,6 +23,7 @@ class Fuzzon {
          const std::vector<std::string>& env_flags,
          int sut_runtime_timeout,
          Executor::Mode mode,
+         Coverage::TrackMode track_mode,
          int test_timeout,
          int max_testcases);
 

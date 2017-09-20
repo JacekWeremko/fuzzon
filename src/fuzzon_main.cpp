@@ -71,6 +71,10 @@ int main(int argc, char** argv) {
                      "PROCESS_ONLY_STDIN_ASYCN_STREAM=1"
                      "PROCESS_ALL_STD_ASYNC_STREAMS=2"
                      "THREAD=3");
+  desc.add_options()("monitor_mode", po::value<int>()->default_value(0),
+                     "Monitor mode : "
+                     "Raw=0"
+                     "Flow=1");
 
   desc.add_options()("alphabet", po::value<std::vector<std::string>>(),
                      "alphabet");
@@ -113,61 +117,14 @@ int main(int argc, char** argv) {
   auto total_testcases = vm["total_testcases"].as<int>();
   auto white_chars_preservation = vm["white_chars_preservation"].as<bool>();
   auto executor_mode = fuzzon::Executor::Mode(vm["executor_mode"].as<int>());
+  auto monitor_mode = fuzzon::Coverage::TrackMode(vm["monitor_mode"].as<int>());
 
   auto verbose_level = verbosity_values.length();
   Logger::Get(output_dir.string(), verbose_level);
 
-  //  std::string input_alphabet("abcd");
-  //  fuzzon::Random::Get()->SetAlphabet(input_alphabet);
   fuzzon::Fuzzon crazy_fuzzer(output_dir.string(), sut.string(),
                               std::move(env_flags), sut_timeout, executor_mode,
-                              test_timeout, total_testcases);
-
-  //  std::vector<std::string> samples = {"a",     "ab",     "abc",    "abcd",
-  //                                      "abcda", "abcdab", "abcdabc"};
-  //  for (auto& sample : samples) {
-  //    crazy_fuzzer.TestInput(sample);
-  //  }
-  //    std::vector<std::string> samples = {"0",
-  //                                        "1 0",
-  //                                        "1 1 1",
-  //                                        "1 5 1 1 1 1 1",
-  //                                        "1 21 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
-  //                                        1 1 1 1 1 1",
-  //                                        "2 3 1 2 3 21 1 1 1 1 1 1 1 1 1 1 1
-  //                                        1 1 1 1 1 1 1 1 1 1",
-  //                                        "2 21 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
-  //                                        1 1 1 1 1 1 21 1 1 1 1 1 1 1 1 1 1 1
-  //                                        "
-  //                                        "1 1 1 1 1 1 1 1 1 1"};
-  //  std::vector<std::string> samples = {"0", "1 0", "1 1 1", "1 5 1 1 1 1 1",
-  //  "1 4 1 1 1 1"};
-  //
-  //  for (auto& sample : samples) {
-  //    crazy_fuzzer.TestInput(sample);
-  //  }
-
-  //  const std::string alphabet("abcd");
-  //  std::string test = "";
-  //  crazy_fuzzer.TestInput(test);
-  //  for (int i = 0; i < alphabet.size(); ++i) {
-  //    for (int j = 0; j < alphabet.size(); ++j) {
-  //      for (int k = 0; k < alphabet.size(); ++k) {
-  //        for (int l = 0; l < alphabet.size(); ++l) {
-  //          test = "";
-  //          test += alphabet[i];
-  //          test += alphabet[j];
-  //          test += alphabet[k];
-  //          test += alphabet[l];
-  //          crazy_fuzzer.TestInput(test);
-  //        }
-  //      }
-  //    }
-  //  }
-
-  //  for (auto i = 0; i < 5; ++i) {
-  //    crazy_fuzzer.TestInput("abcd abcd abcd ");
-  //  }
+                              monitor_mode, test_timeout, total_testcases);
 
   crazy_fuzzer.ScanCorpus(corpus_base.string());
   crazy_fuzzer.Generation(input_format.string(), generate);

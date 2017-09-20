@@ -29,13 +29,18 @@ Fuzzon::Fuzzon(std::string output_dir,
                const std::vector<std::string>& env_flags,
                int sut_runtime_timeout,
                Executor::Mode mode,
+               Coverage::TrackMode track_mode,
                int test_timeout,
                int max_testcases)
     : output_dir_(output_dir),
       test_timeout_(std::chrono::milliseconds(test_timeout)),
       max_testcases_(max_testcases),
       corpus_(output_dir),
-      execution_monitor_(sut_path, env_flags, sut_runtime_timeout, mode) {
+      execution_monitor_(sut_path,
+                         env_flags,
+                         sut_runtime_timeout,
+                         mode,
+                         track_mode) {
   LOG_INFO("Base directory is " + output_dir_);
 }
 

@@ -31,7 +31,7 @@ class ExecutionTracker {
 
   template <typename valueT>
   void TraceCmp(uintptr_t pc, valueT arg1, valueT arg2) {
-    //    cov_->TraceData(pc, arg1 ^ arg2);
+    // cov_->TraceData(pc, arg1 ^ arg2);
     cov_->TraceCmp(pc, arg1, arg2);
   }
 

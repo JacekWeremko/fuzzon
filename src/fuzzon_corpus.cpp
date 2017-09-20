@@ -182,7 +182,7 @@ std::stringstream Corpus::GetShortStats() {
 
 std::stringstream Corpus::GetFullStats() {
   std::stringstream stats;
-  // yeayh...cashing those data would be usefull...
+  // yey...cashing those data would be useful...
   stats << std::endl
         << "Campaign Summary : " << std::endl
         << "  Test cases: " << summary_.test_cases << std::endl

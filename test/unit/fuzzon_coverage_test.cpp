@@ -50,8 +50,8 @@ void VerifyOperatorDoubleEqualReturnTrueForSimilarCompresedDataImpl() {
   fuzzon::Coverage base(fuzzon::Coverage::Raw);
   fuzzon::Coverage test(fuzzon::Coverage::Raw);
 
-  base.SetPCLimit(20);
-  test.SetPCLimit(20);
+  base.SetPCGuardsCount(20);
+  test.SetPCGuardsCount(20);
   for (size_t i = 0; i < 10; i++) {
     base.TracePC(i);
     base.TracePC(i);
@@ -83,7 +83,7 @@ void VerifyIfIsTheSameReturnTrueForTheSameDataImpl() {
     test.TracePC(i);
   }
 
-  BOOST_TEST(base.IsTheSame(test));
+  BOOST_TEST(base.IsPcFlowTheSame(test));
   return;
 }
 
@@ -97,7 +97,7 @@ void VerifyIfIsTheSameReturnFalseForTheDifferentDataImpl() {
   }
   test.TracePC(6);
 
-  BOOST_TEST(!base.IsTheSame(test));
+  BOOST_TEST(!base.IsPcFlowTheSame(test));
   return;
 }
 
@@ -120,7 +120,7 @@ void VerifyIfIsTheSameReturnTrueForSimilarCompresedDataImpl() {
   base.Compress(fuzzon::Coverage::Log2);
   test.Compress(fuzzon::Coverage::Log2);
 
-  BOOST_TEST(base.IsTheSame(test));
+  BOOST_TEST(base.IsPcFlowTheSame(test));
   return;
 }
 

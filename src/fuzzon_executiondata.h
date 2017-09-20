@@ -39,9 +39,7 @@ struct ExecutionData {
         std_out(std::move(std_out)),
         std_err(std::move(std_err)),
         path(*cov),
-        //        mutatation_exhausted(false),
         path_execution_coutner_(1) {
-    //        mutation_counter_(0) {
     path.Compress();
     path.ComputeHash();
   }
@@ -93,7 +91,8 @@ struct CampaignSummary {
         none_zero_error_code(0),
         none_zero_return_code(0),
         timeout(0),
-        crash(0) {}
+        crash(0),
+        total_cov(Coverage::Raw) {}
   int test_cases;
   int none_zero_error_code;
   int none_zero_return_code;
