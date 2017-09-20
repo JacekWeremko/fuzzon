@@ -1,33 +1,59 @@
+import os
 import argparse
 from bs4 import builder
 
 
-def run_blocking(args, poll_stdout = False):
+def run_blocking(args, poll_stdout = False, outfile_path = None):
     import subprocess   
+    import unicodedata
     
     proc = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     
-    
+    decoding = "utf-16"
+    stdout = ""
+    stderr = ""
     if (poll_stdout is True):
         import sys
         while True:
             line = proc.stdout.readline()
-#             if line == '' and proc.poll() is not None:
-            if line == b'' and proc.poll() == 0:
+            if line == b'' and proc.poll() is not None:
+#             if line == b'' and proc.poll() is not  0:
                 break
-            sys.stdout.write(line.decode("utf-8"))
+#             
+            write_me = str(line)
+            write_me = write_me[2:-1]
+            write_me = write_me[0:-2]
+            write_me = write_me + '\r\n'
+             
+#             line = line.decode("utf-8")
+#             stdout += line.decode(decoding)
+            stdout += write_me
+#             print(str(line))
+            sys.stdout.write(write_me)
             sys.stdout.flush()
-
+            
         
-    stdout, stderr = proc.communicate()  
+    pstdout, pstderr = proc.communicate()  
+#     stdout = stdout + pstdout.decode(decoding)
+#     stderr = stderr + pstderr.decode(decoding)
+    stdout = stdout + str(pstdout)
+    stderr = stderr + str(pstderr)
+    if (outfile_path is not None):
+        with open(outfile_path, 'a+') as output_file:
+            if (len(stdout) != 0):
+                output_file.write(stdout)
+            if (len(stderr) != 0):
+                output_file.write("STRERR:")
+                output_file.write(stderr)
+
     if(proc.returncode != 0):
         print("args: " + str(args))
         print("return_code: " + str(proc.returncode))
         
         if (len(stdout) != 0):
-            print("stdout: " + stdout.decode("utf-8"))
+            print("stdout: " + stdout)
         if (len(stderr) != 0):
-            print("stderr: " + stderr.decode("utf-8"))   
+            print("stderr: " + stderr)   
     return proc.returncode
 
 class Builder(object):
@@ -37,14 +63,12 @@ class Builder(object):
 
       
     def build_dir(self, source_dir, fuzzonlib, cflags, lflags, mode):
-        import os
-        
         output_files = []
         if (source_dir is not None) : 
             for file in os.listdir(source_dir):
                 if file.endswith(".cpp"):
                     new_source_file = os.path.join(source_dir, file)
-                    output_files += self.build_single(new_source_file, None, fuzzonlib, cflags, lflags, mode)
+                    output_files.append(self.build_single(new_source_file, None, fuzzonlib, cflags, lflags, mode))
         return output_files
     
     def build_single(self, source_file, output_file, fuzzonlib, cflags, lflags, mode):    
@@ -63,14 +87,12 @@ class Builder(object):
         if (retcode != 0):
             return
 #         print("output_file : " + output_file)
-        return [output_file]
+        return output_file
 
     def _change_main_name(self, obj_file): 
         main_func_name = "main"
 
-    def _compile(self, source_file, cflags):
-        import os
-        
+    def _compile(self, source_file, cflags):     
         file_name_wo_ext = os.path.splitext(source_file)[0]
         dir_name = os.path.join(os.path.dirname(source_file), self.OUTPUT_FOLDER_NAME)
         file_name = os.path.basename(file_name_wo_ext)
@@ -94,6 +116,10 @@ class Builder(object):
         cflags.append("-S")
         cflags.append("-emit-llvm")
         cflags.append("-fsanitize-coverage=edge,trace-pc-guard")
+        cflags.append("-fsanitize-coverage=trace-cmp")
+#         cflags.append("-fsanitize-coverage=trace-gep")
+        
+         
 #         cflags.append("-fsanitize=address")
 #         cflags.append("-fno-omit-frame-pointer")
 #         cflags.append("-fsanitize-address-use-after-scope")
@@ -113,9 +139,7 @@ class Builder(object):
         return retcode, obj_file
         
     
-    def _link(self, obj_file, output_file, fuzzonlib, lflags):
-        import os
-        
+    def _link(self, obj_file, output_file, fuzzonlib, lflags):       
         if (output_file is None):
             output_file = os.path.splitext(obj_file)[0]
             
@@ -149,8 +173,6 @@ class Builder(object):
         return retcode, output_file
     
     def _linkful(self, obj_file, output_file, fuzzonlib, lflags):
-        import os
-        
         if (output_file is None):
             output_file = os.path.splitext(obj_file)[0]
             
@@ -189,47 +211,118 @@ class Builder(object):
             print("Successfully linked.")            
         return retcode, output_file
     
-
-def test(level, sut_list, input_format, additional_options, fuzzonexe, iterations):
-    import os
+class Tester(object):
     FUZZON_NAME = "fuzzon"
     
-    if (fuzzonexe is None):
-        fuzzonexe = FUZZON_NAME
-    
-    if (level is None):
-        level = "default"
-            
-    if (additional_options is None):
-        additional_options = []
+    def __init__(self, fuzzonexe):
+        import datetime
         
-    additional_options.extend(["-vvvv"])
-    if (level == "touch"):
-        additional_options.extend(["--generate", 25])
-        additional_options.extend(["--mutate_d", 0])
-        additional_options.extend(["--mutate_nd", 50])
-    elif (level == "full"):   
-        additional_options.extend(["--generate", 5000])
-        additional_options.extend(["--mutate_d", 1])
-        additional_options.extend(["--mutate_nd", 50000])
-
-    additional_options.extend(["--single_test_timeout", 20])
-    additional_options.extend(["--total_timeout", 1000 * 60 * 5])
-    for sut in sut_list:
+        if (fuzzonexe is None):
+            self.fuzzonexe = self.FUZZON_NAME
+        else:  
+            self.fuzzonexe = fuzzonexe
+            
+        self.start_test_datatime = str(datetime.datetime.now()).replace(" ", "_")
+        self.predefined_options = {
+            "touch" : ["--generate", 25] +   ["--mutate_d", 0] + ["--mutate_nd", 100]    + ["--total_timeout", 1000 * 60 * 1],
+            "medium": ["--generate", 1000] + ["--mutate_d", 0] + ["--mutate_nd", 1000]   + ["--total_timeout", 1000 * 60 * 5],
+            "full"  : ["--generate", 2500] + ["--mutate_d", 1] + ["--mutate_nd", 100000] + ["--total_timeout", 1000 * 60 * 30]
+        } 
+        
+    def _get_basic_options(self, level):
+        if (level is None):
+            level = "default"
+        
+        options = []
+        options.extend(["-vvvv"])
+        if (level == "touch"):
+            options.extend(self.predefined_options["touch"]);
+        if (level == "medium"):
+            options.extend(self.predefined_options["medium"]);
+        elif (level == "full"):  
+            options.extend(self.predefined_options["full"]);
+        options.extend(["--single_test_timeout", 50])
+        options.extend(["--total_testcases", 1000000])
+        return options
+    
+    def _output_base_dir(self, sut):
+        sut_basepath = os.path.dirname(sut)
+        output_base = os.path.join(sut_basepath, 
+#                                    self.FUZZON_NAME + "_out", 
+                                    "test_results",
+                                   self.start_test_datatime)
+        os.makedirs(output_base, exist_ok=True)
+        return output_base
+    
+    def _output_sut_dir(self, sut):
+        sut_exe_name = os.path.basename(sut)    
+        output_base = os.path.join(self._output_base_dir(sut), sut_exe_name)
+        os.makedirs(output_base, exist_ok=True)
+        return output_base
+                
+    def test_single(self, sut, input_format, level, additional_options, iterations):
+        if (additional_options is None):
+            additional_options = [str(elem) for elem in self._get_basic_options(level)]
+    
+        # this is agrh ;(
+        summary_file_path = os.path.join(self._output_base_dir(sut), "summary.txt")
+        
+        per_sut_additional_options = []
+        per_sut_additional_options.extend(additional_options)
+        per_sut_additional_options.extend(["--out", self._output_sut_dir(sut)])  
+        
         args = []
-        args.append(fuzzonexe)
+        args.append(self.fuzzonexe)
         args.extend(["--sut", sut])
         args.extend(["--input_format", input_format])
+        args.extend(per_sut_additional_options)
         
-        additional_options = [str(elem) for elem in additional_options]
-        args.extend(additional_options)
-        
-        print("Fuzzon campaign start: " + str(args))
+        print("Fuzzon testing start: " + str(args))
         for i in range(0, iterations):
-            retcode = run_blocking(args, True)
+            retcode = run_blocking(args, True, summary_file_path)
             print("Finished! retcode :" + str(retcode))
-        print("Fuzzon campaign end.")   
-    return 
+        print("Fuzzon testing end.")   
+        return 
+    
+    def test_campaign(self, sut_list, input_format, level, additional_options, iterations):
+        if (additional_options is None):
+            additional_options = [str(elem) for elem in self._get_basic_options(level)]
+    
+        sut_list = sorted(sut_list)
+        print("Fuzzon campaign start")
+        for sut in sut_list:
+            self.test_single(sut, input_format, level, additional_options, iterations)
+        print("Fuzzon campaign end.")      
+        return 
+#     
+#     def test_campaign(self, sut_list, input_format, level, additional_options, iterations):
+#         if (additional_options is None):
+#             additional_options = [str(elem) for elem in self._get_basic_options(level)]
+#         
+# 
+#         for sut in sut_list:
+#             args = []
+#             args.append(fuzzonexe)
+#             args.extend(["--sut", sut])
+#             args.extend(["--input_format", input_format])
+#             
+#             sut_basepath = os.path.dirname(sut)
+#             sut_exe_name = os.path.basename(sut)
+#             
+#             output_base = os.path.join(sut_basepath, (FUZZON_NAME + "_" + sut_exe_name), str(datetime.datetime.now()).replace(" ", "_"))
+#             additional_options.extend(["--out", output_base]) 
+#             additional_options.extend(["--corpus_seeds", os.path.join(output_base, "corpus")])   
+#             
+#             
+#             args.extend(additional_options)
+#             
+#             print("Fuzzon campaign start: " + str(args))
+#             for i in range(0, iterations):
+#                 retcode = run_blocking(args, True)
+#                 print("Finished! retcode :" + str(retcode))
+#             print("Fuzzon campaign end.")   
+#         return 
+
 
 
 def main():
@@ -252,15 +345,15 @@ def main():
     group_build.add_argument('--source_dir',    type=str, action='store',  required=False, help="Path to directory with source files. For each cpp file is threaded as separate project.")
     
     
-    group_test = parser.add_argument_group("campaign", description="Start campaign")
-    group_test.add_argument("--test",           dest='test',action='store_true',  required=False, help="Path to software under test.")
-    group_test.add_argument("--iterations",     type=int,   action='store',       required=False, help="Number of testing campaigns.")
+    group_test = parser.add_argument_group("test", description="Testing options.")
+    group_test.add_argument("--test_single",    dest='test_single',action='store_true',  required=False, help="Simple tests.")
+    group_test.add_argument("--test_campaign",  dest='test_campaign',action='store_true',  required=False, help="Testing campaign.")
+    group_test.add_argument("--iterations",     type=int,   action='store',       required=False, help="Number of testing iterations.")
     group_test.add_argument("--fuzzonexe",      type=str,   action='store',       required=False, help="Path to fuzzon executable.")
     group_test.add_argument("--sut",            type=str,   action='store',       required=False, help="Path to software under test.")
     group_test.add_argument("--input_format",   type=str,   action='store',       required=False, help="Path to SUT input format file.")
     group_test.add_argument("--level",          type=str,   action='store',       required=False, help="Select testing level - touch, default, full")
     
-
 
     args = parser.parse_args()
     print(args)
@@ -268,19 +361,23 @@ def main():
 
     if (args.mode == "build_single"):
         builder = Builder()
-        outputs = builder.build_single(args.source_file, args.output_file, args.fuzzonlib, args.cflag, args.lflag, args.execution_mode)
+        sut_list = [builder.build_single(args.source_file, args.output_file, args.fuzzonlib, args.cflag, args.lflag, args.execution_mode)]
     elif (args.mode == "build_dir"):
         builder = Builder()
-        outputs = builder.build_dir(args.source_dir, args.fuzzonlib, args.cflag, args.lflag, args.execution_mode)
+        sut_list = builder.build_dir(args.source_dir, args.fuzzonlib, args.cflag, args.lflag, args.execution_mode)
     
+
     
     additional_options = None
-
-    if (args.test):
-        test(args.level, outputs, args.input_format, additional_options, args.fuzzonexe, args.iterations)
+    if (args.test_single):
+        tester = Tester( args.fuzzonexe)
+        tester.test_single(sut_list[0], args.input_format, args.level, additional_options, args.iterations)
+    if (args.test_campaign):
+        tester = Tester( args.fuzzonexe)
+        tester.test_campaign(sut_list, args.input_format, args.level, additional_options, args.iterations)
     elif (args.sut) :        
-        outputs = [args.sut]
-        test(args.level, outputs, args.input_format, additional_options, args.fuzzonexe, args.iterations)
+        tester = Tester( args.fuzzonexe)
+        tester.test_single(args.sut, args.input_format, args.level, additional_options, args.iterations)
         
     print("Finish.")
     return
