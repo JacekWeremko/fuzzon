@@ -135,13 +135,18 @@ void Fuzzon::MutationDeterministic(int level, bool white_chars_preservation) {
     }
 
     // walking: simple arithmetic
-    for (auto value = -35; value <= 35; value += (2 * 35)) {
-      for (auto byte_idx = 0; byte_idx < favorite->length_byte(); ++byte_idx) {
-        auto mutate_me = TestCase(*favorite, TestCase::MutationDeterministic);
-        if (test_cases_mutator.SimpleArithmetics(mutate_me, byte_idx, value)) {
-          auto execution_data = execution_monitor_.ExecuteBlocking(mutate_me);
-          corpus_.AddIfInteresting(execution_data);
-          //          favorite->increased_mutation_counter();
+    for (auto exp = 0; exp <= 2; ++exp) {
+      const auto word_size = std::pow(2, exp);
+      for (auto value = -35; value <= 35; value += (2 * 35)) {
+        for (auto byte_idx = 0; byte_idx < favorite->length_byte();
+             ++byte_idx) {
+          auto mutate_me = TestCase(*favorite, TestCase::MutationDeterministic);
+          if (test_cases_mutator.SimpleArithmetics(mutate_me, byte_idx, value,
+                                                   word_size)) {
+            auto execution_data = execution_monitor_.ExecuteBlocking(mutate_me);
+            corpus_.AddIfInteresting(execution_data);
+            //          favorite->increased_mutation_counter();
+          }
         }
       }
     }
@@ -149,13 +154,18 @@ void Fuzzon::MutationDeterministic(int level, bool white_chars_preservation) {
     // std::vector<int> interesting_limits = { 1, 7,8,9, 15,16,17, 31,32,33,
     // 63,64,65, 127,128,129 };
     std::vector<int> interesting_limits = {-1, 16, 32, 64, 127};
-    for (const auto& value : interesting_limits) {
-      for (auto byte_idx = 0; byte_idx < favorite->length_byte(); ++byte_idx) {
-        auto mutate_me = TestCase(*favorite, TestCase::MutationDeterministic);
-        if (test_cases_mutator.KnownIntegers(mutate_me, byte_idx, value)) {
-          auto execution_data = execution_monitor_.ExecuteBlocking(mutate_me);
-          corpus_.AddIfInteresting(execution_data);
-          //          favorite->increased_mutation_counter();
+    for (auto exp = 0; exp <= 2; ++exp) {
+      const auto word_size = std::pow(2, exp);
+      for (const auto& value : interesting_limits) {
+        for (auto byte_idx = 0; byte_idx < favorite->length_byte();
+             ++byte_idx) {
+          auto mutate_me = TestCase(*favorite, TestCase::MutationDeterministic);
+          if (test_cases_mutator.KnownIntegers(mutate_me, byte_idx, value,
+                                               word_size)) {
+            auto execution_data = execution_monitor_.ExecuteBlocking(mutate_me);
+            corpus_.AddIfInteresting(execution_data);
+            //          favorite->increased_mutation_counter();
+          }
         }
       }
     }
@@ -231,14 +241,18 @@ void Fuzzon::MutationNonDeterministic(int test_cases_to_mutate,
           }
           case 2: {
             auto byte_idx = Random::Get()->GenerateInt(1, mutate_me.size());
-            auto value = Random::Get()->GenerateChar();
-            auto success = engine.SimpleArithmetics(mutate_me, byte_idx, value);
+            auto value = Random::Get()->GenerateInt();
+            auto count = Random::Get()->GenerateInt(1, 4);
+            auto success =
+                engine.SimpleArithmetics(mutate_me, byte_idx, value, count);
             break;
           }
           case 3: {
             auto byte_idx = Random::Get()->GenerateInt(1, mutate_me.size());
-            auto value = Random::Get()->GenerateChar();
-            auto success = engine.KnownIntegers(mutate_me, byte_idx, value);
+            auto value = Random::Get()->GenerateInt();
+            auto count = Random::Get()->GenerateInt(1, 4);
+            auto success =
+                engine.KnownIntegers(mutate_me, byte_idx, value, count);
             break;
           }
           case 4: {
