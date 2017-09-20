@@ -1,0 +1,25 @@
+{
+  "properties": {
+    "array_len": 2,
+    "array_items": {
+      "items": {
+        "properties": {
+          "example_random_string": "8V",
+          "example_random_int": 6734,
+          "example_constant_string": "\n"
+        }
+      },
+      "items": {
+        "properties": {
+          "example_random_string": "Aihdwp",
+          "example_random_int": -432896,
+          "example_constant_string": "\n"
+        }
+      }
+    }
+  }
+}
+
+
+
+

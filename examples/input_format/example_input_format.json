@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/schema#",
+  "id": "json schema example",
+  "properties": {
+    "array_len": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 3
+    },
+    "array_items": {
+      "type": "array",
+      "length": {
+        "$ref": "/properties/arrays_len"
+      },
+      "items": {
+        "properties": {
+          "example_random_string": {
+            "type": "string",
+            "minimum": 1,
+            "maximum": 7
+          },
+          "example_random_int": {
+            "type": "integer"
+          },
+          "example_constant_string": {
+            "type": "string",
+            "content": "\n"
+          }
+        }
+      }
+    }
+  }
+}
+
+
