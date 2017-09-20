@@ -17,36 +17,50 @@ Coverage::Coverage(TrackMode mode)
       pc_total_(std::numeric_limits<uint32_t>::max()),
       pc_visited_(0),
       last_pc_(0) {
-  pc_flow_.fill(0);
+  flow_pcs_.fill(0);
+  flow_data_.fill(0);
 }
 
 void Coverage::Reset() {
   pc_visited_ = 0;
   last_pc_ = 0;
-  pc_flow_.fill(0);
+  flow_pcs_.fill(0);
+  flow_data_.fill(0);
+  hash_pcs_.fill(0);
+  hash_data_.fill(0);
 }
 
 void Coverage::Compress(CompreseMode comprese_mode) {
   if (comprese_mode == CompreseMode::Log2) {
-    for (auto& elem : pc_flow_) {
+    for (auto& elem : flow_pcs_) {
       if (elem == 0) {
         continue;
       }
       elem = std::log2(elem) + 1;
       pc_visited_++;
     }
+    //
+    //    //    for (auto& elem : flow_data_) {
+    //    //      if (elem == 0) {
+    //    //        continue;
+    //    //      }
+    //    //      elem = std::log2(elem) + 1;
+    //    //    }
   }
 }
 
 void Coverage::ComputeHash() {
-  MD5(reinterpret_cast<const unsigned char*>(pc_flow_.data()),
-      pc_flow_.size() * sizeof(pc_flow_[0]), hash_.data());
+  MD5(reinterpret_cast<const unsigned char*>(flow_pcs_.data()),
+      flow_pcs_.size() * sizeof(flow_pcs_[0]), hash_pcs_.data());
+
+  MD5(reinterpret_cast<const unsigned char*>(flow_data_.data()),
+      flow_data_.size() * sizeof(flow_data_[0]), hash_data_.data());
 }
 
 void Coverage::Merge(const Coverage& merge_me) {
   pc_total_ = merge_me.pc_total_;
-  for (size_t idx = 0; idx < pc_flow_.size(); idx++) {
-    pc_flow_[idx] += merge_me.pc_flow_[idx];
+  for (size_t idx = 0; idx < flow_pcs_.size(); idx++) {
+    flow_pcs_[idx] += merge_me.flow_pcs_[idx];
   }
 }
 
@@ -57,8 +71,8 @@ int Coverage::GetTotalPCCounter() const {
 
 int Coverage::GetVisitedPCCounter() {
   pc_visited_ = 0;
-  for (size_t idx = 0; idx < pc_flow_.size(); ++idx) {
-    if (pc_flow_[idx]) {
+  for (size_t idx = 0; idx < flow_pcs_.size(); ++idx) {
+    if (flow_pcs_[idx]) {
       pc_visited_ += 1;
     }
   }
@@ -66,41 +80,51 @@ int Coverage::GetVisitedPCCounter() {
 }
 
 bool Coverage::operator==(const Coverage& compare_with_me) const {
-  return hash_ == compare_with_me.hash_;
+  auto pcs_match = hash_pcs_ == compare_with_me.hash_pcs_;
+  auto data_match = hash_data_ == compare_with_me.hash_data_;
+  return pcs_match && data_match;
 }
 
 bool Coverage::operator!=(const Coverage& compare_with_me) const {
   return !(*this == compare_with_me);
 }
 
-bool Coverage::IsTheSame(const Coverage& compare_with_me) const {
-  for (size_t idx = 0; idx < pc_flow_.size(); idx++) {
-    if (pc_flow_[idx] != compare_with_me.pc_flow_[idx]) {
+bool Coverage::IsPcFlowTheSame(const Coverage& compare_with_me) const {
+  for (size_t idx = 0; idx < flow_pcs_.size(); idx++) {
+    if (flow_pcs_[idx] != compare_with_me.flow_pcs_[idx]) {
       return false;
     }
   }
   return true;
 }
 
-void Coverage::SetPCLimit(size_t value) {
-  std::cout << value << std::endl;
+bool Coverage::IsDataFlowTheSame(const Coverage& compare_with_me) const {
+  for (size_t idx = 0; idx < flow_data_.size(); idx++) {
+    if (flow_data_[idx] != compare_with_me.flow_data_[idx]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+void Coverage::SetPCGuardsCount(size_t value) {
+  LOG_DEBUG("SetPCGuardsCount : " + std::to_string(value));
   pc_total_ = value;
 }
 
-void Coverage::TracePC(uintptr_t PC) {
+void Coverage::TracePC(uintptr_t pc) {
   uintptr_t current = 0;
   if (mode_ == TrackMode::Raw) {
-    current = PC;
+    current = pc;
   } else {
-    current = last_pc_ == 0 ? PC : (PC ^ last_pc_);
+    current = last_pc_ == 0 ? pc : (pc ^ last_pc_);
   }
-
-  TracePC(current % pc_flow_.size(), PC);
+  TracePC(current, pc);
 }
 
-void Coverage::TracePC(uint32_t idx, uintptr_t PC) {
-  pc_flow_[idx]++;
-  last_pc_ = PC >> 1;
+void Coverage::TracePC(uint32_t idx, uintptr_t pc) {
+  flow_pcs_[idx % flow_pcs_.size()]++;
+  last_pc_ = pc >> 1;
 }
 
 void Coverage::PrintTrace() const {

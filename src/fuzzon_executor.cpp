@@ -17,6 +17,7 @@
 #include <boost/signals2.hpp>
 #include <boost/asio.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
+//#include <boost/iostreams/filtering_streambuf.hpp>
 #include <iostream>
 #include <string>
 #include <sstream>
@@ -585,7 +586,7 @@ ExecutionDataSP Executor::ExecuteProcessStdInFile(TestCase& input) {
   int exit_code = bp::system(sut_path_, sut_env_, input.string(),
                              boost::process::std_out > boost::process::null,
                              boost::process::std_err > boost::process::null,
-                             boost::process::std_in < input_file_path);
+                             boost::process::std_in = input_file_path);
   auto finish = std::chrono::system_clock::now();
 
   static int counter = 0;
@@ -638,36 +639,43 @@ ExecutionDataSP Executor::ExecuteProcessAsyncStdAllStremsPoll(TestCase& input) {
     }
   };
 
-  auto stdin_ap_buffer = ba::buffer(input.string());
+  boost::process::detail::posix::file_descriptor null_source{
+      "/dev/null", boost::process::detail::posix::file_descriptor::read};
+
   auto stdin_ap = bp::async_pipe(ios);
   async_handler stdin_handler = [&](const bs::error_code& ec, size_t n) {
     stdin_ap.async_close();
+
   };
+  //  char nulls_arr[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+  //  ba::const_buffer cb(&nulls_arr[0], 0);
+  //  boost::process::detail::posix::file_descriptor null_source{
+  //      "/dev/null", boost::process::detail::posix::file_descriptor::read};
 
   auto start = std::chrono::system_clock::now();
   boost::process::child sut(
       sut_path_, input.string(), sut_env_, boost::process::std_out > stdout_ap,
       boost::process::std_err > stderr_ap, boost::process::std_in < stdin_ap);
 
-  ba::async_write(stdin_ap, stdin_ap_buffer, stdin_handler);
+  ba::async_write(stdin_ap, ba::buffer(input.string()), stdin_handler);
   ba::async_read(stdout_ap, stdout_ap_buffer, stdout_handler);
   ba::async_read(stderr_ap, stderr_ap_buffer, stderr_handler);
 
   std::error_code ec;
   boost::system::error_code boot_ec;
   while (true) {
-    auto now = std::chrono::system_clock::now();
-    if ((now - start > execution_timeout_) || !sut.running()) {
-      break;
-    }
-
-    ios.poll_one(boot_ec);
+    ios.poll(boot_ec);
     if (boot_ec.value()) {
       break;
     }
 
     if (ios.stopped()) {
       ios.reset();
+    }
+
+    auto now = std::chrono::system_clock::now();
+    if (((now - start) > execution_timeout_) || !sut.running()) {
+      break;
     }
   }
 
@@ -683,6 +691,84 @@ ExecutionDataSP Executor::ExecuteProcessAsyncStdAllStremsPoll(TestCase& input) {
       input, ec, exit_code, timeout_occured,
       std::chrono::duration_cast<std::chrono::microseconds>(finish - start),
       std::move(sut_std_out), std::move(sut_std_err),
+      ExecutionTracker::Get()->GetCoverage());
+}
+
+ExecutionDataSP Executor::ExecuteProcessSyncStdAllStremsPoll(TestCase& input) {
+  bp::pipe pipe_in;
+  bp::pipe pipe_out;
+  bp::pipe pipe_err;
+
+  auto int_str = input.string();
+  pipe_in.write(int_str.c_str(), int_str.size());
+
+  auto start = std::chrono::system_clock::now();
+  boost::process::child sut(
+      sut_path_, input.string(), sut_env_, boost::process::std_out > pipe_out,
+      boost::process::std_err > pipe_err, boost::process::std_in < pipe_in);
+
+  while (!pipe_in.is_open()) {
+    boost::this_thread::yield();
+  }
+
+  std::error_code ec;
+  boost::system::error_code boot_ec;
+  while (true) {
+    auto now = std::chrono::system_clock::now();
+    if ((now - start > execution_timeout_) || !sut.running()) {
+      break;
+    }
+    boost::this_thread::yield();
+  }
+
+  if (sut.running()) {
+    sut.terminate(ec);
+    std::cout << "terminate";
+  }
+
+  std::string output;
+  {
+    char output_char[256] = {0};
+    while (true) {
+      auto read_len = ::read(pipe_out.native_source(), &output_char[0], 256);
+      if (read_len <= 0) {
+        break;
+      }
+      output += std::string(&output_char[0], read_len);
+    }
+  }
+
+  std::string error;
+  {
+    char outerr_char[256] = {0};
+    while (true) {
+      auto read_len = ::read(pipe_err.native_source(), &outerr_char[0], 256);
+      if (read_len <= 0) {
+        break;
+      }
+      error += std::string(&outerr_char[0], read_len);
+    }
+  }
+
+  if (output != "") {
+    //    std::cout << "output: " << output << std::endl;
+    std::cout << "o";
+  }
+
+  if (error != "") {
+    std::cout << "e";
+    //    std::cout << "error: " << error << std::endl;
+  }
+
+  auto finish = std::chrono::system_clock::now();
+  auto timeout_occured = ((finish - start) > execution_timeout_);
+  auto exit_code = sut.exit_code();
+
+  return std::make_shared<ExecutionData>(
+      input, ec, exit_code, timeout_occured,
+      std::chrono::duration_cast<std::chrono::microseconds>(finish - start),
+      std::make_shared<std::stringstream>(),
+      std::make_shared<std::stringstream>(),
       ExecutionTracker::Get()->GetCoverage());
 }
 

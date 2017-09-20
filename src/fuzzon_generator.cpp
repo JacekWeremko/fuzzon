@@ -19,6 +19,7 @@
 #include <sstream>
 #include <regex>
 #include <vector>
+#include <utility>
 
 #include "./fuzzon_random.h"
 #include "./utils/logger.h"
@@ -54,28 +55,98 @@ TestCase Generator::generateNext() {
   std::stringstream input_stripped;
   int result = StripJson(intput_data, input_stripped);
   BOOST_ASSERT(result == 0);
-
   LOG_DEBUG("Stripped input data :" + input_stripped.str());
-  return TestCase(input_stripped.str(), TestCase::Generation);
+  std::string in = std::string(input_stripped.str() + '\0');
+
+  return TestCase(in, TestCase::Generation);
+
+  //  std::vector<char> input_stripped;
+  //  int result = StripJson(intput_data, input_stripped);
+  //  BOOST_ASSERT(result == 0);
+  //
+  //  std::string str(input_stripped.begin(), input_stripped.end());
+  //  LOG_DEBUG("Stripped input data :" + str);
+  //  std::string in = std::string(str + '\0');
+  //
+  //  return TestCase(std::move(input_stripped), TestCase::Generation);
+}
+
+// std::string GetElementType()
+
+std::string FindType(const rapidjson::Value& current) {
+  auto name = std::string("");
+  {
+    auto mtype = current.FindMember("type");
+    if (mtype == current.MemberEnd()) {
+      name = "object";
+    } else {
+      name = std::string(mtype->value.GetString());
+    }
+  }
+  return name;
+}
+
+int Generator::TryFindMin(const rapidjson::Value& current) {
+  auto min = current.FindMember("minimum");
+  auto min_value = min == current.MemberEnd() ? -1 : min->value.GetInt();
+  return min_value;
+}
+
+int Generator::TryFindMax(const rapidjson::Value& current) {
+  auto max = current.FindMember("maximum");
+  auto max_value = max == current.MemberEnd() ? -1 : max->value.GetInt();
+  return max_value;
+}
+
+int Generator::TryFindLength(rapidjson::Document& new_doc,
+                             const rapidjson::Value& current) {
+  auto array_length = 0;
+  const auto length = current.FindMember("length");
+  PrintJson("FindMember ", length);
+
+  if (length->value.IsObject()) {
+    const auto length_ref = length->value.FindMember("$ref");
+    PrintJson("FindMember ", length_ref);
+
+    auto length_value_ptr = rapidjson::Pointer(length_ref->value.GetString());
+    auto array_length_value = GetLast(new_doc, length_value_ptr);
+    PrintJson("array_length", *array_length_value);
+
+    array_length = array_length_value->GetInt();
+  } else if (length->value.IsNumber()) {
+    array_length = length->value.GetInt();
+  } else {
+    LOG_CRITICAL("Array length handling supports only refs and integers.");
+  }
+  return array_length;
+}
+
+std::string Generator::TryFindContent(const rapidjson::Value& current) {
+  const auto content = current.FindMember("content");
+
+  if (content == current.MemberEnd()) {
+    LOG_TRACE("Content not found. fallback")
+    return "";
+  }
+  PrintJson("FindMember ", content);
+  return std::string((content->value.GetString()));
 }
 
 int Generator::ParseJson(rapidjson::Value& current,
-                         rapidjson::Document& new_document,
-                         rapidjson::Value& new_document_current) {
+                         rapidjson::Document& new_doc,
+                         rapidjson::Value& last_child) {
   if (!current.IsObject()) {
     LOG_CRITICAL(std::string(current.GetString()) + " is not an object!");
     return -1;
   }
 
-  for (auto cuttent_it = current.MemberBegin();
-       cuttent_it != current.MemberEnd(); ++cuttent_it) {
+  for (auto it = current.MemberBegin(); it != current.MemberEnd(); ++it) {
     {
       static const char* kTypeNames[] = {"Null",  "False",  "True",  "Object",
                                          "Array", "String", "Number"};
-      std::string name = cuttent_it->name.GetString();
-      std::string type = std::string(kTypeNames[cuttent_it->value.GetType()]);
-      //      LOG_TRACE("Parse: " +
-      // std::string(name) + " is " + std::string((type)));
+      auto name = it->name.GetString();
+      auto type = std::string(kTypeNames[it->value.GetType()]);
+      LOG_TRACE("Parse: " + std::string(name) + " is " + std::string((type)));
 
       static const std::vector<std::string> reserved = {
           "id", "type", "uniqueItems", "length"};
@@ -84,166 +155,142 @@ int Generator::ParseJson(rapidjson::Value& current,
       }
     }
 
-    if (!cuttent_it->value.IsObject() || !cuttent_it->value.HasMember("type")) {
-      //        throw std::string(type) + " handling is
-      // not implemented yet";
-      LOG_CRITICAL(std::string(cuttent_it->value.GetString()) +
-                   " is not an object or has not 'type' member.");
+    //    if (!it->value.IsObject() || !it->value.HasMember("type")) {
+    //      LOG_CRITICAL(std::string(it->value.GetString()) +
+    //                   " is not an object or has not 'type' member.");
+    //      return -1;
+    //    }
+    if (!it->value.IsObject()) {
+      LOG_CRITICAL(std::string(it->value.GetString()) + " is not an object!");
       return -1;
     }
 
-    auto element_type =
-        std::string(cuttent_it->value.FindMember("type")->value.GetString());
-    if (std::string("integer").compare(element_type) == 0) {
-      auto minimum = cuttent_it->value.FindMember("minimum");
-      auto minimum_value = minimum == cuttent_it->value.MemberEnd()
-                               ? -1
-                               : minimum->value.GetInt();
+    auto it_name = std::string(it->name.GetString());
+    auto it_type = FindType(it->value);
+    LOG_TRACE("Parsing : " + it_name + " typeof " + it_type);
 
-      auto maximum = cuttent_it->value.FindMember("maximum");
-      auto maximum_value = maximum == cuttent_it->value.MemberEnd()
-                               ? -1
-                               : maximum->value.GetInt();
-
-      JsonInsertInteger(new_document, new_document_current,
-                        std::string(cuttent_it->name.GetString()),
-                        minimum_value, maximum_value);
+    if (std::string("integer").compare(it_type) == 0) {
+      auto min = TryFindMin(it->value);
+      auto max = TryFindMax(it->value);
+      JsonInsertInteger(new_doc, last_child, it_name, min, max);
     }
-    if (std::string("string").compare(element_type) == 0) {
-      auto minimum = cuttent_it->value.FindMember("minimum");
-      auto minimum_value = minimum == cuttent_it->value.MemberEnd()
-                               ? -1
-                               : minimum->value.GetInt();
-
-      auto maximum = cuttent_it->value.FindMember("maximum");
-      auto maximum_value = maximum == cuttent_it->value.MemberEnd()
-                               ? -1
-                               : maximum->value.GetInt();
-
-      JsonInsertString(new_document, new_document_current,
-                       std::string(cuttent_it->name.GetString()), minimum_value,
-                       maximum_value);
-    } else if (std::string("object").compare(element_type) == 0) {
-      new_document_current.AddMember(
-          rapidjson::Value(cuttent_it->name, new_document.GetAllocator()),
-          rapidjson::Value(rapidjson::kObjectType),
-          new_document.GetAllocator());
-      PrintJson(
-          "AddMember object1 " + std::string(cuttent_it->name.GetString()),
-          new_document);
-      // auto new_document_obect =
-      // new_document_current.FindMember(cuttent_it->name);
-      auto new_document_obect = new_document_current.MemberEnd() - 1;
-
-      ParseJson(cuttent_it->value, new_document, new_document_obect->value);
-    } else if (std::string("array").compare(element_type) == 0) {
-      int array_length = 0;
-      {
-        auto length = cuttent_it->value.FindMember("length");
-        PrintJson("FindMember ", length);
-
-        auto length_ref = length->value.FindMember("$ref");
-        PrintJson("FindMember ", length_ref);
-
-        // auto new_array_item =
-        // new_document_array->value.MemberEnd() - 1;
-
-        auto array_length_value = GetLast(
-            new_document, rapidjson::Pointer(length_ref->value.GetString()));
-        PrintJson("array_length", *array_length_value);
-
-        array_length = array_length_value->GetInt();
+    if (std::string("string").compare(it_type) == 0) {
+      auto value = TryFindContent(it->value);
+      if (value != "") {
+        JsonInsertString(new_doc, last_child, it_name, value);
+      } else {
+        auto min = TryFindMin(it->value);
+        auto max = TryFindMax(it->value);
+        JsonInsertString(new_doc, last_child, it_name, min, max);
       }
+    } else if (std::string("object").compare(it_type) == 0) {
+      last_child.AddMember(rapidjson::Value(it->name, new_doc.GetAllocator()),
+                           rapidjson::Value(rapidjson::kObjectType),
+                           new_doc.GetAllocator());
+      PrintJson("AddMember object " + it_name, new_doc);
 
-      new_document_current.AddMember(
-          rapidjson::Value(cuttent_it->name, new_document.GetAllocator()),
-          rapidjson::Value(rapidjson::kObjectType),
-          new_document.GetAllocator());
-      PrintJson("AddMember array " + std::string(cuttent_it->name.GetString()),
-                new_document);
-      auto new_document_array =
-          new_document_current.FindMember(cuttent_it->name);
+      auto new_last_child = last_child.MemberEnd() - 1;
+      ParseJson(it->value, new_doc, new_last_child->value);
+    } else if (std::string("array").compare(it_type) == 0) {
+      int array_length = TryFindLength(new_doc, it->value);
+      last_child.AddMember(rapidjson::Value(it->name, new_doc.GetAllocator()),
+                           rapidjson::Value(rapidjson::kObjectType),
+                           new_doc.GetAllocator());
+      PrintJson("AddMember array " + it_name, new_doc);
+      auto new_document_array = last_child.FindMember(it->name);
 
-      auto items = cuttent_it->value.FindMember("items");
-      // auto properties =
-      // items->value.FindMember("properties");
-      auto type_of_array_elements = items->value.FindMember("type");
-      if ((std::string("object").compare(
-               std::string(type_of_array_elements->value.GetString())) == 0) ||
-          (std::string("array").compare(
-               std::string(type_of_array_elements->value.GetString())) == 0)) {
-        for (size_t idx = 0; idx < array_length; idx++) {
+      auto items = it->value.FindMember("items");
+      auto array_elements_type = FindType(items->value);
+
+      if ((std::string("object").compare(array_elements_type) == 0) ||
+          (std::string("array").compare(array_elements_type) == 0)) {
+        for (auto idx = 0; idx < array_length; idx++) {
           new_document_array->value.AddMember(
-              rapidjson::Value(items->name, new_document.GetAllocator()),
-              rapidjson::Value(rapidjson::kObjectType),
-              new_document.GetAllocator());
+              rapidjson::Value(items->name, new_doc.GetAllocator()),
+              rapidjson::Value(rapidjson::kObjectType), new_doc.GetAllocator());
           PrintJson(
               "AddMember array/object " + std::string(items->name.GetString()),
-              new_document);
-          // auto new_array_item =
-          // new_document_array->value.FindMember(items->name);
+              new_doc);
+
           auto new_array_item = new_document_array->value.MemberEnd() - 1;
-
-          ParseJson(items->value, new_document, new_array_item->value);
+          ParseJson(items->value, new_doc, new_array_item->value);
         }
-      } else if (std::string("integer").compare(std::string(
-                     type_of_array_elements->value.GetString())) == 0) {
+      } else if (std::string("integer").compare(array_elements_type) == 0) {
         new_document_array->value.AddMember(
-            rapidjson::Value(items->name, new_document.GetAllocator()),
-            rapidjson::Value(rapidjson::kArrayType),
-            new_document.GetAllocator());
+            rapidjson::Value(items->name, new_doc.GetAllocator()),
+            rapidjson::Value(rapidjson::kArrayType), new_doc.GetAllocator());
         PrintJson("AddMember integer " + std::string(items->name.GetString()),
-                  new_document);
+                  new_doc);
+
         auto new_array_item = new_document_array->value.MemberEnd() - 1;
 
-        auto minimum = cuttent_it->value.FindMember("minimum");
-        auto minimum_value = minimum == cuttent_it->value.MemberEnd()
-                                 ? -1
-                                 : minimum->value.GetInt();
-
-        auto maximum = cuttent_it->value.FindMember("maximum");
-        auto maximum_value = maximum == cuttent_it->value.MemberEnd()
-                                 ? -1
-                                 : maximum->value.GetInt();
-        for (size_t idx = 0; idx < array_length; idx++) {
-          JsonInsertInteger(new_document, new_array_item->value,
-                            std::string(cuttent_it->name.GetString()),
-                            minimum_value, maximum_value);
+        auto min = TryFindMin(it->value);
+        auto max = TryFindMax(it->value);
+        for (auto idx = 0; idx < array_length; idx++) {
+          JsonInsertInteger(new_doc, new_array_item->value, it_name, min, max);
         }
-      } else if (std::string("string").compare(std::string(
-                     type_of_array_elements->value.GetString())) == 0) {
+      } else if (std::string("string").compare(array_elements_type) == 0) {
         new_document_array->value.AddMember(
-            rapidjson::Value(items->name, new_document.GetAllocator()),
-            rapidjson::Value(rapidjson::kArrayType),
-            new_document.GetAllocator());
+            rapidjson::Value(items->name, new_doc.GetAllocator()),
+            rapidjson::Value(rapidjson::kArrayType), new_doc.GetAllocator());
         PrintJson("AddMember string " + std::string(items->name.GetString()),
-                  new_document);
+                  new_doc);
+
         auto new_array_item = new_document_array->value.MemberEnd() - 1;
 
-        auto minimum = cuttent_it->value.FindMember("minimum");
-        auto minimum_value = minimum == cuttent_it->value.MemberEnd()
-                                 ? -1
-                                 : minimum->value.GetInt();
-
-        auto maximum = cuttent_it->value.FindMember("maximum");
-        auto maximum_value = maximum == cuttent_it->value.MemberEnd()
-                                 ? -1
-                                 : maximum->value.GetInt();
+        auto min = TryFindMin(it->value);
+        auto max = TryFindMax(it->value);
 
         for (size_t idx = 0; idx < array_length; idx++) {
-          JsonInsertString(new_document, new_array_item->value,
-                           std::string(cuttent_it->name.GetString()),
-                           minimum_value, maximum_value);
+          JsonInsertString(new_doc, new_array_item->value, it_name, min, max);
         }
       } else {
-        LOG_CRITICAL(std::string(type_of_array_elements->value.GetString()) +
+        LOG_CRITICAL(array_elements_type +
                      " handling of array element type not implemented yet!");
       }
 
     } else {
-      LOG_TRACE(element_type + " handling is not implemented yet");
+      LOG_TRACE(it_type + " handling is not implemented yet");
     }
   }
+  return 0;
+}
+
+int Generator::StripJson(rapidjson::Value& current, std::vector<char>& output) {
+  if (current.IsInt()) {
+    // output.push_back(current.GetInt());
+    // output.push_back(' ');
+    auto push_me = current.GetInt();
+    //    output.push_back(push_me);
+
+    //    std::vector<unsigned char> push_me_bytes(4);
+    for (int i = 0; i < 4; ++i) {
+      //      push_me_bytes[3 - i] = (push_me >> (i * 8));
+      output.push_back(push_me >> (i * 8));
+    }
+
+  } else if (current.IsString()) {
+    auto push_me = std::string(current.GetString());
+    for (auto& ch : push_me) {
+      output.push_back(ch);
+    }
+    output.push_back(' ');
+  } else if (current.IsArray()) {
+    for (auto idx = 0; idx < current.Size(); idx++) {
+      auto& elem = current[idx];
+      StripJson(elem, output);
+    }
+  } else if (current.IsObject()) {
+    for (auto it = current.MemberBegin(); it != current.MemberEnd(); ++it) {
+      StripJson(it->value, output);
+    }
+  } else {
+    LOG_CRITICAL("Stripping not supported for given type.");
+  }
+
+  std::vector<char> v;
+  std::string str(v.begin(), v.end());
+
   return 0;
 }
 
@@ -316,6 +363,15 @@ bool Generator::JsonInsertString(rapidjson::Document& document,
   rapidjson::Value new_element_value = rapidjson::Value(
       Random::Get()->GenerateString(minimum_value, maximum_value).c_str(),
       document.GetAllocator());
+  return JsonInsert(document, current, new_value_name, new_element_value);
+}
+
+bool Generator::JsonInsertString(rapidjson::Document& document,
+                                 rapidjson::Value& current,
+                                 std::string new_value_name,
+                                 std::string content) {
+  rapidjson::Value new_element_value =
+      rapidjson::Value(content.c_str(), document.GetAllocator());
   return JsonInsert(document, current, new_value_name, new_element_value);
 }
 

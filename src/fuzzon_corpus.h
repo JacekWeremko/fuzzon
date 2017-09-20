@@ -25,7 +25,7 @@ class Corpus {
 
   bool AddIfInteresting(ExecutionDataSP add_me_to_corpus);
 
-  TestCase* const SelectFavorite();
+  ExecutionData* const SelectFavorite();
   TestCase* const SelectRandom();
   TestCase* const SelectNotYetExhaustMutated();
 

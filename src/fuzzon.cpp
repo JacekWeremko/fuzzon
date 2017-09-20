@@ -89,7 +89,6 @@ void Fuzzon::Generation(std::string input_format, int test_cases_to_generate) {
     auto execution_data = execution_monitor_.ExecuteBlocking(new_test_case);
     corpus_.AddIfInteresting(execution_data);
   }
-  std::cout << corpus_.total_testcases() << std::endl;
   LOG_INFO(corpus_.GetShortStats().str() + " <- generation finish");
   return;
 }
@@ -117,7 +116,7 @@ void Fuzzon::MutationDeterministic(int level, bool white_chars_preservation) {
         if (test_cases_mutator.FlipBit(mutate_me, bite_idx, bits_to_flip)) {
           auto execution_data = execution_monitor_.ExecuteBlocking(mutate_me);
           corpus_.AddIfInteresting(execution_data);
-          favorite->increased_mutation_counter();
+          //          favorite->increased_mutation_counter();
         }
       }
     }
@@ -130,7 +129,7 @@ void Fuzzon::MutationDeterministic(int level, bool white_chars_preservation) {
         if (test_cases_mutator.FlipByte(mutate_me, byte_idx, bytes_to_flip)) {
           auto execution_data = execution_monitor_.ExecuteBlocking(mutate_me);
           corpus_.AddIfInteresting(execution_data);
-          favorite->increased_mutation_counter();
+          //          favorite->increased_mutation_counter();
         }
       }
     }
@@ -142,7 +141,7 @@ void Fuzzon::MutationDeterministic(int level, bool white_chars_preservation) {
         if (test_cases_mutator.SimpleArithmetics(mutate_me, byte_idx, value)) {
           auto execution_data = execution_monitor_.ExecuteBlocking(mutate_me);
           corpus_.AddIfInteresting(execution_data);
-          favorite->increased_mutation_counter();
+          //          favorite->increased_mutation_counter();
         }
       }
     }
@@ -156,7 +155,7 @@ void Fuzzon::MutationDeterministic(int level, bool white_chars_preservation) {
         if (test_cases_mutator.KnownIntegers(mutate_me, byte_idx, value)) {
           auto execution_data = execution_monitor_.ExecuteBlocking(mutate_me);
           corpus_.AddIfInteresting(execution_data);
-          favorite->increased_mutation_counter();
+          //          favorite->increased_mutation_counter();
         }
       }
     }
@@ -167,99 +166,131 @@ void Fuzzon::MutationDeterministic(int level, bool white_chars_preservation) {
   return;
 }
 
+void Fuzzon::MutationJSONBased(int test_cases_to_mutate,
+                               bool white_chars_preservation) {
+  LOG_INFO(corpus_.GetShortStats().str() + " <- mutation json based start");
+  Mutator engine(white_chars_preservation);
+
+  LOG_INFO(corpus_.GetShortStats().str() + " <- mutation json based finish");
+  return;
+}
+
 void Fuzzon::MutationNonDeterministic(int test_cases_to_mutate,
                                       bool white_chars_preservation) {
   LOG_INFO(corpus_.GetShortStats().str() +
            " <- mutation non-deterministic start");
   Mutator engine(white_chars_preservation);
 
-  while (!shall_finish() && test_cases_to_mutate) {
-    test_cases_to_mutate--;
+  while (!shall_finish() && test_cases_to_mutate >= 0) {
     auto favorite = corpus_.SelectFavorite();
     if (favorite == nullptr) {
       break;
     }
 
-    auto mutate_me = TestCase(*favorite, TestCase::MutationNonDeterministic);
-    auto mutations_count = Random::Get()->GenerateInt(1, 3);
-    for (auto i = 0; i < mutations_count; ++i) {
-      auto mutation_idx = Random::Get()->GenerateInt(0, 7);
-      switch (mutation_idx) {
-        case 0: {
-          auto start_idx = Random::Get()->GenerateInt(1, mutate_me.size() * 8);
-          auto count = Random::Get()->GenerateInt(1, 4);
-          auto success = engine.FlipBit(mutate_me, start_idx, count);
-          break;
-        }
-        case 1: {
-          auto start_idx = Random::Get()->GenerateInt(1, mutate_me.size());
-          auto count = Random::Get()->GenerateInt(1, 4);
-          auto success = engine.FlipByte(mutate_me, start_idx, count);
-          break;
-        }
-        case 2: {
-          auto byte_idx = Random::Get()->GenerateInt(1, mutate_me.size());
-          auto value = Random::Get()->GenerateChar();
-          auto success = engine.SimpleArithmetics(mutate_me, byte_idx, value);
-          break;
-        }
-        case 3: {
-          auto byte_idx = Random::Get()->GenerateInt(1, mutate_me.size());
-          auto value = Random::Get()->GenerateChar();
-          auto success = engine.KnownIntegers(mutate_me, byte_idx, value);
-          break;
-        }
-        case 4: {
-          auto base_idx = Random::Get()->GenerateInt(1, mutate_me.size());
-          auto insertme = corpus_.SelectRandom();
-          if (insertme == nullptr) {
-            break;
-          }
-          auto insertme_idx = Random::Get()->GenerateInt(1, insertme->size());
-          auto block_length = Random::Get()->GenerateInt(
-              0, static_cast<int>(insertme->size() - insertme_idx));
-          auto success = engine.BlockInsertion(mutate_me, base_idx, *insertme,
-                                               insertme_idx, block_length);
-          break;
-        }
-        case 5: {
-          auto start_idx = Random::Get()->GenerateInt(1, mutate_me.size());
-          auto block_length = Random::Get()->GenerateInt(
-              0, static_cast<int>(mutate_me.size() - start_idx));
-          auto success =
-              engine.BlockDeletion(mutate_me, start_idx, block_length);
-          break;
-        }
-        case 6: {
-          auto start_idx = Random::Get()->GenerateInt(1, mutate_me.size());
-          auto block_length = Random::Get()->GenerateInt(
-              0, static_cast<int>(mutate_me.size() - start_idx));
-          auto new_value = 0;
-          auto success =
-              engine.BlockMemset(mutate_me, start_idx, block_length, new_value);
-          break;
-        }
-        case 7: {
-          auto base_idx = Random::Get()->GenerateInt(1, mutate_me.size());
-          auto insertme = corpus_.SelectRandom();
-          if (insertme == nullptr) {
-            break;
-          }
-          auto insertme_idx = Random::Get()->GenerateInt(1, insertme->size());
-          auto block_length =
-              Random::Get()->GenerateInt(1, static_cast<int>(insertme->size()));
-          auto success = engine.BlockOverriding(mutate_me, base_idx, *insertme,
-                                                insertme_idx, block_length);
-          break;
-        }
-        default:
-          break;
-      }
-    }
+    auto f_i = static_cast<double>(favorite->path_execution_coutner_);
+    auto s_i =
+        std::min(static_cast<double>(favorite->input.mutation_counter()), 30.0);
+    static const double M = 64;
+    int energy = static_cast<int>(std::min((std::pow(2.0f, s_i) / f_i), M));
 
-    auto execution_data = execution_monitor_.ExecuteBlocking(mutate_me);
-    if (corpus_.AddIfInteresting(execution_data)) {
-      favorite->increased_mutation_counter();
+    // just to not
+    energy = std::min(energy, test_cases_to_mutate);
+
+    if (energy == 0) {
+      energy++;
+    }
+    // doesn't matter before of after a loop
+    // just put it out there to prevent too quick expansion
+    favorite->input.increased_mutation_counter();
+
+    for (auto ei = 0; ei < energy; ++ei) {
+      test_cases_to_mutate--;
+      auto mutate_me =
+          TestCase(favorite->input, TestCase::MutationNonDeterministic);
+
+      auto mutation_idx = Random::Get()->GenerateInt(0, 8);
+      auto mutations_count = 1;
+      if (mutation_idx == 8) {
+        mutations_count += Random::Get()->GenerateInt(1, 3);
+      }
+
+      for (auto i = 0; i < mutations_count; ++i) {
+        switch (Random::Get()->GenerateInt(0, 7)) {
+          case 0: {
+            auto start_idx =
+                Random::Get()->GenerateInt(1, mutate_me.size() * 8);
+            auto count = Random::Get()->GenerateInt(1, 4);
+            auto success = engine.FlipBit(mutate_me, start_idx, count);
+            break;
+          }
+          case 1: {
+            auto start_idx = Random::Get()->GenerateInt(1, mutate_me.size());
+            auto count = Random::Get()->GenerateInt(1, 4);
+            auto success = engine.FlipByte(mutate_me, start_idx, count);
+            break;
+          }
+          case 2: {
+            auto byte_idx = Random::Get()->GenerateInt(1, mutate_me.size());
+            auto value = Random::Get()->GenerateChar();
+            auto success = engine.SimpleArithmetics(mutate_me, byte_idx, value);
+            break;
+          }
+          case 3: {
+            auto byte_idx = Random::Get()->GenerateInt(1, mutate_me.size());
+            auto value = Random::Get()->GenerateChar();
+            auto success = engine.KnownIntegers(mutate_me, byte_idx, value);
+            break;
+          }
+          case 4: {
+            auto base_idx = Random::Get()->GenerateInt(1, mutate_me.size());
+            auto insertme = corpus_.SelectRandom();
+            if (insertme == nullptr) {
+              break;
+            }
+            auto insertme_idx = Random::Get()->GenerateInt(1, insertme->size());
+            auto block_length = Random::Get()->GenerateInt(
+                0, static_cast<int>(insertme->size() - insertme_idx));
+            auto success = engine.BlockInsertion(mutate_me, base_idx, *insertme,
+                                                 insertme_idx, block_length);
+            break;
+          }
+          case 5: {
+            auto start_idx = Random::Get()->GenerateInt(1, mutate_me.size());
+            auto block_length = Random::Get()->GenerateInt(
+                0, static_cast<int>(mutate_me.size() - start_idx));
+            auto success =
+                engine.BlockDeletion(mutate_me, start_idx, block_length);
+            break;
+          }
+          case 6: {
+            auto start_idx = Random::Get()->GenerateInt(1, mutate_me.size());
+            auto block_length = Random::Get()->GenerateInt(
+                0, static_cast<int>(mutate_me.size() - start_idx));
+            auto new_value = 0;
+            auto success = engine.BlockMemset(mutate_me, start_idx,
+                                              block_length, new_value);
+            break;
+          }
+          case 7: {
+            auto base_idx = Random::Get()->GenerateInt(1, mutate_me.size());
+            auto insertme = corpus_.SelectRandom();
+            if (insertme == nullptr) {
+              break;
+            }
+            auto insertme_idx = Random::Get()->GenerateInt(1, insertme->size());
+            auto block_length = Random::Get()->GenerateInt(
+                1, static_cast<int>(insertme->size()));
+            auto success = engine.BlockOverriding(
+                mutate_me, base_idx, *insertme, insertme_idx, block_length);
+            break;
+          }
+          default:
+            break;
+        }
+      }
+
+      auto execution_data = execution_monitor_.ExecuteBlocking(mutate_me);
+      auto is_interesting = corpus_.AddIfInteresting(execution_data);
     }
   }
   LOG_INFO(corpus_.GetShortStats().str() +

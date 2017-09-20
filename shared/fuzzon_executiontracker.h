@@ -11,26 +11,41 @@ namespace fuzzon {
 
 class ExecutionTracker {
  public:
-  ExecutionTracker(ExecutionTracker const&) = delete;
-  void operator=(ExecutionTracker const&) = delete;
-
   enum WorkingMode { SUT, Monitor };
 
-  static ExecutionTracker* Get(WorkingMode mode = WorkingMode::SUT) {
-    static ExecutionTracker monitor_(mode);
+  static ExecutionTracker* Get(WorkingMode mode = WorkingMode::SUT,
+                               Coverage::TrackMode track_mode = Coverage::Raw) {
+    static ExecutionTracker monitor_(mode, track_mode);
     return &monitor_;
   }
 
-  void Reset();
+  ExecutionTracker(ExecutionTracker const&) = delete;
+  void operator=(ExecutionTracker const&) = delete;
 
+  void Reset();
   const Coverage* GetCoverage() { return cov_; }
 
-  void SetPCLimit(size_t value) { cov_->SetPCLimit(value); }
-  void TracePC(uintptr_t PC) { cov_->TracePC(PC); }
-  void TracePC(uint32_t idx, uintptr_t PC) { cov_->TracePC(idx, PC); }
+  void SetPCLimit(size_t value) { cov_->SetPCGuardsCount(value); }
+  void TracePC(uintptr_t pc) { cov_->TracePC(pc); }
+  void TracePC(uint32_t guard_idx, uintptr_t pc) { cov_->TracePC(guard_idx); }
+
+  template <typename valueT>
+  void TraceCmp(uintptr_t pc, valueT arg1, valueT arg2) {
+    //    cov_->TraceData(pc, arg1 ^ arg2);
+    cov_->TraceCmp(pc, arg1, arg2);
+  }
+
+  template <typename valueT>
+  void TraceDiv(uintptr_t pc, valueT value) {
+    // cov_->TraceData(pc, value);
+  }
+
+  void TraceGep(uintptr_t pc, uint32_t idx) {
+    // cov_->TraceData(pc, idx);
+  }
 
  private:
-  explicit ExecutionTracker(WorkingMode mode);
+  explicit ExecutionTracker(WorkingMode mode, Coverage::TrackMode track_mode);
 
   const std::string shared_memory_buffer_name = "fuzzon_cov";
   boost::interprocess::shared_memory_object shared_memory_;

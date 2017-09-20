@@ -36,12 +36,35 @@ class Coverage {
   bool operator!=(const Coverage&) const;
 
   // Compares content
-  bool IsTheSame(const Coverage&) const;
+  bool IsPcFlowTheSame(const Coverage&) const;
+  bool IsDataFlowTheSame(const Coverage&) const;
 
   // Tracing interface
-  void SetPCLimit(size_t value);
-  void TracePC(uintptr_t PC);
-  void TracePC(uint32_t idx, uintptr_t PC);
+  void SetPCGuardsCount(size_t value);
+  void TracePC(uintptr_t pc);
+  void TracePC(uint32_t idx, uintptr_t pc);
+
+  template <typename valueT>
+  void TraceData(uintptr_t pc, valueT value) {
+    //    TracePC(pc);
+    //    flow_data_[value % flow_pcs_.size()]++;
+    //    flow_data_[pc % flow_data_.size()] += value;
+  }
+
+  template <typename valueT>
+  void TraceCmp(uintptr_t pc, valueT arg1, valueT arg2) {
+    auto set_me = 0;
+    if (arg1 > arg2) {
+      set_me |= 1 << 0;
+    } else if (arg1 < arg2) {
+      set_me |= 1 << 1;
+    }
+    if (arg1 == arg2) {
+      set_me |= 1 << 2;
+    }
+
+    flow_data_[pc % flow_data_.size()] |= set_me;
+  }
 
   // Printers
   void PrintTrace() const;
@@ -53,20 +76,20 @@ class Coverage {
     os << "\"pc_visited\" : " << print_me.pc_visited_ << "," << std::endl;
     os << "\"last_pc\" : " << print_me.last_pc_ << "," << std::endl;
     os << "\"pc_flow\" : {" << std::endl;
-    for (auto i = 0, j = 0; i < print_me.pc_flow_.size(); i++) {
-      if (print_me.pc_flow_[i] != 0) {
+    for (auto i = 0, j = 0; i < print_me.flow_pcs_.size(); i++) {
+      if (print_me.flow_pcs_[i] != 0) {
         if (j == 0) {
-          os << "\"" << std::to_string(i) << "\" : " << print_me.pc_flow_[i];
+          os << "\"" << std::to_string(i) << "\" : " << print_me.flow_pcs_[i];
         } else {
           os << "," << std::endl;
-          os << "\"" << std::to_string(i) << "\" : " << print_me.pc_flow_[i];
+          os << "\"" << std::to_string(i) << "\" : " << print_me.flow_pcs_[i];
         }
         j++;
       }
     }
     os << std::endl << "}," << std::endl;
     os << "\"hash\" : \"";
-    for (const auto& elem : print_me.hash_) {
+    for (const auto& elem : print_me.hash_pcs_) {
       os << std::hex << static_cast<int>(elem);
     }
     os << "\"" << std::endl;
@@ -81,11 +104,13 @@ class Coverage {
   uintptr_t last_pc_;
 
   //   static const int pc_flow_size_ = 64 * 1024;
-  static const int pc_flow_size_ = 128;
+  static const int flow_array_size_ = 128;
   //  static const int pc_flow_size_ = 15;
-  std::array<uint32_t, pc_flow_size_> pc_flow_;
+  std::array<uint32_t, flow_array_size_> flow_pcs_;
+  std::array<uint32_t, flow_array_size_> flow_data_;
 
-  std::array<unsigned char, MD5_DIGEST_LENGTH> hash_;
+  std::array<unsigned char, MD5_DIGEST_LENGTH> hash_pcs_;
+  std::array<unsigned char, MD5_DIGEST_LENGTH> hash_data_;
 };
 
 } /* namespace fuzzon */

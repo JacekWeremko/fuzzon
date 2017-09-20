@@ -49,7 +49,7 @@ int main(int argc, char** argv) {
   desc.add_options()("single_test_timeout", po::value<int>()->default_value(50),
                      "Max allowed time to execute SUT");
   desc.add_options()("total_timeout",
-                     po::value<int>()->default_value(1000 * 60 * 30),
+                     po::value<int>()->default_value(1000 * 60 * 60),
                      "Total campaign timeout.");
   desc.add_options()("generate", po::value<int>()->default_value(1000),
                      "Generation phase: number of test cases to generate.");
@@ -71,6 +71,9 @@ int main(int argc, char** argv) {
                      "PROCESS_ONLY_STDIN_ASYCN_STREAM=1"
                      "PROCESS_ALL_STD_ASYNC_STREAMS=2"
                      "THREAD=3");
+
+  desc.add_options()("alphabet", po::value<std::vector<std::string>>(),
+                     "alphabet");
 
   po::variables_map vm;
   po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -95,7 +98,9 @@ int main(int argc, char** argv) {
           : (sut.parent_path() /
              (fs::path("fuzzon_").concat(sut.filename().c_str())) /
              time_now_str);
-
+  auto alphabet = vm.count("alphabet")
+                      ? vm["alphabet"].as<std::vector<std::string>>()
+                      : std::vector<std::string>();
   auto env_flags = vm.count("env_flag")
                        ? vm["env_flag"].as<std::vector<std::string>>()
                        : std::vector<std::string>();

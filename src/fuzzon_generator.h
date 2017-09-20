@@ -11,6 +11,7 @@
 #include <rapidjson/pointer.h>
 #include <boost/random.hpp>
 #include <string>
+#include <vector>
 
 namespace fuzzon {
 
@@ -26,7 +27,10 @@ class Generator {
   int ParseJson(rapidjson::Value& current,
                 rapidjson::Document& new_document,
                 rapidjson::Value& new_document_current);
+
+  int StripJson(rapidjson::Value& current, std::vector<char>& output);
   int StripJson(rapidjson::Value& current, std::stringstream& output);
+
   rapidjson::Value* GetLast(rapidjson::Value& top,
                             const rapidjson::Pointer& find_me);
 
@@ -40,6 +44,10 @@ class Generator {
                         std::string new_value_name,
                         int minimum_value,
                         int maximum_value);
+  bool JsonInsertString(rapidjson::Document& document,
+                        rapidjson::Value& current,
+                        std::string new_value_name,
+                        std::string content);
 
   bool JsonInsert(rapidjson::Document& document,
                   rapidjson::Value& current,
@@ -53,6 +61,12 @@ class Generator {
                  rapidjson::Value::ConstMemberIterator print_me);
   void PrintJson(std::string title,
                  rapidjson::Value::ConstMemberIterator& print_me);
+
+  int TryFindMin(const rapidjson::Value& current);
+  int TryFindMax(const rapidjson::Value& current);
+  int TryFindLength(rapidjson::Document& new_doc,
+                    const rapidjson::Value& current);
+  std::string TryFindContent(const rapidjson::Value& current);
 
   std::string input_format_filepath_;
   rapidjson::Document input_format_;

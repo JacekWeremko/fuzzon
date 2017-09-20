@@ -41,11 +41,13 @@ class Executor {
   ExecutionDataSP Test(TestCase& input);
   ExecutionDataSP ExecuteProcessLinuxNativ(TestCase& input);
   ExecutionDataSP ExecuteProcessStdInFile(TestCase& input);
+  ExecutionDataSP ExecuteProcessStdInFileNative(TestCase& input);
   ExecutionDataSP ExecuteProcessAsyncStdInStrems(TestCase& input);
   ExecutionDataSP ExecuteProcessAsyncStdInStrems(TestCase& input, bool one_ios);
   ExecutionDataSP ExecuteProcessAsyncStdInStrems(TestCase& input, int fallback);
   ExecutionDataSP ExecuteProcessAsyncStdAllStrems(TestCase& input);
   ExecutionDataSP ExecuteProcessAsyncStdAllStremsPoll(TestCase& input);
+  ExecutionDataSP ExecuteProcessSyncStdAllStremsPoll(TestCase& input);
 
 #ifdef EXTERN_FUZZZON_ENTRY_POINT
   ExecutionData ExecuteBlockingThread(TestCase& input);

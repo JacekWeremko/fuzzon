@@ -61,11 +61,9 @@ bool Corpus::IsInteresting(const ExecutionData& am_i) {
   return result;
 }
 
-// TODO: move semantic
 void Corpus::AddExecutionData(ExecutionDataSP add_me_to_corpus) {
   LOG_DEBUG("Adding new test case to corpus: " +
             add_me_to_corpus->input.string());
-  // TODO: optimize memory footprint
 
   summary_.total_cov.Merge(add_me_to_corpus->path);
   data_.push_back(add_me_to_corpus);
@@ -87,36 +85,43 @@ bool Corpus::AddIfInteresting(ExecutionDataSP add_me_to_corpus) {
   return result;
 }
 
-TestCase* const Corpus::SelectFavorite() {
+ExecutionData* const Corpus::SelectFavorite() {
   BOOST_ASSERT(data_.size() > 0);
 
-  std::vector<ExecutionDataSP> lowest_mutation_counter;
-  // find min s(i) - test cases used as mutation base
+  std::vector<ExecutionDataSP> viable_elements;
+
+  std::copy_if(data_.begin(), data_.end(), std::back_inserter(viable_elements),
+               [](const ExecutionDataSP& elem) {
+                 return elem->crashed() == false && elem->timeout == false;
+               });
+
+  std::vector<ExecutionDataSP> lowest_paths_coutner;
+  // find min f(i) - lowest frequency path
   {
-    auto lowest_usage_count = std::numeric_limits<size_t>::max();
-    for (auto& current : data_) {
-      if (current->input.mutation_counter() < lowest_usage_count) {
-        lowest_mutation_counter.clear();
-        lowest_usage_count = current->input.mutation_counter();
-        lowest_mutation_counter.push_back(current);
-      } else if (current->input.mutation_counter() == lowest_usage_count) {
-        lowest_mutation_counter.push_back(current);
+    auto lowest_path_execution_coutner = std::numeric_limits<size_t>::max();
+    for (auto& current : viable_elements) {
+      if (current->path_execution_coutner_ < lowest_path_execution_coutner) {
+        lowest_paths_coutner.clear();
+        lowest_path_execution_coutner = current->path_execution_coutner_;
+        lowest_paths_coutner.push_back(current);
+      } else if (current->path_execution_coutner_ ==
+                 lowest_path_execution_coutner) {
+        lowest_paths_coutner.push_back(current);
       }
     }
   }
 
-  std::vector<ExecutionDataSP> lowest_similar_path_coutner;
-  // find min f(i) - lowest frequency path
+  std::vector<ExecutionDataSP> lowest_mutation_counter;
+  // find min s(i) - test cases used as mutation base
   {
-    auto lowest_similar_execution_coutner = std::numeric_limits<size_t>::max();
-    for (auto& current : lowest_mutation_counter) {
-      if (current->path_execution_coutner_ < lowest_similar_execution_coutner) {
-        lowest_similar_path_coutner.clear();
-        lowest_similar_execution_coutner = current->path_execution_coutner_;
-        lowest_similar_path_coutner.push_back(current);
-      } else if (current->path_execution_coutner_ ==
-                 lowest_similar_execution_coutner) {
-        lowest_similar_path_coutner.push_back(current);
+    auto lowest_mutation_count = std::numeric_limits<size_t>::max();
+    for (auto& current : lowest_paths_coutner) {
+      if (current->input.mutation_counter() < lowest_mutation_count) {
+        lowest_mutation_counter.clear();
+        lowest_mutation_count = current->input.mutation_counter();
+        lowest_mutation_counter.push_back(current);
+      } else if (current->input.mutation_counter() == lowest_mutation_count) {
+        lowest_mutation_counter.push_back(current);
       }
     }
   }
@@ -125,7 +130,7 @@ TestCase* const Corpus::SelectFavorite() {
   // find min t(i) time and size
   {
     auto lowest_time_and_size = std::numeric_limits<double>::max();
-    for (auto& current : lowest_similar_path_coutner) {
+    for (auto& current : lowest_mutation_counter) {
       double current_time_and_size =
           current->execution_time.count() * current->input.length_byte();
       if (current_time_and_size < lowest_time_and_size) {
@@ -134,7 +139,7 @@ TestCase* const Corpus::SelectFavorite() {
     }
   }
   if (result != nullptr) {
-    return &result->input;
+    return result.get();
   }
   return nullptr;
 }
@@ -187,8 +192,6 @@ std::stringstream Corpus::GetFullStats() {
         << std::endl
         << "  Timeout: " << summary_.timeout << std::endl
         << "  Crash: " << summary_.crash << std::endl
-
-        << std::endl
         << "  Test case genesis: " /*yeah....could be map in corpus..*/
         << std::endl
         << "    Predefined: "
@@ -202,6 +205,7 @@ std::stringstream Corpus::GetFullStats() {
         << std::endl
         << "    MutationNonDeterministic: "
         << summary_.test_cases_genesis[TestCase::MutationNonDeterministic]
+        << std::endl
         << std::endl;
 
   stats << "Corpus Summary : " << std::endl

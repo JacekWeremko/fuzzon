@@ -49,6 +49,8 @@ struct ExecutionData {
   friend std::ostream& operator<<(std::ostream& os,
                                   const ExecutionData& print_me) {
     os << "{" << std::endl;
+    os << "\"genesis\" : \"" << print_me.input.my_genesis() << "\","
+       << std::endl;
     os << "\"input\" : \"" << print_me.input << "\"," << std::endl;
     os << "\"error_code\" : \"" << print_me.error_code << "\"," << std::endl;
     os << "\"exit_code\" : " << print_me.exit_code << "," << std::endl;
@@ -64,7 +66,7 @@ struct ExecutionData {
 
   std::string string() const {
     std::stringstream ss;
-    ss << this;
+    ss << *this;
     return ss.str();
   }
 

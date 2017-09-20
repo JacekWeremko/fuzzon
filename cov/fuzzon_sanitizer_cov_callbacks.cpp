@@ -7,45 +7,39 @@
 #include <string>
 #include "./utils/logger.h"
 
-#ifdef __x86_64
-#define ATTRIBUTE_TARGET_POPCNT __attribute__((target("popcnt")))
-#else
-#define ATTRIBUTE_TARGET_POPCNT
-#endif
-
 extern "C" {
 
 void __sanitizer_cov_module_init(uint32_t* guards,
                                  uintptr_t npcs,
                                  const char* module_name) {
-  uintptr_t PC = reinterpret_cast<uintptr_t>(__builtin_return_address(0));
+  uintptr_t pc = reinterpret_cast<uintptr_t>(__builtin_return_address(0));
   LOG_TRACE("__sanitizer_cov_module_init");
   LOG_TRACE("  module_name: " + std::string(module_name));
-  LOG_TRACE("  PC: " + std::to_string(PC));
-  fuzzon::ExecutionTracker::Get()->TracePC(PC);
+  LOG_TRACE("  pc: " + std::to_string(pc));
+  fuzzon::ExecutionTracker::Get()->TracePC(pc);
 }
 
 void __sanitizer_cov(uint32_t* Guard) {
-  uintptr_t PC = reinterpret_cast<uintptr_t>(__builtin_return_address(0));
-  uint32_t Idx = *Guard;
+  uintptr_t pc = reinterpret_cast<uintptr_t>(__builtin_return_address(0));
+  uint32_t idx = *Guard;
   LOG_TRACE("__sanitizer_cov");
-  LOG_TRACE("  PC: " + std::to_string(PC) + "    Idx: " + std::to_string(Idx));
-  fuzzon::ExecutionTracker::Get()->TracePC(PC);
+  LOG_TRACE("  pc: " + std::to_string(pc) + "    idx: " + std::to_string(idx));
+  fuzzon::ExecutionTracker::Get()->TracePC(pc);
 }
 
 void __sanitizer_cov_trace_pc_guard(uint32_t* Guard) {
-  uintptr_t PC = reinterpret_cast<uintptr_t>(__builtin_return_address(0));
-  uint32_t Idx = *Guard;
+  uintptr_t pc = reinterpret_cast<uintptr_t>(__builtin_return_address(0));
+  uint32_t idx = *Guard;
   LOG_TRACE("__sanitizer_cov_trace_pc_guard");
-  LOG_TRACE("  PC: " + std::to_string(PC) + "    Idx: " + std::to_string(Idx));
-  fuzzon::ExecutionTracker::Get()->TracePC(Idx, PC);
+  LOG_TRACE("  pc: " + std::to_string(pc) + "    idx: " + std::to_string(idx));
+  fuzzon::ExecutionTracker::Get()->TracePC(idx, pc);
 }
 
 void __sanitizer_cov_trace_pc() {
-  uintptr_t PC = reinterpret_cast<uintptr_t>(__builtin_return_address(0));
+  uintptr_t pc = reinterpret_cast<uintptr_t>(__builtin_return_address(0));
   LOG_TRACE("__sanitizer_cov_trace_pc");
-  LOG_TRACE("  PC: " + std::to_string(PC));
-  fuzzon::ExecutionTracker::Get()->TracePC(PC);
+  LOG_TRACE("  pc: " + std::to_string(pc));
+  fuzzon::ExecutionTracker::Get()->TracePC(pc);
 }
 
 void __sanitizer_cov_trace_pc_guard_init(uint32_t* start, uint32_t* stop) {
@@ -60,72 +54,78 @@ void __sanitizer_cov_trace_pc_guard_init(uint32_t* start, uint32_t* stop) {
   for (uint32_t* P = start; P < stop; P++) {
     pc_total++;
     *P = pc_total;
-    //    LOG_TRACE("  guard : " + std::to_string(*P));
+    LOG_TRACE("  guard : " + std::to_string(*P));
   }
-  LOG_TRACE("  PC_total : " + std::to_string(pc_total));
+  LOG_TRACE("  pc_total : " + std::to_string(pc_total));
   fuzzon::ExecutionTracker::Get()->SetPCLimit(pc_total);
 }
 
-void __sanitizer_cov_trace_pc_indir(uintptr_t Callee) {
-  uintptr_t PC = reinterpret_cast<uintptr_t>(__builtin_return_address(0));
+void __sanitizer_cov_trace_pc_indir(uintptr_t callee) {
+  uintptr_t pc = reinterpret_cast<uintptr_t>(__builtin_return_address(0));
   LOG_TRACE("__sanitizer_cov_trace_pc_indir");
-  LOG_TRACE("  PC: " + std::to_string(PC) +
-            "    Callee: " + std::to_string(Callee));
+  LOG_TRACE("  pc: " + std::to_string(pc));
+  LOG_TRACE("  callee: " + std::to_string(callee));
 }
 
-ATTRIBUTE_TARGET_POPCNT
-void __sanitizer_cov_trace_cmp8(uint64_t Arg1, uint64_t Arg2) {
-  uintptr_t PC = reinterpret_cast<uintptr_t>(__builtin_return_address(0));
+void __sanitizer_cov_trace_cmp8(uint64_t arg1, uint64_t arg2) {
+  uintptr_t pc = reinterpret_cast<uintptr_t>(__builtin_return_address(0));
   LOG_TRACE("__sanitizer_cov_trace_cmp8");
-  LOG_TRACE("  Arg1: " + std::to_string(Arg1) +
-            "    Arg2: " + std::to_string(Arg2));
+  LOG_TRACE("  arg1: " + std::to_string(arg1));
+  LOG_TRACE("  arg2: " + std::to_string(arg1));
+  fuzzon::ExecutionTracker::Get()->TraceCmp(pc, arg1, arg2);
 }
 
-ATTRIBUTE_TARGET_POPCNT
-void __sanitizer_cov_trace_cmp4(uint32_t Arg1, uint32_t Arg2) {
+void __sanitizer_cov_trace_cmp4(uint32_t arg1, uint32_t arg2) {
+  uintptr_t pc = reinterpret_cast<uintptr_t>(__builtin_return_address(0));
   LOG_TRACE("__sanitizer_cov_trace_cmp4");
-  LOG_TRACE("  Arg1: " + std::to_string(Arg1) +
-            "    Arg2: " + std::to_string(Arg2));
+  LOG_TRACE("  arg1: " + std::to_string(arg1));
+  LOG_TRACE("  arg2: " + std::to_string(arg1));
+  fuzzon::ExecutionTracker::Get()->TraceCmp(pc, arg1, arg2);
 }
 
-ATTRIBUTE_TARGET_POPCNT
-void __sanitizer_cov_trace_cmp2(uint16_t Arg1, uint16_t Arg2) {
+void __sanitizer_cov_trace_cmp2(uint16_t arg1, uint16_t arg2) {
+  uintptr_t pc = reinterpret_cast<uintptr_t>(__builtin_return_address(0));
   LOG_TRACE("__sanitizer_cov_trace_cmp2");
-  LOG_TRACE("  Arg1: " + std::to_string(Arg1) +
-            "    Arg2: " + std::to_string(Arg2));
+  LOG_TRACE("  arg1: " + std::to_string(arg1));
+  LOG_TRACE("  arg2: " + std::to_string(arg1));
+  fuzzon::ExecutionTracker::Get()->TraceCmp(pc, arg1, arg2);
 }
 
-ATTRIBUTE_TARGET_POPCNT
-void __sanitizer_cov_trace_cmp1(uint8_t Arg1, uint8_t Arg2) {
+void __sanitizer_cov_trace_cmp1(uint8_t arg1, uint8_t arg2) {
+  uintptr_t pc = reinterpret_cast<uintptr_t>(__builtin_return_address(0));
   LOG_TRACE("__sanitizer_cov_trace_cmp1");
-  LOG_TRACE("  Arg1: " + std::to_string(Arg1) +
-            "    Arg2: " + std::to_string(Arg2));
+  LOG_TRACE("  arg1: " + std::to_string(arg1));
+  LOG_TRACE("  arg2: " + std::to_string(arg1));
+  fuzzon::ExecutionTracker::Get()->TraceCmp(pc, arg1, arg2);
 }
 
-ATTRIBUTE_TARGET_POPCNT
-void __sanitizer_cov_trace_switch(uint64_t Val, uint64_t* Cases) {
+void __sanitizer_cov_trace_switch(uint64_t value, uint64_t* cases) {
+  uintptr_t pc = reinterpret_cast<uintptr_t>(__builtin_return_address(0));
   LOG_TRACE("__sanitizer_cov_trace_switch");
-  LOG_TRACE("  Val: " + std::to_string(Val));
-  LOG_TRACE("  Cases[0]: " + std::to_string(Cases[0]));
-  LOG_TRACE("  Cases[1]: " + std::to_string(Cases[1]));
+  LOG_TRACE("  value: " + std::to_string(value));
+  LOG_TRACE("  cases[0]: " + std::to_string(cases[0]));
+  LOG_TRACE("  cases[1]: " + std::to_string(cases[1]));
 }
 
-ATTRIBUTE_TARGET_POPCNT
-void __sanitizer_cov_trace_div4(uint32_t Val) {
+void __sanitizer_cov_trace_div4(uint32_t value) {
+  uintptr_t pc = reinterpret_cast<uintptr_t>(__builtin_return_address(0));
   LOG_TRACE("__sanitizer_cov_trace_div4");
-  LOG_TRACE("  Val: " + std::to_string(Val));
+  LOG_TRACE("  value: " + std::to_string(value));
+  fuzzon::ExecutionTracker::Get()->TraceDiv(pc, value);
 }
 
-ATTRIBUTE_TARGET_POPCNT
-void __sanitizer_cov_trace_div8(uint64_t Val) {
+void __sanitizer_cov_trace_div8(uint64_t value) {
+  uintptr_t pc = reinterpret_cast<uintptr_t>(__builtin_return_address(0));
   LOG_TRACE("__sanitizer_cov_trace_div8");
-  LOG_TRACE("  Val: " + std::to_string(Val));
+  LOG_TRACE("  value: " + std::to_string(value));
+  fuzzon::ExecutionTracker::Get()->TraceDiv(pc, value);
 }
 
-ATTRIBUTE_TARGET_POPCNT
-void __sanitizer_cov_trace_gep(uintptr_t Idx) {
+void __sanitizer_cov_trace_gep(uintptr_t idx) {
+  uintptr_t pc = reinterpret_cast<uintptr_t>(__builtin_return_address(0));
   LOG_TRACE("__sanitizer_cov_trace_gep");
-  LOG_TRACE("  Idx: " + std::to_string(Idx));
+  LOG_TRACE("  idx: " + std::to_string(idx));
+  fuzzon::ExecutionTracker::Get()->TraceGep(pc, idx);
 }
 
 }  // extern "C"

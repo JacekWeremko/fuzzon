@@ -37,7 +37,7 @@ void Random::SetAlphabet(std::string alphabet) {
 }
 
 int Random::GenerateInt(int min, int max) {
-  static const int default_min = 1;
+  static const int default_min = std::numeric_limits<int>::min();
   static const int default_max = std::numeric_limits<int>::max();
 
   BOOST_ASSERT(min <= max);

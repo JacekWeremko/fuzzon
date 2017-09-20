@@ -3,8 +3,9 @@
 
 namespace fuzzon {
 
-ExecutionTracker::ExecutionTracker(WorkingMode mode) : mode_(mode), cov_(NULL) {
-  Logger::Get("9");
+ExecutionTracker::ExecutionTracker(WorkingMode mode,
+                                   Coverage::TrackMode track_mode)
+    : mode_(mode), cov_(NULL) {
   LOG_TRACE("ExecutionTracker::ExecutionTracker");
   if (mode_ == WorkingMode::Monitor) {
     shared_memory_ = boost::interprocess::shared_memory_object(
@@ -16,7 +17,7 @@ ExecutionTracker::ExecutionTracker(WorkingMode mode) : mode_(mode), cov_(NULL) {
         shared_memory_, boost::interprocess::read_write);
     std::memset(region_.get_address(), 0, region_.get_size());
 
-    cov_ = new (region_.get_address()) Coverage(Coverage::Raw);
+    cov_ = new (region_.get_address()) Coverage(track_mode);
   } else if (mode_ == WorkingMode::SUT) {
     LOG_TRACE("WorkingMode::SUT");
     shared_memory_ = boost::interprocess::shared_memory_object(
