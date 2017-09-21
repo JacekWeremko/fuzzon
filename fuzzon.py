@@ -144,7 +144,7 @@ class Builder(object):
             output_file = os.path.splitext(obj_file)[0]
             
         if (lflags is None):
-            lflags = []
+            lflags = []           
             lflags.append("-L/usr/lib/gcc/x86_64-linux-gnu/6/")
             lflags.append("-L/usr/lib/x86_64-linux-gnu/")
             lflags.append("-L" + fuzzonlib)
