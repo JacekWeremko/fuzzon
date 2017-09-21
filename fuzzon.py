@@ -104,9 +104,9 @@ class Builder(object):
             
         if (cflags is None):
             cflags = []
-            cflags.append("-O3")
+            cflags.append("-Oz")
 #             cflags.append("-g3")
-            cflags.append("-Wall")
+#             cflags.append("-Wall")
             cflags.append("-fmessage-length=0")
 #             cflags.append("-fno-exceptions")
 #             cflags.append("-std=c++1y")
