@@ -43,7 +43,8 @@ class Generator {
                         rapidjson::Value& current,
                         std::string new_value_name,
                         int minimum_value,
-                        int maximum_value);
+                        int maximum_value,
+                        std::string alphabet);
   bool JsonInsertString(rapidjson::Document& document,
                         rapidjson::Value& current,
                         std::string new_value_name,
@@ -67,6 +68,7 @@ class Generator {
   int TryFindLength(rapidjson::Document& new_doc,
                     const rapidjson::Value& current);
   std::string TryFindContent(const rapidjson::Value& current);
+  std::string TryFindAlphabet(const rapidjson::Value& current);
 
   std::string input_format_filepath_;
   rapidjson::Document input_format_;

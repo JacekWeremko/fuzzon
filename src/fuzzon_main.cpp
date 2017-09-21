@@ -122,6 +122,14 @@ int main(int argc, char** argv) {
   auto verbose_level = verbosity_values.length();
   Logger::Get(output_dir.string(), verbose_level);
 
+  if (alphabet.size()) {
+    std::string alphabet_all;
+    for (const auto& a : alphabet) {
+      alphabet_all += a;
+    }
+    fuzzon::Random::Get()->SetAlphabet(alphabet_all);
+  }
+
   fuzzon::Fuzzon crazy_fuzzer(output_dir.string(), sut.string(),
                               std::move(env_flags), sut_timeout, executor_mode,
                               monitor_mode, test_timeout, total_testcases);

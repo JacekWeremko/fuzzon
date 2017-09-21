@@ -86,6 +86,17 @@ int Generator::TryFindMax(const rapidjson::Value& current) {
   return max_value;
 }
 
+std::string Generator::TryFindAlphabet(const rapidjson::Value& current) {
+  auto alphabet_m = current.FindMember("alphabet");
+
+  if (alphabet_m == current.MemberEnd()) {
+    return "";
+  }
+
+  auto alphabet = std::string(alphabet_m->value.GetString());
+  return alphabet;
+}
+
 int Generator::TryFindLength(rapidjson::Document& new_doc,
                              const rapidjson::Value& current) {
   auto array_length = 0;
@@ -164,7 +175,8 @@ int Generator::ParseJson(rapidjson::Value& current,
       } else {
         auto min = TryFindMin(it->value);
         auto max = TryFindMax(it->value);
-        JsonInsertString(new_doc, last_child, it_name, min, max);
+        auto alphabet = TryFindAlphabet(it->value);
+        JsonInsertString(new_doc, last_child, it_name, min, max, alphabet);
       }
     } else if (std::string("object").compare(it_type) == 0) {
       last_child.AddMember(rapidjson::Value(it->name, new_doc.GetAllocator()),
@@ -223,9 +235,11 @@ int Generator::ParseJson(rapidjson::Value& current,
 
         auto min = TryFindMin(it->value);
         auto max = TryFindMax(it->value);
+        auto alphabet = TryFindAlphabet(it->value);
 
         for (size_t idx = 0; idx < array_length; idx++) {
-          JsonInsertString(new_doc, new_array_item->value, it_name, min, max);
+          JsonInsertString(new_doc, new_array_item->value, it_name, min, max,
+                           alphabet);
         }
       } else {
         LOG_CRITICAL(array_elements_type +
@@ -328,29 +342,27 @@ bool Generator::JsonInsertInteger(rapidjson::Document& document,
                                   std::string new_value_name,
                                   int minimum,
                                   int maximum) {
-  rapidjson::Value new_element_value =
-      rapidjson::Value(Random::Get()->GenerateInt(minimum, maximum));
-  return JsonInsert(document, current, new_value_name, new_element_value);
+  auto element = rapidjson::Value(Random::Get()->GenerateInt(minimum, maximum));
+  return JsonInsert(document, current, new_value_name, element);
 }
 
 bool Generator::JsonInsertString(rapidjson::Document& document,
                                  rapidjson::Value& current,
                                  std::string new_value_name,
-                                 int minimum_value,
-                                 int maximum_value) {
-  rapidjson::Value new_element_value = rapidjson::Value(
-      Random::Get()->GenerateString(minimum_value, maximum_value).c_str(),
-      document.GetAllocator());
-  return JsonInsert(document, current, new_value_name, new_element_value);
+                                 int min,
+                                 int max,
+                                 std::string alphabet) {
+  auto value = Random::Get()->GenerateString(min, max, alphabet);
+  auto element = rapidjson::Value(value.c_str(), document.GetAllocator());
+  return JsonInsert(document, current, new_value_name, element);
 }
 
 bool Generator::JsonInsertString(rapidjson::Document& document,
                                  rapidjson::Value& current,
                                  std::string new_value_name,
                                  std::string content) {
-  rapidjson::Value new_element_value =
-      rapidjson::Value(content.c_str(), document.GetAllocator());
-  return JsonInsert(document, current, new_value_name, new_element_value);
+  auto element = rapidjson::Value(content.c_str(), document.GetAllocator());
+  return JsonInsert(document, current, new_value_name, element);
 }
 
 bool Generator::JsonInsert(rapidjson::Document& document,

@@ -16,16 +16,31 @@ namespace fuzzon {
 
 Random::Random() {
   generator_ = boost::random::mt19937(static_cast<std::uint32_t>(std::time(0)));
+
+  char ascii_0_31[32];
+  for (char i = 0; i < 31; ++i) {
+    ascii_0_31[i] = i;
+  }
+
   alphabets_ = {
       {AlphabetType::SmallLetters, "abcdefghijklmnopqrstuvwxyz"},
       {AlphabetType::CapitalLetters, "ABCDEFGHIJKLMNOPQRSTUVWXYZ"},
       {AlphabetType::Nums, "1234567890"},
       {AlphabetType::NumsSpecials, "!@#$%^&*()"},
       {AlphabetType::OtherSpecials, "`~-_=+[{]}\\|;:'\",<.>/? "},
+      {AlphabetType::ASCII_0_31, std::string(ascii_0_31)},
   };
-  alphabet_ = std::string(alphabets_[AlphabetType::SmallLetters] +
-                          alphabets_[AlphabetType::CapitalLetters] +
-                          alphabets_[AlphabetType::Nums]);
+  alphabet_ = std::string(alphabets_[AlphabetType::SmallLetters]);
+
+  //  alphabet_ = std::string(alphabets_[AlphabetType::SmallLetters] +
+  //                          alphabets_[AlphabetType::CapitalLetters] +
+  //                          alphabets_[AlphabetType::Nums]);
+
+  //  alphabet_ = std::string(alphabets_[AlphabetType::SmallLetters] +
+  //                          alphabets_[AlphabetType::CapitalLetters] +
+  //                          alphabets_[AlphabetType::Nums] +
+  //                          alphabets_[AlphabetType::NumsSpecials] +
+  //                          alphabets_[AlphabetType::OtherSpecials]);
 }
 
 void Random::AddAlphabet(AlphabetType type) {
@@ -69,6 +84,31 @@ std::string Random::GenerateString(int min, int max) {
   for (auto i = 0; i < string_length; i++) {
     random << GenerateChar();
   }
+  return random.str();
+}
+
+std::string Random::GenerateString(int min,
+                                   int max,
+                                   const std::string& alphabet) {
+  static const int min_length = 1;
+  static const int max_length = 100;
+
+  BOOST_ASSERT(min <= max);
+  min = min == -1 ? min_length : min;
+  max = max == -1 ? max_length : max;
+
+  const auto string_length = GenerateInt(min, max);
+  std::stringstream random;
+  if (alphabet == "") {
+    for (auto i = 0; i < string_length; i++) {
+      random << GenerateChar();  // use default
+    }
+  } else {
+    for (auto i = 0; i < string_length; i++) {
+      random << GenerateChar(alphabet);
+    }
+  }
+
   return random.str();
 }
 
