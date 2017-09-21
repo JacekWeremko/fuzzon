@@ -100,17 +100,13 @@ void Fuzzon::Generation(std::string input_format, int test_cases_to_generate) {
 
 void Fuzzon::MutationDeterministic(int level, bool white_chars_preservation) {
   LOG_INFO(corpus_.GetShortStats().str() + " <- mutation deterministic start");
-  bool all_posibilities_checked = false;
+  bool all_posibilities_checked = (level == 0);
   Mutator test_cases_mutator(white_chars_preservation);
   while (!shall_finish() && !all_posibilities_checked) {
     auto favorite = corpus_.SelectNotYetExhaustMutated();
     if (favorite == nullptr) {
       all_posibilities_checked = true;
       break;
-    }
-
-    if (level == 0) {
-      continue;
     }
 
     // walking: exhaust bit flips

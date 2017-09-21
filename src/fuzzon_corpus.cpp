@@ -158,7 +158,7 @@ TestCase* const Corpus::SelectRandom() {
 
 TestCase* const Corpus::SelectNotYetExhaustMutated() {
   for (auto& current : data_) {
-    if (current->input.not_yet_mutated() == false) {
+    if (current->input.not_yet_mutated() == true) {
       return &current->input;
     }
   }
