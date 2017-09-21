@@ -19,6 +19,7 @@ class Random {
     Nums,
     NumsSpecials,
     OtherSpecials,
+    ASCII_0_31,
     Unknown,
   };
 
@@ -35,6 +36,10 @@ class Random {
 
   std::string GenerateString(int length = -1);
   std::string GenerateString(int min = -1, int max = -1);
+  std::string GenerateString(int min = -1,
+                             int max = -1,
+                             const std::string& alphabet = "");
+
   int GenerateInt(int min = -1, int max = -1);
   char GenerateChar();
   char GenerateChar(char same_type_as_me);
