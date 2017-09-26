@@ -19,6 +19,8 @@ class Logger {
     return &logger;
   }
 
+  void SetLevel(int logging_level);
+
   void trace(std::string message);
   void debug(std::string message);
   void info(std::string message);
@@ -28,7 +30,8 @@ class Logger {
 };
 
 #ifdef LOGGING_ENABLED
-#define LOG_TRACE(message) Logger::Get()->trace(message);
+//#define LOG_TRACE(message) Logger::Get()->trace(message);
+#define LOG_TRACE(message)
 #define LOG_DEBUG(message) Logger::Get()->debug(message);
 #define LOG_INFO(message) Logger::Get()->info(message);
 #define LOG_WARNING(message) Logger::Get()->warning(message);

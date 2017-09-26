@@ -35,17 +35,22 @@ class Executor {
                     Executor::Mode mode,
                     Coverage::TrackMode track_mode);
 
-  ExecutionDataSP ExecuteBlocking(TestCase& input) {
-    return ExecuteProcessAsyncStdAllStremsPoll(input);
-  }
+#ifdef EXTERN_FUZZZON_ENTRY_POINT
+  ExecutionDataSP ExecuteSameThread(TestCase& input);
+//  ExecutionData ExecuteBlockingThread(TestCase& input);
+//  ExecutionData ExecuteBlockingThreadFork(TestCase& input);
+#endif
+
   ExecutionDataSP ExecuteProcessStdInFile(TestCase& input);
   ExecutionDataSP ExecuteProcessAsyncStdAllStremsPoll(TestCase& input);
+  ExecutionDataSP ExecuteProcessAsyncStdinFileStdOutStremsPoll(TestCase& input);
   ExecutionDataSP ExecuteProcessSyncStdAllStremsPoll(TestCase& input);
 
-#ifdef EXTERN_FUZZZON_ENTRY_POINT
-  ExecutionData ExecuteBlockingThread(TestCase& input);
-  ExecutionData ExecuteBlockingThreadFork(TestCase& input);
-#endif
+  ExecutionDataSP ExecuteBlocking(TestCase& input) {
+    return ExecuteProcessAsyncStdAllStremsPoll(input);
+    //    return ExecuteProcessAsyncStdinFileStdOutStremsPoll(input);
+    //    return ExecuteSameThread(input);
+  }
 
  private:
   const std::string sut_path_;

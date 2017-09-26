@@ -68,12 +68,32 @@ Executor::Executor(std::string sut_path,
   sut_env_["LD_PRELOAD"] =
       "/usr/lib/llvm-4.0/lib/clang/4.0.0/lib/linux/libclang_rt.asan-x86_64.so";
 }
-
 #if EXTERN_FUZZZON_ENTRY_POINT
+/*
+ *
+ *
 
-extern "C" int FuzzonTest(int argc, char** argv);
+cd fuzzer-test-suite/openssl-1.0.1f/build
 
-ExecutionData Executor::ExecuteBlockingThread(TestCase& input) {
+clang++  \
+../target.cc \
+-o test_my_fuzzer \
+BUILD/libssl.a BUILD/libcrypto.a \
+libfuzzon.a \
+-ldl -lpthread -lrt \
+-lboost_program_options -lboost_thread -lboost_date_time -lboost_log_setup
+-lboost_filesystem \
+-lboost_exception -lboost_system -lboost_regex -lboost_log -lboost_serialization
+-lboost_random \
+-lboost_iostreams -lboost_chrono -lrt -lcrypto
+
+ *
+ */
+// extern "C" int FuzzonTest(int argc, char** argv);
+extern "C" int LLVMFuzzerTestOneInput(const uint8_t* Data, size_t Size);
+
+ExecutionDataSP Executor::ExecuteSameThread(TestCase& input) {
+  ExecutionTracker::Get()->Reset();
   ba::io_service ios;
 
   boost::asio::signal_set signals(ios);
@@ -121,112 +141,226 @@ ExecutionData Executor::ExecuteBlockingThread(TestCase& input) {
   int exit_code = 0;
   bool timeout_not_occured = false;
 
-  std::vector<char*> argv;
-  {
-    std::istringstream ss(input.string());
-    std::string current_arg;
-    std::list<std::string> helper_list;
-    while (ss >> current_arg) {
-      helper_list.push_back(current_arg);
-      argv.push_back(const_cast<char*>(helper_list.back().c_str()));
-    }
-    argv.push_back(0);  // need terminating null pointer
-  }
+  //  std::cout << input.string() << std::endl;
+  //  auto in_str = input.string();
+  //  auto in_cstr = in_str.c_str();
+  //  const uint8_t* data = reinterpret_cast<const uint8_t*>(in_cstr);
+  //  size_t size = in_str.size();
+
+  const uint8_t* data = reinterpret_cast<const uint8_t*>(input.vec().data());
+  size_t size = input.size();
+
+  //  auto corpus_base = boost::filesystem::path(
+  //      "/home/dablju/eclipse/cpp-neon/workspace/fuzzon/test/fuzzer-test-suite/"
+  //      "openssl-1.0.1f/build/CORPUS1");
+  //  //  boost::filesystem::ifstream input_file(input_file_path);
+  //  //
+  //  LOG_INFO("corpus_base: " + corpus_base.string());
+  //  std::vector<boost::filesystem::path> corpus_seeds;
+  //  if (boost::filesystem::exists(corpus_base)) {
+  //    boost::filesystem::path corpus_seeds_dir(corpus_base);
+  //
+  //    for (const auto& file :
+  //         boost::filesystem::directory_iterator(corpus_seeds_dir)) {
+  //      corpus_seeds.push_back(file.path());
+  //    }
+  //  }
+  //
+  //  for (const auto& file_path : corpus_seeds) {
+  //    std::ifstream file(file_path.string(), std::ios::binary |
+  //    std::ios::ate);
+  //    std::streamsize file_size = file.tellg();
+  //    file.seekg(0, std::ios::beg);
+  //
+  //    std::vector<char> buffer(file_size);
+  //    if (file.read(buffer.data(), file_size)) {
+  //      const uint8_t* data_u8 = reinterpret_cast<const
+  //      uint8_t*>(buffer.data());
+  //      size_t size_u8 = buffer.size();
+  //
+  //      auto start = std::chrono::system_clock::now();
+  //      exit_code = LLVMFuzzerTestOneInput(data_u8, size_u8);
+  //      auto finish = std::chrono::system_clock::now();
+  //
+  //      std::cout << "Tested:" << std::string(buffer.data(), buffer.size())
+  //                << "size: " << size_u8 << std::endl;
+  //    }
+  //  }
+
+  //  data = reinterpret_cast<uint8_t*>(buffer.data());
+  //  size = buffer.size();
+
+  //  data = &crash_data[0];
+  //  size = sizeof(crash_data);
 
   auto start = std::chrono::system_clock::now();
-  try {
-    exit_code = FuzzonTest(argv.size(), &argv[0]);
-  } catch (std::exception& ex) {
-    std::cout << ex.what() << std::endl;
-  }
+  exit_code = LLVMFuzzerTestOneInput(data, size);
   auto finish = std::chrono::system_clock::now();
 
-  return ExecutionData(
-      input, ec, exit_code, !timeout_not_occured,
+  //  std::cout << "exit_code: " << exit_code << std::endl;
+
+  return std::make_shared<ExecutionData>(
+      input, ec, exit_code, timeout_not_occured,
       std::chrono::duration_cast<std::chrono::microseconds>(finish - start),
       std::make_shared<std::stringstream>(),
       std::make_shared<std::stringstream>(),
       ExecutionTracker::Get()->GetCoverage());
 }
 
-ExecutionData Executor::ExecuteBlockingThreadFork(TestCase& input) {
-  ba::io_service ios;
-
-  std::error_code ec;
-  int exit_code = 0;
-  bool timeout_not_occured = false;
-
-  std::vector<char*> argv;
-  {
-    std::istringstream ss(input.string());
-    std::string current_arg;
-    std::list<std::string> helper_list;
-    while (ss >> current_arg) {
-      helper_list.push_back(current_arg);
-      argv.push_back(const_cast<char*>(helper_list.back().c_str()));
-    }
-    argv.push_back(0);  // need terminating null pointer
-  }
-
-  auto start = std::chrono::system_clock::now();
-  try {
-    boost::thread sut([&argv, &ios]() {
-      boost::asio::signal_set signals(ios);
-      signals.add(SIGHUP);
-      signals.add(SIGINT);
-      signals.add(SIGQUIT);
-      signals.add(SIGILL);
-      signals.add(SIGTRAP);
-      signals.add(SIGABRT);
-      signals.add(SIGIOT);
-      signals.add(SIGBUS);
-      signals.add(SIGFPE);
-      //  signals.add(SIGKILL);
-      signals.add(SIGUSR1);
-      signals.add(SIGSEGV);
-      signals.add(SIGUSR2);
-      signals.add(SIGPIPE);
-      signals.add(SIGALRM);
-      signals.add(SIGTERM);
-      signals.add(SIGSTKFLT);
-      signals.add(SIGCLD);
-      signals.add(SIGCHLD);
-      signals.add(SIGCONT);
-      //  signals.add(SIGSTOP);
-      signals.add(SIGTSTP);
-      signals.add(SIGTTIN);
-      signals.add(SIGTTOU);
-      signals.add(SIGURG);
-      signals.add(SIGXCPU);
-      signals.add(SIGXFSZ);
-      signals.add(SIGVTALRM);
-      signals.add(SIGPROF);
-      signals.add(SIGWINCH);
-      signals.add(SIGPOLL);
-      signals.add(SIGIO);
-      signals.add(SIGPWR);
-      signals.add(SIGSYS);
-      signals.add(SIGUNUSED);
-
-      signals.async_wait([&](const boost::system::error_code& error,
-                             int signal) {
-        std::cout << "signal_set -> " << error << ":" << signal << std::endl;
-      });
-      auto exit_code = FuzzonTest(argv.size(), &argv[0]);
-    });
-  } catch (std::exception& ex) {
-    std::cout << ex.what() << std::endl;
-  }
-
-  auto finish = std::chrono::system_clock::now();
-
-  return ExecutionData(
-      input, ec, exit_code, !timeout_not_occured,
-      std::chrono::duration_cast<std::chrono::microseconds>(finish - start),
-      std::make_shared<std::stringstream>(),
-      std::make_shared<std::stringstream>(),
-      ExecutionTracker::Get()->GetCoverage());
-}
+// ExecutionData Executor::ExecuteBlockingThread(TestCase& input) {
+//  ba::io_service ios;
+//
+//  boost::asio::signal_set signals(ios);
+//  signals.add(SIGHUP);
+//  signals.add(SIGINT);
+//  signals.add(SIGQUIT);
+//  signals.add(SIGILL);
+//  signals.add(SIGTRAP);
+//  signals.add(SIGABRT);
+//  signals.add(SIGIOT);
+//  signals.add(SIGBUS);
+//  signals.add(SIGFPE);
+//  //  signals.add(SIGKILL);
+//  signals.add(SIGUSR1);
+//  signals.add(SIGSEGV);
+//  signals.add(SIGUSR2);
+//  signals.add(SIGPIPE);
+//  signals.add(SIGALRM);
+//  signals.add(SIGTERM);
+//  signals.add(SIGSTKFLT);
+//  signals.add(SIGCLD);
+//  signals.add(SIGCHLD);
+//  signals.add(SIGCONT);
+//  //  signals.add(SIGSTOP);
+//  signals.add(SIGTSTP);
+//  signals.add(SIGTTIN);
+//  signals.add(SIGTTOU);
+//  signals.add(SIGURG);
+//  signals.add(SIGXCPU);
+//  signals.add(SIGXFSZ);
+//  signals.add(SIGVTALRM);
+//  signals.add(SIGPROF);
+//  signals.add(SIGWINCH);
+//  signals.add(SIGPOLL);
+//  signals.add(SIGIO);
+//  signals.add(SIGPWR);
+//  signals.add(SIGSYS);
+//  signals.add(SIGUNUSED);
+//
+//  signals.async_wait([&](const boost::system::error_code& error, int signal) {
+//    std::cout << "signal_set -> " << error << ":" << signal << std::endl;
+//  });
+//
+//  std::error_code ec;
+//  int exit_code = 0;
+//  bool timeout_not_occured = false;
+//
+//  std::vector<char*> argv;
+//  {
+//    std::istringstream ss(input.string());
+//    std::string current_arg;
+//    std::list<std::string> helper_list;
+//    while (ss >> current_arg) {
+//      helper_list.push_back(current_arg);
+//      argv.push_back(const_cast<char*>(helper_list.back().c_str()));
+//    }
+//    argv.push_back(0);  // need terminating null pointer
+//  }
+//
+//  auto start = std::chrono::system_clock::now();
+//  try {
+//    exit_code = FuzzonTest(argv.size(), &argv[0]);
+//  } catch (std::exception& ex) {
+//    std::cout << ex.what() << std::endl;
+//  }
+//  auto finish = std::chrono::system_clock::now();
+//
+//  return ExecutionData(
+//      input, ec, exit_code, !timeout_not_occured,
+//      std::chrono::duration_cast<std::chrono::microseconds>(finish - start),
+//      std::make_shared<std::stringstream>(),
+//      std::make_shared<std::stringstream>(),
+//      ExecutionTracker::Get()->GetCoverage());
+//}
+//
+// ExecutionData Executor::ExecuteBlockingThreadFork(TestCase& input) {
+//  ba::io_service ios;
+//
+//  std::error_code ec;
+//  int exit_code = 0;
+//  bool timeout_not_occured = false;
+//
+//  std::vector<char*> argv;
+//  {
+//    std::istringstream ss(input.string());
+//    std::string current_arg;
+//    std::list<std::string> helper_list;
+//    while (ss >> current_arg) {
+//      helper_list.push_back(current_arg);
+//      argv.push_back(const_cast<char*>(helper_list.back().c_str()));
+//    }
+//    argv.push_back(0);  // need terminating null pointer
+//  }
+//
+//  auto start = std::chrono::system_clock::now();
+//  try {
+//    boost::thread sut([&argv, &ios]() {
+//      boost::asio::signal_set signals(ios);
+//      signals.add(SIGHUP);
+//      signals.add(SIGINT);
+//      signals.add(SIGQUIT);
+//      signals.add(SIGILL);
+//      signals.add(SIGTRAP);
+//      signals.add(SIGABRT);
+//      signals.add(SIGIOT);
+//      signals.add(SIGBUS);
+//      signals.add(SIGFPE);
+//      //  signals.add(SIGKILL);
+//      signals.add(SIGUSR1);
+//      signals.add(SIGSEGV);
+//      signals.add(SIGUSR2);
+//      signals.add(SIGPIPE);
+//      signals.add(SIGALRM);
+//      signals.add(SIGTERM);
+//      signals.add(SIGSTKFLT);
+//      signals.add(SIGCLD);
+//      signals.add(SIGCHLD);
+//      signals.add(SIGCONT);
+//      //  signals.add(SIGSTOP);
+//      signals.add(SIGTSTP);
+//      signals.add(SIGTTIN);
+//      signals.add(SIGTTOU);
+//      signals.add(SIGURG);
+//      signals.add(SIGXCPU);
+//      signals.add(SIGXFSZ);
+//      signals.add(SIGVTALRM);
+//      signals.add(SIGPROF);
+//      signals.add(SIGWINCH);
+//      signals.add(SIGPOLL);
+//      signals.add(SIGIO);
+//      signals.add(SIGPWR);
+//      signals.add(SIGSYS);
+//      signals.add(SIGUNUSED);
+//
+//      signals.async_wait([&](const boost::system::error_code& error,
+//                             int signal) {
+//        std::cout << "signal_set -> " << error << ":" << signal << std::endl;
+//      });
+//      auto exit_code = FuzzonTest(argv.size(), &argv[0]);
+//    });
+//  } catch (std::exception& ex) {
+//    std::cout << ex.what() << std::endl;
+//  }
+//
+//  auto finish = std::chrono::system_clock::now();
+//
+//  return ExecutionData(
+//      input, ec, exit_code, !timeout_not_occured,
+//      std::chrono::duration_cast<std::chrono::microseconds>(finish - start),
+//      std::make_shared<std::stringstream>(),
+//      std::make_shared<std::stringstream>(),
+//      ExecutionTracker::Get()->GetCoverage());
+//}
 
 #endif
 
@@ -253,7 +387,8 @@ ExecutionDataSP Executor::ExecuteProcessStdInFile(TestCase& input) {
   std::error_code ec;
 
   auto duration = finish - start;
-  //      std::chrono::duration_cast<std::chrono::microseconds>(finish - start);
+  //      std::chrono::duration_cast<std::chrono::microseconds>(finish -
+  //      start);
   bool timeout_not_occured = duration > execution_timeout_ ? false : true;
 
   return std::make_shared<ExecutionData>(
@@ -265,6 +400,7 @@ ExecutionDataSP Executor::ExecuteProcessStdInFile(TestCase& input) {
 }
 
 ExecutionDataSP Executor::ExecuteProcessAsyncStdAllStremsPoll(TestCase& input) {
+  ExecutionTracker::Get()->Reset();
   using async_handler = std::function<void(const bs::error_code& ec, size_t n)>;
   ba::io_service ios;
 
@@ -304,7 +440,8 @@ ExecutionDataSP Executor::ExecuteProcessAsyncStdAllStremsPoll(TestCase& input) {
   //  char nulls_arr[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
   //  ba::const_buffer cb(&nulls_arr[0], 0);
   //  boost::process::detail::posix::file_descriptor null_source{
-  //      "/dev/null", boost::process::detail::posix::file_descriptor::read};
+  //      "/dev/null",
+  //      boost::process::detail::posix::file_descriptor::read};
 
   auto start = std::chrono::system_clock::now();
   boost::process::child sut(
@@ -331,6 +468,95 @@ ExecutionDataSP Executor::ExecuteProcessAsyncStdAllStremsPoll(TestCase& input) {
     if (((now - start) > execution_timeout_) || !sut.running()) {
       break;
     }
+    boost::this_thread::yield();
+  }
+
+  if (sut.running()) {
+    sut.terminate(ec);
+  }
+
+  auto finish = std::chrono::system_clock::now();
+  auto timeout_occured = ((finish - start) > execution_timeout_);
+  auto exit_code = sut.exit_code();
+
+  return std::make_shared<ExecutionData>(
+      input, ec, exit_code, timeout_occured,
+      std::chrono::duration_cast<std::chrono::microseconds>(finish - start),
+      std::make_shared<std::stringstream>(), std::move(sut_std_err),
+      ExecutionTracker::Get()->GetCoverage());
+}
+
+ExecutionDataSP Executor::ExecuteProcessAsyncStdinFileStdOutStremsPoll(
+    TestCase& input) {
+  ExecutionTracker::Get()->Reset();
+  using async_handler = std::function<void(const bs::error_code& ec, size_t n)>;
+  ba::io_service ios;
+
+  auto sut_std_out = std::make_shared<std::stringstream>();
+  auto stdout_buffer = std::vector<char>(10 * 4096);
+  auto stdout_ap_buffer = ba::buffer(stdout_buffer);
+  auto stdout_ap = bp::async_pipe(ios);
+  async_handler stdout_handler = [&](const bs::error_code& ec, size_t n) {
+    std::copy(stdout_buffer.begin(), stdout_buffer.begin() + n,
+              std::ostream_iterator<char>(*sut_std_out.get()));
+    //    std::cout << "sut_std_out:" << sut_std_out;
+    if (ec == 0) {
+      boost::asio::async_read(stdout_ap, stdout_ap_buffer, stdout_handler);
+    }
+  };
+
+  auto sut_std_err = std::make_shared<std::stringstream>();
+  auto stderr_buffer = std::vector<char>(10 * 4096);
+  auto stderr_ap_buffer = ba::buffer(stderr_buffer);
+  auto stderr_ap = bp::async_pipe(ios);
+  async_handler stderr_handler = [&](const bs::error_code& ec, size_t n) {
+    std::copy(stderr_buffer.begin(), stderr_buffer.begin() + n,
+              std::ostream_iterator<char>(*sut_std_err.get()));
+    //    std::cout << "sut_std_err:" << sut_std_err.get();
+    if (ec == 0) {
+      ba::async_read(stderr_ap, stderr_ap_buffer, stderr_handler);
+    }
+  };
+
+  //  auto input_file_path = boost::filesystem::path(
+  //      "/home/dablju/eclipse/cpp-neon/workspace/fuzzon/test/application/"
+  //      "fuzzgoat/input.txt");
+  //  auto input_file_path = boost::filesystem::path("input.txt");
+  auto input_file_path = boost::filesystem::path(
+      "/home/dablju/eclipse/cpp-neon/workspace/fuzzon/input.txt");
+  {
+    boost::filesystem::ofstream input_file(input_file_path);
+    input_file << input.string();
+    boost::filesystem::permissions(input_file_path, boost::filesystem::all_all);
+    input_file.flush();
+  }
+
+  auto start = std::chrono::system_clock::now();
+  boost::process::child sut(sut_path_, input_file_path.string(), sut_env_,
+                            boost::process::std_out > stdout_ap,
+                            boost::process::std_err > stderr_ap,
+                            boost::process::std_in.close());
+
+  ba::async_read(stdout_ap, stdout_ap_buffer, stdout_handler);
+  ba::async_read(stderr_ap, stderr_ap_buffer, stderr_handler);
+
+  std::error_code ec;
+  boost::system::error_code boot_ec;
+  while (true) {
+    ios.poll(boot_ec);
+    if (boot_ec.value()) {
+      break;
+    }
+
+    if (ios.stopped()) {
+      ios.reset();
+    }
+
+    auto now = std::chrono::system_clock::now();
+    if (((now - start) > execution_timeout_) || !sut.running()) {
+      break;
+    }
+    boost::this_thread::yield();
   }
 
   if (sut.running()) {
@@ -349,6 +575,7 @@ ExecutionDataSP Executor::ExecuteProcessAsyncStdAllStremsPoll(TestCase& input) {
 }
 
 ExecutionDataSP Executor::ExecuteProcessSyncStdAllStremsPoll(TestCase& input) {
+  ExecutionTracker::Get()->Reset();
   bp::pipe pipe_in;
   bp::pipe pipe_out;
   bp::pipe pipe_err;

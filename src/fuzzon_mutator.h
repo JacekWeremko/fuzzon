@@ -80,12 +80,12 @@ class Mutator {
    */
   bool KnownIntegers(std::vector<char>& base,
                      size_t byte_idx,
-                     char value,
+                     int value,
                      int value_size = 1) const;
 
   bool KnownIntegers(TestCase& base,
                      size_t byte_idx,
-                     char value,
+                     int value,
                      int value_size) const {
     return KnownIntegers(base.vec(), byte_idx, value, value_size);
   }

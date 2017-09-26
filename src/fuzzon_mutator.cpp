@@ -40,6 +40,11 @@ bool Mutator::FlipBit(std::vector<char>& base,
     if (!ChangeAllowed(selected_byte)) {
       return false;
     }
+  }
+
+  for (auto i = 0; i < bits_count; ++i) {
+    const auto& byte_idx = (bit_start_idx + i) / 8;
+    auto& selected_byte = base[byte_idx];
     selected_byte = selected_byte ^ (1 << ((bit_start_idx + i) % 8));
   }
   return true;
@@ -57,6 +62,11 @@ bool Mutator::FlipByte(std::vector<char>& base,
     if (!ChangeAllowed(selected_byte)) {
       return false;
     }
+  }
+
+  for (size_t i = 0; i < bytes_count; ++i) {
+    const auto& byte_index = byte_start_idx + i;
+    auto& selected_byte = base[byte_index];
     selected_byte = ~selected_byte;
   }
   return true;
@@ -102,7 +112,7 @@ bool Mutator::SimpleArithmetics(std::vector<char>& base,
 
 bool Mutator::KnownIntegers(std::vector<char>& base,
                             size_t byte_idx,
-                            char value,
+                            int value,
                             int value_size) const {
   SAFE_CHECK(base.size() > (byte_idx + value_size), false);
 

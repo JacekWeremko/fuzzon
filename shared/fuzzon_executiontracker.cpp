@@ -7,7 +7,11 @@ ExecutionTracker::ExecutionTracker(WorkingMode mode,
                                    Coverage::TrackMode track_mode)
     : mode_(mode), cov_(NULL) {
   LOG_TRACE("ExecutionTracker::ExecutionTracker");
+
+  //#ifndef EXTERN_FUZZZON_ENTRY_POINT
+
   if (mode_ == WorkingMode::Monitor) {
+    LOG_TRACE("WorkingMode::Monitor");
     shared_memory_ = boost::interprocess::shared_memory_object(
         boost::interprocess::open_or_create, shared_memory_buffer_name.c_str(),
         boost::interprocess::read_write);
@@ -30,7 +34,34 @@ ExecutionTracker::ExecutionTracker(WorkingMode mode,
   } else {
     // ..
   }
-
+  //#else EXTERN_FUZZZON_ENTRY_POINT
+  //  if (cov_ == NULL) {
+  //    LOG_TRACE("WorkingMode:: -> cov_ == NULL");
+  //    shared_memory_ = boost::interprocess::shared_memory_object(
+  //        boost::interprocess::open_or_create,
+  //        shared_memory_buffer_name.c_str(),
+  //        boost::interprocess::read_write);
+  //    LOG_TRACE("just do it");
+  //
+  //    shared_memory_.truncate(sizeof(Coverage));
+  //    region_ = boost::interprocess::mapped_region(
+  //        shared_memory_, boost::interprocess::read_write);
+  //    std::memset(region_.get_address(), 0, region_.get_size());
+  //
+  //    cov_ = new (region_.get_address()) Coverage(track_mode);
+  //  } else {
+  //    LOG_TRACE("WorkingMode:: -> cov_ != NULL");
+  //    shared_memory_ = boost::interprocess::shared_memory_object(
+  //        boost::interprocess::open_or_create,
+  //        shared_memory_buffer_name.c_str(),
+  //        boost::interprocess::read_write);
+  //    region_ = boost::interprocess::mapped_region(
+  //        shared_memory_, boost::interprocess::read_write);
+  //
+  //    cov_ = reinterpret_cast<Coverage*>(region_.get_address());
+  //  }
+  //
+  //#endif
   return;
 }
 

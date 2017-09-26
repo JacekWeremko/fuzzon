@@ -35,6 +35,12 @@ Logger::Logger(std::string output_direcotry, int logging_level) {
                                           logging_level);
 }
 
+void Logger::SetLevel(int logging_level) {
+  boost::log::core::get()->set_filter(boost::log::trivial::severity >=
+                                      boost::log::trivial::fatal -
+                                          logging_level);
+}
+
 void Logger::trace(std::string message) {
   BOOST_LOG_TRIVIAL(trace) << message;
 }
